@@ -1,28 +1,39 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Filter, Grid, List } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
+import { productsAPI } from '../services/api'
 
-const allProducts = [
-  { id: 1, name: 'Classic White T-Shirt', price: 1200, discountPrice: 999, imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400' },
-  { id: 2, name: 'Denim Jacket', price: 3500, imageUrl: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400' },
-  { id: 3, name: 'Summer Dress', price: 2800, discountPrice: 2200, imageUrl: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400' },
-  { id: 4, name: 'Casual Sneakers', price: 4500, imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400' },
-  { id: 5, name: 'Formal Shirt', price: 1800, imageUrl: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400' },
-  { id: 6, name: 'Leather Belt', price: 800, discountPrice: 650, imageUrl: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400' },
-  { id: 7, name: 'Sunglasses', price: 1500, imageUrl: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400' },
-  { id: 8, name: 'Hoodie', price: 2500, discountPrice: 1999, imageUrl: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400' },
-]
+const API_BASE_URL = 'http://localhost:8000'
+
+const toUrl = (path?: string | null) => {
+  if (!path) return ''
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  return `${API_BASE_URL}${path}`
+}
 
 const Products = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [items, setItems] = useState<any[]>([])
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await productsAPI.getAll()
+        setItems(data)
+      } catch {
+        setItems([])
+      }
+    }
+    load()
+  }, [])
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">All Products</h1>
-          <p className="text-gray-500 mt-1">Showing {allProducts.length} products</p>
+          <h1 className="text-3xl font-bold text-gray-900">Designs</h1>
+          <p className="text-gray-500 mt-1">Showing {items.length} designs</p>
         </div>
         
         <div className="flex items-center space-x-4 mt-4 md:mt-0">
@@ -99,8 +110,15 @@ const Products = () => {
         {/* Products Grid */}
         <div className="flex-1">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {allProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
+            {items.map((p) => (
+              <ProductCard
+                key={p.id}
+                id={p.id}
+                name={p.name}
+                price={Number(p.price)}
+                discountPrice={p.discount_price ? Number(p.discount_price) : undefined}
+                imageUrl={toUrl(p.design_preview || p.image) || 'https://via.placeholder.com/600x600'}
+              />
             ))}
           </div>
 

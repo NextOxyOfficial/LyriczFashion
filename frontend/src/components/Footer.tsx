@@ -8,20 +8,23 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-1">
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-pink-400 bg-clip-text text-transparent">
-              LyriczFashion
-            </h3>
-            <p className="mt-4 text-gray-400">
-              Your Style, Your Story. Discover the latest trends in fashion.
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">L</span>
+              </div>
+              <span className="text-xl font-bold text-white">LyriczFashion</span>
+            </div>
+            <p className="text-gray-400">
+              T-shirt printing made easy. Print shirts for yourself or your online business.
             </p>
             <div className="flex space-x-4 mt-6">
-              <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">
+              <a href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
                 <Twitter className="w-5 h-5" />
               </a>
             </div>
@@ -32,50 +35,50 @@ const Footer = () => {
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="text-gray-400 hover:text-white transition-colors">
+                <Link to="/" className="text-gray-400 hover:text-emerald-400 transition-colors">
                   Home
                 </Link>
               </li>
               <li>
-                <Link to="/products" className="text-gray-400 hover:text-white transition-colors">
-                  Products
+                <Link to="/products" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                  Shop
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-gray-400 hover:text-white transition-colors">
-                  About Us
+                <Link to="/design-studio" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                  Design Studio
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-gray-400 hover:text-white transition-colors">
-                  Contact
+                <Link to="/seller" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                  Start Selling
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Categories */}
+          {/* Services */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Categories</h4>
+            <h4 className="text-lg font-semibold mb-4">Services</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/products?category=men" className="text-gray-400 hover:text-white transition-colors">
-                  Men's Fashion
+                <Link to="/design-studio" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                  Custom T-Shirts
                 </Link>
               </li>
               <li>
-                <Link to="/products?category=women" className="text-gray-400 hover:text-white transition-colors">
-                  Women's Fashion
+                <Link to="/seller" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                  Seller Center
                 </Link>
               </li>
               <li>
-                <Link to="/products?category=accessories" className="text-gray-400 hover:text-white transition-colors">
-                  Accessories
+                <Link to="/products" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                  Browse Designs
                 </Link>
               </li>
               <li>
-                <Link to="/products?category=shoes" className="text-gray-400 hover:text-white transition-colors">
-                  Shoes
+                <Link to="/cart" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                  My Cart
                 </Link>
               </li>
             </ul>
@@ -86,15 +89,15 @@ const Footer = () => {
             <h4 className="text-lg font-semibold mb-4">Contact Us</h4>
             <ul className="space-y-3">
               <li className="flex items-center space-x-3 text-gray-400">
-                <MapPin className="w-5 h-5" />
+                <MapPin className="w-5 h-5 text-emerald-500" />
                 <span>Dhaka, Bangladesh</span>
               </li>
               <li className="flex items-center space-x-3 text-gray-400">
-                <Phone className="w-5 h-5" />
+                <Phone className="w-5 h-5 text-emerald-500" />
                 <span>+880 1234-567890</span>
               </li>
               <li className="flex items-center space-x-3 text-gray-400">
-                <Mail className="w-5 h-5" />
+                <Mail className="w-5 h-5 text-emerald-500" />
                 <span>info@lyriczfashion.com</span>
               </li>
             </ul>

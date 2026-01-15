@@ -4,6 +4,7 @@ import { Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react'
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -16,9 +17,24 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Register:', formData)
+    if (formData.password !== formData.confirmPassword) {
+      alert('Password and confirm password do not match')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const { authAPI } = await import('../services/api')
+      await authAPI.register(formData.email, formData.password, formData.fullName, formData.phone)
+      alert('Account created! Please login.')
+      window.location.href = '/login'
+    } catch (error: any) {
+      alert('Register failed: ' + (error.response?.data?.detail || error.message))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -143,9 +159,10 @@ const Register = () => {
 
             <button
               type="submit"
-              className="w-full py-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors"
+              disabled={isLoading}
+              className="w-full py-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Account
+              {isLoading ? 'Creating...' : 'Create Account'}
             </button>
           </form>
 
