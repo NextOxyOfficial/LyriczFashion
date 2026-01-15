@@ -1,0 +1,7 @@
+DB_NAME=user_lczfashion
+DB_USER=postgres
+DB_PASSWORD=password
+DB_HOST=localhost
+DB_PORT=5432
+SECRET_KEY=django-insecure-change-this-in-production
+DEBUG=True

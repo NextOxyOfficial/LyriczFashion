@@ -6,10 +6,33 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Login:', { email, password })
+    setIsLoading(true)
+    
+    try {
+      const { authAPI } = await import('../services/api')
+      const data = await authAPI.login(email, password)
+      
+      localStorage.setItem('token', data.access_token)
+      
+      // Get user info to check if admin
+      const userInfo = await authAPI.getMe(data.access_token)
+      
+      if (userInfo.is_admin) {
+        // Redirect to admin dashboard
+        window.location.href = '/admin'
+      } else {
+        // Redirect to home page
+        window.location.href = '/'
+      }
+    } catch (error: any) {
+      alert('Login failed: ' + (error.response?.data?.detail || error.message))
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -75,9 +98,10 @@ const Login = () => {
 
             <button
               type="submit"
-              className="w-full py-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors"
+              disabled={isLoading}
+              className="w-full py-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign In
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 

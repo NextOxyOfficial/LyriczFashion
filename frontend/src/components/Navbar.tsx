@@ -1,9 +1,32 @@
 import { Link } from 'react-router-dom'
-import { ShoppingCart, User, Menu, X, Search } from 'lucide-react'
-import { useState } from 'react'
+import { ShoppingCart, User, Menu, X, Search, LogOut } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token')
+      if (token) {
+        try {
+          const { authAPI } = await import('../services/api')
+          const userData = await authAPI.getMe(token)
+          setUser(userData)
+        } catch (error) {
+          localStorage.removeItem('token')
+        }
+      }
+    }
+    checkAuth()
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    setUser(null)
+    window.location.href = '/login'
+  }
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -52,9 +75,29 @@ const Navbar = () => {
                 0
               </span>
             </Link>
-            <Link to="/login" className="hidden md:flex items-center space-x-1 text-gray-700 hover:text-primary-600 transition-colors">
-              <User className="w-6 h-6" />
-            </Link>
+            
+            {user ? (
+              <div className="hidden md:flex items-center space-x-3">
+                <div className="flex items-center space-x-2 px-3 py-2 bg-primary-50 rounded-lg">
+                  <User className="w-5 h-5 text-primary-600" />
+                  <span className="text-sm font-medium text-primary-600">{user.full_name || user.email}</span>
+                  {user.is_admin && (
+                    <span className="px-2 py-0.5 bg-primary-600 text-white text-xs rounded-full">Admin</span>
+                  )}
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 text-gray-700 hover:text-red-600 transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
+            ) : (
+              <Link to="/login" className="hidden md:flex items-center space-x-1 text-gray-700 hover:text-primary-600 transition-colors">
+                <User className="w-6 h-6" />
+              </Link>
+            )}
             
             {/* Mobile Menu Button */}
             <button
