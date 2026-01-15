@@ -21,7 +21,7 @@ const ProductCard = ({ id, name, price, discountPrice, imageUrl }: ProductCardPr
           <img
             src={imageUrl || 'https://via.placeholder.com/300x400'}
             alt={name}
-            className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-84 object-cover group-hover:scale-105 transition-transform duration-300"
           />
         </Link>
         {discountPrice && (

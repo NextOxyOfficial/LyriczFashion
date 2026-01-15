@@ -87,13 +87,21 @@ const Navbar = () => {
 
               <div className="flex items-center gap-3">
                 {user ? (
-                  <button
-                    onClick={handleLogout}
-                    className="p-2 text-gray-600 hover:text-red-600 transition-colors"
-                    title="Logout"
-                  >
-                    <LogOut className="w-6 h-6" />
-                  </button>
+                  <>
+                    <Link
+                      to="/dashboard"
+                      className="px-4 py-2 bg-emerald-600 text-white font-medium rounded-full hover:bg-emerald-700 transition-colors"
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="p-2 text-gray-600 hover:text-red-600 transition-colors"
+                      title="Logout"
+                    >
+                      <LogOut className="w-6 h-6" />
+                    </button>
+                  </>
                 ) : (
                   <Link to="/login" className="p-2 text-gray-600 hover:text-emerald-600 transition-colors">
                     <User className="w-6 h-6" />

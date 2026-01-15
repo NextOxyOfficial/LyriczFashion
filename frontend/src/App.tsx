@@ -11,6 +11,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import AdminDashboard from './pages/AdminDashboard'
 import SellerDashboard from './pages/SellerDashboard'
+import Dashboard from './pages/Dashboard'
 import SellerDesignCreate from './pages/SellerDesignCreate'
 import StorePage from './pages/StorePage'
 
@@ -25,6 +26,7 @@ function App() {
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/store/:slug" element={<StorePage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/seller" element={<SellerDashboard />} />
             <Route path="/seller/designs/new" element={<SellerDesignCreate />} />
             <Route path="/cart" element={<Cart />} />
