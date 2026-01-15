@@ -31,6 +31,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,6 +43,98 @@ INSTALLED_APPS = [
     'corsheaders',
     'products',
 ]
+
+# Jazzmin Admin Theme Configuration
+JAZZMIN_SETTINGS = {
+    'site_title': 'LyriczFashion Admin',
+    'site_header': 'LyriczFashion',
+    'site_brand': 'LyriczFashion',
+    'site_logo': None,
+    'login_logo': None,
+    'login_logo_dark': None,
+    'site_logo_classes': 'img-circle',
+    'site_icon': None,
+    'welcome_sign': 'Welcome to LyriczFashion Admin',
+    'copyright': 'LyriczFashion Ltd',
+    'search_model': ['auth.User', 'products.Product'],
+    'user_avatar': None,
+    
+    # Top Menu
+    'topmenu_links': [
+        {'name': 'Home', 'url': 'admin:index', 'permissions': ['auth.view_user']},
+        {'name': 'View Site', 'url': '/', 'new_window': True},
+        {'model': 'auth.User'},
+        {'app': 'products'},
+    ],
+    
+    # Side Menu
+    'show_sidebar': True,
+    'navigation_expanded': True,
+    'hide_apps': [],
+    'hide_models': [],
+    'order_with_respect_to': ['auth', 'products', 'products.Category', 'products.Product', 'products.Order'],
+    
+    # Icons
+    'icons': {
+        'auth': 'fas fa-users-cog',
+        'auth.user': 'fas fa-user',
+        'auth.Group': 'fas fa-users',
+        'products.Category': 'fas fa-tags',
+        'products.Product': 'fas fa-tshirt',
+        'products.Order': 'fas fa-shopping-cart',
+        'products.OrderItem': 'fas fa-box',
+    },
+    'default_icon_parents': 'fas fa-chevron-circle-right',
+    'default_icon_children': 'fas fa-circle',
+    
+    # Related Modal
+    'related_modal_active': True,
+    
+    # UI Tweaks
+    'custom_css': None,
+    'custom_js': None,
+    'use_google_fonts_cdn': True,
+    'show_ui_builder': False,
+    
+    # Change view
+    'changeform_format': 'horizontal_tabs',
+    'changeform_format_overrides': {
+        'auth.user': 'collapsible',
+        'auth.group': 'vertical_tabs',
+    },
+}
+
+JAZZMIN_UI_TWEAKS = {
+    'navbar_small_text': False,
+    'footer_small_text': False,
+    'body_small_text': False,
+    'brand_small_text': False,
+    'brand_colour': 'navbar-purple',
+    'accent': 'accent-purple',
+    'navbar': 'navbar-purple navbar-dark',
+    'no_navbar_border': False,
+    'navbar_fixed': True,
+    'layout_boxed': False,
+    'footer_fixed': False,
+    'sidebar_fixed': True,
+    'sidebar': 'sidebar-dark-purple',
+    'sidebar_nav_small_text': False,
+    'sidebar_disable_expand': False,
+    'sidebar_nav_child_indent': False,
+    'sidebar_nav_compact_style': False,
+    'sidebar_nav_legacy_style': False,
+    'sidebar_nav_flat_style': False,
+    'theme': 'default',
+    'dark_mode_theme': None,
+    'button_classes': {
+        'primary': 'btn-primary',
+        'secondary': 'btn-secondary',
+        'info': 'btn-info',
+        'warning': 'btn-warning',
+        'danger': 'btn-danger',
+        'success': 'btn-success',
+    },
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
