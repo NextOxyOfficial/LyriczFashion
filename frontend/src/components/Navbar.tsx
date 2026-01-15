@@ -1,11 +1,14 @@
 import { Link } from 'react-router-dom'
-import { ShoppingCart, User, Menu, X, Search, LogOut, Phone, Heart, ChevronDown } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { ShoppingCart, User, Menu, X, Search, Phone, Heart, ChevronDown } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 import { useCartStore } from '../store/cartStore'
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
   const cartCount = useCartStore((s) => s.items.reduce((sum, x) => sum + x.quantity, 0))
 
   useEffect(() => {
@@ -24,6 +27,47 @@ const Navbar = () => {
     checkAuth()
   }, [])
 
+  useEffect(() => {
+    let lastScrollY = window.scrollY
+    let ticking = false
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          // Only change state if scroll difference is significant (more than 50px)
+          if (Math.abs(currentScrollY - lastScrollY) > 50) {
+            setIsScrolled(currentScrollY > 100)
+            lastScrollY = currentScrollY
+          }
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Click outside to close user dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false)
+      }
+    }
+
+    if (isUserMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isUserMenuOpen])
+
   const handleLogout = () => {
     localStorage.removeItem('token')
     setUser(null)
@@ -31,9 +75,11 @@ const Navbar = () => {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-white">
+    <header className="sticky top-0 z-50 bg-white shadow-sm">
       {/* Scrolling Text Banner */}
-      <div className="bg-gray-900 text-white overflow-hidden relative">
+      <div className={`bg-gray-900 text-white overflow-hidden relative transition-all duration-300 ${
+        isScrolled ? 'h-0 opacity-0' : 'h-auto opacity-100'
+      }`}>
         <div className="flex animate-marquee whitespace-nowrap py-2.5 text-sm font-medium">
           <span className="inline-flex items-center px-8">🔥 Extra Sale 30% off - Limited Time Offer!</span>
           <span className="inline-flex items-center px-8">✨ Free Shipping on Orders Over ৳2000</span>
@@ -48,9 +94,13 @@ const Navbar = () => {
       </div>
 
       {/* Main Header */}
-      <div className="border-gray-100 mt-5">
+      <div className={`border-gray-100 transition-all duration-300 ${
+        isScrolled ? 'mt-0' : 'mt-5'
+      }`}>
         <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+          <div className={`flex justify-between items-center transition-all duration-300 ${
+            isScrolled ? 'h-16' : 'h-20'
+          }`}>
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
               <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
@@ -75,7 +125,9 @@ const Navbar = () => {
 
             {/* Hotline & Icons */}
             <div className="hidden md:flex items-center gap-6">
-              <div className="flex items-center gap-3">
+              <div className={`flex items-center gap-3 transition-all duration-300 ${
+                isScrolled ? 'hidden' : 'flex'
+              }`}>
                 <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                   <Phone className="w-5 h-5 text-gray-600" />
                 </div>
@@ -85,29 +137,9 @@ const Navbar = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                {user ? (
-                  <>
-                    <Link
-                      to="/dashboard"
-                      className="px-4 py-2 bg-emerald-600 text-white font-medium rounded-full hover:bg-emerald-700 transition-colors"
-                    >
-                      Dashboard
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="p-2 text-gray-600 hover:text-red-600 transition-colors"
-                      title="Logout"
-                    >
-                      <LogOut className="w-6 h-6" />
-                    </button>
-                  </>
-                ) : (
-                  <Link to="/login" className="p-2 text-gray-600 hover:text-emerald-600 transition-colors">
-                    <User className="w-6 h-6" />
-                  </Link>
-                )}
-
+              <div className={`flex items-center transition-all duration-300 ${
+                isScrolled ? 'gap-2' : 'gap-3'
+              }`}>
                 <Link to="/cart" className="relative p-2 text-gray-600 hover:text-emerald-600 transition-colors">
                   <Heart className="w-6 h-6" />
                   <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -123,6 +155,69 @@ const Navbar = () => {
                     </span>
                   )}
                 </Link>
+
+                {user ? (
+                  <div className="relative" ref={userMenuRef}>
+                    <button
+                      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                      className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    >
+                      <span className="text-sm font-medium text-gray-700">
+                        Hi, {user.first_name} {user.last_name}
+                      </span>
+                      <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform duration-200 ${
+                        isUserMenuOpen ? 'rotate-180' : ''
+                      }`} />
+                    </button>
+
+                    <div className={`absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50 transition-all duration-200 origin-top ${
+                      isUserMenuOpen 
+                        ? 'opacity-100 scale-100 translate-y-0' 
+                        : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+                    }`}>
+                        <div className="py-2">
+                          <Link
+                            to="/dashboard"
+                            className="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <User className="w-4 h-4 mr-3" />
+                            Dashboard
+                          </Link>
+                          <Link
+                            to="/profile"
+                            className="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <User className="w-4 h-4 mr-3" />
+                            My Profile
+                          </Link>
+                          <Link
+                            to="/orders"
+                            className="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <ShoppingCart className="w-4 h-4 mr-3" />
+                            My Orders
+                          </Link>
+                        </div>
+                        <hr className="border-gray-200" />
+                        <div className="py-2">
+                          <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <X className="w-4 h-4 mr-3" />
+                            Logout
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                ) : (
+                  <Link to="/login" className="p-2 text-gray-600 hover:text-emerald-600 transition-colors">
+                    <User className="w-6 h-6" />
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -138,7 +233,9 @@ const Navbar = () => {
       </div>
 
       {/* Navigation Bar */}
-      <nav className="bg-white py-3">
+      <nav className={`bg-white transition-all duration-300 ${
+        isScrolled ? 'h-0 opacity-0 overflow-hidden py-0' : 'py-3 opacity-100'
+      }`}>
         <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="hidden md:flex justify-between items-center">
             <div className="flex items-center gap-6">

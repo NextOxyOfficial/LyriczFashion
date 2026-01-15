@@ -14,6 +14,8 @@ import SellerDashboard from './pages/SellerDashboard'
 import Dashboard from './pages/Dashboard'
 import SellerDesignCreate from './pages/SellerDesignCreate'
 import StorePage from './pages/StorePage'
+import Profile from './pages/Profile'
+import Orders from './pages/Orders'
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/store/:slug" element={<StorePage />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/orders" element={<Orders />} />
             <Route path="/seller" element={<SellerDashboard />} />
             <Route path="/seller/designs/new" element={<SellerDesignCreate />} />
             <Route path="/cart" element={<Cart />} />

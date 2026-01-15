@@ -133,6 +133,11 @@ export const designAPI = {
     })
     return response.data
   },
+
+  listPublishedDesigns: async () => {
+    const response = await api.get('/seller-products/published/')
+    return response.data
+  },
 };
 
 export const customProductsAPI = {

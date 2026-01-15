@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Truck, Shield, RefreshCw, Headphones } from 'lucide-react'
+import { ArrowRight, Truck, Shield, RefreshCw, Headphones, Wand2 } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
 import { productsAPI } from '../services/api'
 
@@ -8,18 +8,37 @@ const Home = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const imageRef = useRef<HTMLDivElement>(null)
   const [allProducts, setAllProducts] = useState<any[]>([])
+  const [activeTab, setActiveTab] = useState<'new' | 'bestseller' | 'sale'>('new')
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
         const data = await productsAPI.getFeed()
-        setAllProducts(data.slice(0, 20)) // Show first 20 products (4 rows x 5 columns)
+        
+        // Filter products based on active tab
+        let filteredProducts = data
+        if (activeTab === 'new') {
+          // Show newest products (last 20 products)
+          filteredProducts = data.slice(-20).reverse()
+        } else if (activeTab === 'bestseller') {
+          // Show products with discount (simulating best sellers)
+          filteredProducts = data.filter((p: any) => p.discount_price).slice(0, 20)
+          // If not enough discounted products, fill with regular products
+          if (filteredProducts.length < 20) {
+            filteredProducts = [...filteredProducts, ...data.filter((p: any) => !p.discount_price).slice(0, 20 - filteredProducts.length)]
+          }
+        } else if (activeTab === 'sale') {
+          // Show only products with discount
+          filteredProducts = data.filter((p: any) => p.discount_price).slice(0, 20)
+        }
+        
+        setAllProducts(filteredProducts.slice(0, 20))
       } catch {
         setAllProducts([])
       }
     }
     loadProducts()
-  }, [])
+  }, [activeTab])
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!imageRef.current) return
@@ -179,7 +198,7 @@ const Home = () => {
       <section className="py-20 bg-white">
         <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl p-8 lg:p-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-center text-gray-900 mb-12">
+            <h2 className="text-5xl lg:text-5xl font-bold text-center text-gray-900 mb-12">
               How to design and order custom T-shirts
             </h2>
             
@@ -231,6 +250,17 @@ const Home = () => {
                     </p>
                   </div>
                 </div>
+
+                {/* Create Design Button */}
+                <div className="mt-8 ml-14">
+                  <Link
+                    to="/design-studio"
+                    className="inline-flex items-center gap-2 px-8 py-3 bg-emerald-600 text-white font-bold rounded-full hover:bg-emerald-700 transition-colors shadow-lg"
+                  >
+                    <Wand2 className="w-5 h-5" />
+                    Create Design
+                  </Link>
+                </div>
               </div>
 
               {/* Right side - Mockup Image */}
@@ -252,7 +282,32 @@ const Home = () => {
       <section className="py-8 bg-white">
         <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-10">
-            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">All products</h2>
+            <div className="flex gap-8">
+              <button
+                onClick={() => setActiveTab('new')}
+                className={`text-2xl lg:text-3xl font-bold transition-colors ${
+                  activeTab === 'new' ? 'text-gray-900' : 'text-gray-300'
+                }`}
+              >
+                New Arrivals
+              </button>
+              <button
+                onClick={() => setActiveTab('bestseller')}
+                className={`text-2xl lg:text-3xl font-bold transition-colors ${
+                  activeTab === 'bestseller' ? 'text-gray-900' : 'text-gray-300'
+                }`}
+              >
+                Best Seller
+              </button>
+              <button
+                onClick={() => setActiveTab('sale')}
+                className={`text-2xl lg:text-3xl font-bold transition-colors ${
+                  activeTab === 'sale' ? 'text-gray-900' : 'text-gray-300'
+                }`}
+              >
+                Sale
+              </button>
+            </div>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">

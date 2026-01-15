@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { designAPI, storeAPI } from '../services/api'
+import { RotateCw, RotateCcw, ZoomIn, ZoomOut, Move } from 'lucide-react'
 
 const API_BASE_URL = 'http://localhost:8000'
 
@@ -43,6 +44,7 @@ const SellerDesignCreate = () => {
 
   const [pos, setPos] = useState({ x: 220, y: 220 })
   const [scale, setScale] = useState(0.6)
+  const [rotation, setRotation] = useState(0)
 
   const [dragging, setDragging] = useState(false)
   const dragOffset = useRef({ dx: 0, dy: 0 })
@@ -151,10 +153,15 @@ const SellerDesignCreate = () => {
     const logoW = baseLogoW * scale
     const logoH = (logoW * logoImg.height) / logoImg.width
 
-    const drawX = xPct * width - logoW / 2
-    const drawY = yPct * height - logoH / 2
+    const drawX = xPct * width
+    const drawY = yPct * height
 
-    ctx.drawImage(logoImg, drawX, drawY, logoW, logoH)
+    // Apply rotation
+    ctx.save()
+    ctx.translate(drawX, drawY)
+    ctx.rotate((rotation * Math.PI) / 180)
+    ctx.drawImage(logoImg, -logoW / 2, -logoH / 2, logoW, logoH)
+    ctx.restore()
 
     const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
     if (!blob) return null
@@ -190,6 +197,7 @@ const SellerDesignCreate = () => {
           x: rect ? pos.x / rect.width : 0.5,
           y: rect ? pos.y / rect.height : 0.5,
           scale,
+          rotation,
         },
       }
 
@@ -303,15 +311,65 @@ const SellerDesignCreate = () => {
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Logo Size</label>
-              <input
-                type="range"
-                min={0.2}
-                max={1.2}
-                step={0.05}
-                value={scale}
-                onChange={(e) => setScale(Number(e.target.value))}
-                className="w-full"
-              />
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setScale(Math.max(0.2, scale - 0.1))}
+                  className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  <ZoomOut className="w-5 h-5 text-gray-600" />
+                </button>
+                <input
+                  type="range"
+                  min={0.2}
+                  max={1.5}
+                  step={0.05}
+                  value={scale}
+                  onChange={(e) => setScale(Number(e.target.value))}
+                  className="flex-1 accent-emerald-600"
+                />
+                <button
+                  onClick={() => setScale(Math.min(1.5, scale + 0.1))}
+                  className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  <ZoomIn className="w-5 h-5 text-gray-600" />
+                </button>
+                <span className="text-sm text-gray-500 w-12 text-right">{Math.round(scale * 100)}%</span>
+              </div>
+            </div>
+
+            {/* Rotation Control */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Rotation</label>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setRotation(rotation - 15)}
+                  className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  <RotateCcw className="w-5 h-5 text-gray-600" />
+                </button>
+                <input
+                  type="range"
+                  min={-180}
+                  max={180}
+                  step={1}
+                  value={rotation}
+                  onChange={(e) => setRotation(Number(e.target.value))}
+                  className="flex-1 accent-emerald-600"
+                />
+                <button
+                  onClick={() => setRotation(rotation + 15)}
+                  className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  <RotateCw className="w-5 h-5 text-gray-600" />
+                </button>
+                <span className="text-sm text-gray-500 w-12 text-right">{rotation}°</span>
+              </div>
+              <button
+                onClick={() => setRotation(0)}
+                className="mt-2 text-sm text-emerald-600 hover:text-emerald-700"
+              >
+                Reset rotation
+              </button>
             </div>
 
             <div className="md:col-span-2 flex items-center gap-3">
@@ -353,7 +411,8 @@ const SellerDesignCreate = () => {
                   left: pos.x,
                   top: pos.y,
                   width: `${260 * scale}px`,
-                  transform: 'translate(-50%, -50%)',
+                  transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+                  transition: dragging ? 'none' : 'transform 0.1s ease-out',
                 }}
                 className="absolute cursor-move drop-shadow-lg"
                 onMouseDown={onMouseDownLogo}
@@ -368,8 +427,57 @@ const SellerDesignCreate = () => {
             )}
           </div>
 
-          <div className="mt-4 text-sm text-gray-600">
-            Drag the logo to place it. Use the slider to resize.
+          {/* Quick Controls */}
+          {logoUrl && (
+            <div className="mt-4 flex items-center justify-center gap-4">
+              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setRotation(rotation - 45)}
+                  className="p-2 hover:bg-white rounded transition-colors"
+                  title="Rotate Left 45°"
+                >
+                  <RotateCcw className="w-5 h-5 text-gray-600" />
+                </button>
+                <button
+                  onClick={() => setRotation(rotation + 45)}
+                  className="p-2 hover:bg-white rounded transition-colors"
+                  title="Rotate Right 45°"
+                >
+                  <RotateCw className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setScale(Math.max(0.2, scale - 0.1))}
+                  className="p-2 hover:bg-white rounded transition-colors"
+                  title="Zoom Out"
+                >
+                  <ZoomOut className="w-5 h-5 text-gray-600" />
+                </button>
+                <button
+                  onClick={() => setScale(Math.min(1.5, scale + 0.1))}
+                  className="p-2 hover:bg-white rounded transition-colors"
+                  title="Zoom In"
+                >
+                  <ZoomIn className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+              <button
+                onClick={() => {
+                  setRotation(0)
+                  setScale(0.6)
+                  setPos({ x: 220, y: 220 })
+                }}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Reset
+              </button>
+            </div>
+          )}
+
+          <div className="mt-4 text-sm text-gray-600 flex items-center gap-2">
+            <Move className="w-4 h-4" />
+            Drag the logo to place it. Use sliders or buttons to resize and rotate.
           </div>
 
           {store?.logo && (
