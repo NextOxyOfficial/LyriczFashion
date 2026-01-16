@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, SellerProfile, Store, Product, Order, OrderItem
+from .models import Category, SellerProfile, Store, Product, Order, OrderItem, DesignLibraryItem, DesignCommission
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -26,7 +26,7 @@ class SellerProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SellerProfile
-        fields = ['id', 'user', 'is_seller', 'phone', 'created_at', 'updated_at']
+        fields = ['id', 'user', 'is_seller', 'status', 'phone', 'created_at', 'updated_at']
 
 
 class StoreSerializer(serializers.ModelSerializer):
@@ -86,3 +86,23 @@ class OrderSerializer(serializers.ModelSerializer):
             except Exception:
                 pass
         return total
+
+
+class DesignLibraryItemSerializer(serializers.ModelSerializer):
+    owner = UserSerializer(read_only=True)
+
+    class Meta:
+        model = DesignLibraryItem
+        fields = '__all__'
+        read_only_fields = ['owner', 'created_at', 'updated_at']
+
+
+class DesignCommissionSerializer(serializers.ModelSerializer):
+    design = DesignLibraryItemSerializer(read_only=True)
+    owner = UserSerializer(read_only=True)
+    used_by = UserSerializer(read_only=True)
+
+    class Meta:
+        model = DesignCommission
+        fields = '__all__'
+        read_only_fields = ['design', 'owner', 'used_by', 'order', 'order_item', 'created_at']

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { authAPI } from '../services/api'
 import SellerDashboard from './SellerDashboard'
 import AdminDashboard from './AdminDashboard'
+import UserDashboard from './UserDashboard'
 
 const Dashboard = () => {
   const [user, setUser] = useState<any>(null)
@@ -48,15 +49,18 @@ const Dashboard = () => {
   }
 
   // Check if user is admin (you can adjust this logic based on your user model)
-  const isAdmin = user.is_staff || user.is_superuser
+  const isAdmin = user.is_admin || user.is_staff || user.is_superuser
 
   // Render appropriate dashboard
   if (isAdmin) {
     return <AdminDashboard />
   }
 
-  // Default to seller dashboard for regular users
-  return <SellerDashboard />
+  if (user.is_seller) {
+    return <SellerDashboard />
+  }
+
+  return <UserDashboard />
 }
 
 export default Dashboard

@@ -10,31 +10,44 @@ const Cart = () => {
   const clearCart = useCartStore((s) => s.clear)
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null)
-  const [couponDiscount, setCouponDiscount] = useState(0)
+  const [couponError, setCouponError] = useState<string | null>(null)
+
+  const FREE_SHIPPING_THRESHOLD = 2000
+  const SHIPPING_FEE = 100
 
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
-  const shipping = items.length > 0 ? (subtotal > 2000 ? 0 : 100) : 0
-  const discount = couponDiscount
-  const total = subtotal + shipping - discount
+
+  const discount = (() => {
+    if (!appliedCoupon) return 0
+    if (appliedCoupon === 'SAVE10') return Math.round(subtotal * 0.1)
+    if (appliedCoupon === 'FLAT100') return 100
+    return 0
+  })()
+
+  const discountedSubtotal = Math.max(0, subtotal - discount)
+  const isFreeShipping = items.length > 0 && discountedSubtotal >= FREE_SHIPPING_THRESHOLD
+  const shipping = items.length > 0 ? (isFreeShipping ? 0 : SHIPPING_FEE) : 0
+  const total = discountedSubtotal + shipping
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
-  const freeShippingProgress = Math.min((subtotal / 2000) * 100, 100)
+  const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - discountedSubtotal)
+  const freeShippingProgress = Math.min((discountedSubtotal / FREE_SHIPPING_THRESHOLD) * 100, 100)
 
   const handleApplyCoupon = () => {
-    if (couponCode.toUpperCase() === 'SAVE10') {
-      setCouponDiscount(Math.round(subtotal * 0.1))
-      setAppliedCoupon('SAVE10')
-    } else if (couponCode.toUpperCase() === 'FLAT100') {
-      setCouponDiscount(100)
-      setAppliedCoupon('FLAT100')
+    const code = couponCode.trim().toUpperCase()
+    if (!code) return
+
+    if (code === 'SAVE10' || code === 'FLAT100') {
+      setAppliedCoupon(code)
+      setCouponError(null)
     } else {
-      alert('Invalid coupon code')
+      setCouponError('Invalid coupon code')
     }
     setCouponCode('')
   }
 
   const removeCoupon = () => {
     setAppliedCoupon(null)
-    setCouponDiscount(0)
+    setCouponError(null)
   }
 
   return (
@@ -69,16 +82,22 @@ const Cart = () => {
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               {/* Free Shipping Progress */}
-              {subtotal < 2000 && (
-                <div className="bg-emerald-50 rounded-xl p-4 mb-4">
+              {items.length > 0 && (
+                <div className={`rounded-xl p-4 mb-4 ${isFreeShipping ? 'bg-emerald-50' : 'bg-emerald-50'}`}>
                   <div className="flex items-center gap-2 mb-2">
                     <Truck className="w-5 h-5 text-emerald-600" />
-                    <span className="text-sm font-medium text-emerald-800">
-                      Add ৳{2000 - subtotal} more for FREE shipping!
-                    </span>
+                    {isFreeShipping ? (
+                      <span className="text-sm font-medium text-emerald-800">
+                        Free shipping unlocked! (৳{FREE_SHIPPING_THRESHOLD}+)
+                      </span>
+                    ) : (
+                      <span className="text-sm font-medium text-emerald-800">
+                        Add ৳{remainingForFreeShipping} more for FREE shipping!
+                      </span>
+                    )}
                   </div>
                   <div className="w-full h-2 bg-emerald-200 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="h-full bg-emerald-600 rounded-full transition-all duration-500"
                       style={{ width: `${freeShippingProgress}%` }}
                     />
@@ -204,7 +223,7 @@ const Cart = () => {
                     <div className="flex items-center gap-2">
                       <Gift className="w-5 h-5 text-emerald-600" />
                       <span className="font-medium text-emerald-700">{appliedCoupon}</span>
-                      <span className="text-sm text-emerald-600">(-৳{couponDiscount})</span>
+                      <span className="text-sm text-emerald-600">(-৳{discount})</span>
                     </div>
                     <button
                       onClick={removeCoupon}
@@ -229,6 +248,9 @@ const Cart = () => {
                       Apply
                     </button>
                   </div>
+                )}
+                {couponError && !appliedCoupon && (
+                  <p className="text-xs text-red-600 mt-2">{couponError}</p>
                 )}
                 <p className="text-xs text-gray-500 mt-2">Try: SAVE10 or FLAT100</p>
               </div>

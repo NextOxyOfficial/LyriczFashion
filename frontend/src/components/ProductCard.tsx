@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ShoppingCart, Heart } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { useCartStore } from '../store/cartStore'
 
 interface ProductCardProps {
@@ -13,6 +14,33 @@ interface ProductCardProps {
 const ProductCard = ({ id, name, price, discountPrice, imageUrl }: ProductCardProps) => {
   const addItem = useCartStore((s) => s.addItem)
   const unitPrice = discountPrice ?? price
+  const [isFavorited, setIsFavorited] = useState(false)
+
+  useEffect(() => {
+    // Check if product is in favorites on mount
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]')
+    setIsFavorited(favorites.includes(id))
+  }, [id])
+
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault() // Prevent navigation if clicked inside Link
+    e.stopPropagation()
+    
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]')
+    
+    if (isFavorited) {
+      const newFavorites = favorites.filter((fav: number) => fav !== id)
+      localStorage.setItem('favorites', JSON.stringify(newFavorites))
+      setIsFavorited(false)
+    } else {
+      const newFavorites = [...favorites, id]
+      localStorage.setItem('favorites', JSON.stringify(newFavorites))
+      setIsFavorited(true)
+    }
+    
+    // Dispatch custom event to update navbar
+    window.dispatchEvent(new CustomEvent('favoritesUpdated'))
+  }
 
   return (
     <div className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -29,8 +57,16 @@ const ProductCard = ({ id, name, price, discountPrice, imageUrl }: ProductCardPr
             SALE
           </span>
         )}
-        <button className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-red-50">
-          <Heart className="w-5 h-5 text-gray-400 hover:text-red-500" />
+        <button 
+          onClick={toggleFavorite}
+          className={`absolute top-3 right-3 p-2 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 ${
+            isFavorited ? 'hover:bg-red-50' : 'hover:bg-red-50'
+          }`}
+          title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+        >
+          <Heart className={`w-5 h-5 transition-colors ${
+            isFavorited ? 'text-red-500 fill-red-500' : 'text-gray-400 hover:text-red-500'
+          }`} />
         </button>
       </div>
       

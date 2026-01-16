@@ -8,6 +8,7 @@ type Me = {
   full_name: string
   is_admin: boolean
   is_seller: boolean
+  seller_status?: 'pending' | 'approved' | 'rejected' | null
 }
 
 type Store = {
@@ -179,6 +180,8 @@ const SellerDashboard = () => {
 
   if (!me) return null
 
+  const sellerStatus = me.seller_status
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
@@ -197,29 +200,74 @@ const SellerDashboard = () => {
       </div>
 
       {!me.is_seller ? (
-        <div className="bg-white rounded-2xl shadow p-6">
-          <h2 className="text-xl font-semibold mb-2">Become a Seller</h2>
-          <p className="text-gray-600 mb-6">Join as a seller to create your store and publish your T-shirt designs.</p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Phone (optional)</label>
-              <input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="01XXXXXXXXX"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
+        sellerStatus === 'pending' ? (
+          <div className="bg-white rounded-2xl shadow p-6 border border-amber-200">
+            <h2 className="text-xl font-semibold mb-2 text-amber-900">Seller application pending</h2>
+            <p className="text-amber-800 mb-4">Your request is under review. Once approved, you will be able to create your store and publish designs.</p>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                to="/sell-your-design"
+                className="px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700"
+              >
+                Sell Your Design
+              </Link>
+              <Link
+                to="/dashboard"
+                className="px-6 py-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50"
+              >
+                Back to Dashboard
+              </Link>
             </div>
           </div>
+        ) : sellerStatus === 'rejected' ? (
+          <div className="bg-white rounded-2xl shadow p-6 border border-red-200">
+            <h2 className="text-xl font-semibold mb-2 text-red-700">Seller application rejected</h2>
+            <p className="text-gray-700 mb-4">You can apply again. Please ensure your profile details are correct.</p>
 
-          <button
-            onClick={onBecomeSeller}
-            className="mt-6 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700"
-          >
-            Become Seller
-          </button>
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone (optional)</label>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="01XXXXXXXXX"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={onBecomeSeller}
+              className="mt-6 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700"
+            >
+              Apply Again
+            </button>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h2 className="text-xl font-semibold mb-2">Become a Seller</h2>
+            <p className="text-gray-600 mb-6">Join as a seller to create your store and publish your T-shirt designs.</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone (optional)</label>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="01XXXXXXXXX"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={onBecomeSeller}
+              className="mt-6 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700"
+            >
+              Become Seller
+            </button>
+          </div>
+        )
       ) : !store ? (
         <div className="bg-white rounded-2xl shadow p-6">
           <h2 className="text-xl font-semibold mb-2">Create Your Store</h2>

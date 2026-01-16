@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ShoppingCart, User, Menu, X, Search, Phone, Heart, ChevronDown } from 'lucide-react'
+import { ShoppingCart, User, Menu, X, Search, Phone, Heart, ChevronDown, Sparkles, ImageIcon, Store, Settings, MapPin } from 'lucide-react'
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useCartStore } from '../store/cartStore'
 
@@ -10,7 +10,14 @@ const Navbar = () => {
   const userMenuRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLElement>(null)
   const [headerHeight, setHeaderHeight] = useState(180)
+  const [favoritesCount, setFavoritesCount] = useState(0)
   const cartCount = useCartStore((s) => s.items.reduce((sum, x) => sum + x.quantity, 0))
+
+  // Update favorites count from localStorage
+  const updateFavoritesCount = () => {
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]')
+    setFavoritesCount(favorites.length)
+  }
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -26,6 +33,30 @@ const Navbar = () => {
       }
     }
     checkAuth()
+    
+    // Initialize favorites count
+    updateFavoritesCount()
+    
+    // Listen for storage changes (when favorites are updated from other tabs/components)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'favorites') {
+        updateFavoritesCount()
+      }
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    
+    // Custom event listener for same-tab updates
+    const handleFavoritesUpdate = () => {
+      updateFavoritesCount()
+    }
+    
+    window.addEventListener('favoritesUpdated', handleFavoritesUpdate)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('favoritesUpdated', handleFavoritesUpdate)
+    }
   }, [])
 
   useLayoutEffect(() => {
@@ -72,6 +103,16 @@ const Navbar = () => {
     setUser(null)
     window.location.href = '/login'
   }
+
+  const displayName =
+    (user?.full_name && String(user.full_name).trim()) ||
+    `${user?.first_name || ''} ${user?.last_name || ''}`.trim() ||
+    user?.username ||
+    'User'
+
+  const isSeller = Boolean(user?.is_seller)
+  const sellerStatus = user?.seller_status as string | null | undefined
+  const createHref = isSeller ? '/seller/designs/new' : '/design-studio'
 
   return (
     <>
@@ -132,12 +173,14 @@ const Navbar = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                <Link to="/cart" className="relative p-2 text-gray-600 hover:text-emerald-600 transition-colors">
+                <button className="relative p-2 text-gray-600 hover:text-emerald-600 transition-colors">
                   <Heart className="w-6 h-6" />
-                  <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    0
-                  </span>
-                </Link>
+                  {favoritesCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {favoritesCount}
+                    </span>
+                  )}
+                </button>
 
                 <Link to="/cart" className="relative p-2 text-gray-600 hover:text-emerald-600 transition-colors">
                   <ShoppingCart className="w-6 h-6" />
@@ -155,7 +198,7 @@ const Navbar = () => {
                       className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg transition-colors"
                     >
                       <span className="text-sm font-medium text-gray-700">
-                        Hi, {user.first_name} {user.last_name}
+                        Hi, {displayName}
                       </span>
                       <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform duration-200 ${
                         isUserMenuOpen ? 'rotate-180' : ''
@@ -167,42 +210,106 @@ const Navbar = () => {
                         ? 'opacity-100 scale-100 translate-y-0' 
                         : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
                     }`}>
-                        <div className="py-2">
+                      <div className="p-3 bg-gradient-to-br from-emerald-50 to-white border-b border-gray-100">
+                        <div className="text-sm font-semibold text-gray-900 truncate">{displayName}</div>
+                        <div className="text-xs text-gray-500 truncate">{user.email}</div>
+                        {!isSeller && sellerStatus === 'pending' && (
+                          <div className="mt-2 inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                            Seller request pending
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-3 grid grid-cols-2 gap-2">
+                        <Link
+                          to={createHref}
+                          className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          Create
+                        </Link>
+                        <Link
+                          to="/sell-your-design"
+                          className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white border border-emerald-200 text-emerald-700 text-sm font-semibold hover:bg-emerald-50 transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <ImageIcon className="w-4 h-4" />
+                          Sell
+                        </Link>
+                      </div>
+
+                      <div className="py-2">
+                        <Link
+                          to="/dashboard"
+                          className="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <User className="w-4 h-4 mr-3" />
+                          My Dashboard
+                        </Link>
+
+                        {isSeller && (
                           <Link
-                            to="/dashboard"
+                            to="/my-store"
                             className="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
-                            <User className="w-4 h-4 mr-3" />
-                            Dashboard
+                            <Store className="w-4 h-4 mr-3" />
+                            My Store
                           </Link>
-                          <Link
-                            to="/profile"
-                            className="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
-                            onClick={() => setIsUserMenuOpen(false)}
-                          >
-                            <User className="w-4 h-4 mr-3" />
-                            My Profile
-                          </Link>
-                          <Link
-                            to="/orders"
-                            className="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
-                            onClick={() => setIsUserMenuOpen(false)}
-                          >
-                            <ShoppingCart className="w-4 h-4 mr-3" />
-                            My Orders
-                          </Link>
-                        </div>
-                        <hr className="border-gray-200" />
-                        <div className="py-2">
-                          <button
-                            onClick={handleLogout}
-                            className="w-full flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-                          >
-                            <X className="w-4 h-4 mr-3" />
-                            Logout
-                          </button>
-                        </div>
+                        )}
+
+                        <Link
+                          to="/orders"
+                          className="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <ShoppingCart className="w-4 h-4 mr-3" />
+                          My Orders
+                        </Link>
+
+                        <Link
+                          to="/settings"
+                          className="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <Settings className="w-4 h-4 mr-3" />
+                          Settings
+                        </Link>
+
+                        <Link
+                          to="/address-book"
+                          className="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <MapPin className="w-4 h-4 mr-3" />
+                          Address Book
+                        </Link>
+
+                        {!isSeller && (
+                          <div className="px-4 pt-2">
+                            <Link
+                              to="/seller"
+                              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors"
+                              onClick={() => setIsUserMenuOpen(false)}
+                            >
+                              Become Seller
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+
+                      <hr className="border-gray-200" />
+                      <div className="py-2">
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <X className="w-4 h-4 mr-3" />
+                          Logout
+                        </button>
+                      </div>
                       </div>
                     </div>
                 ) : (

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { customProductsAPI, designAPI, mockupAPI } from '../services/api'
+import { customProductsAPI, designLibraryAPI, mockupAPI } from '../services/api'
 import { useCartStore } from '../store/cartStore'
 import { RotateCw, RotateCcw, ZoomIn, ZoomOut, Type, Layers, Sparkles, ShoppingCart, ImageIcon } from 'lucide-react'
 
@@ -212,6 +212,10 @@ const DesignStudio = () => {
   const [activeElement, setActiveElement] = useState<'image' | 'text' | null>(null)
   const [hoveredElement, setHoveredElement] = useState<'image' | 'text' | null>(null)
 
+  const [frontLibraryDesignId, setFrontLibraryDesignId] = useState<number | null>(null)
+  const [backLibraryDesignId, setBackLibraryDesignId] = useState<number | null>(null)
+  const setLibraryDesignId = activeSide === 'front' ? setFrontLibraryDesignId : setBackLibraryDesignId
+
   const [designLibrary, setDesignLibrary] = useState<any[]>([])
   const [loadingDesigns, setLoadingDesigns] = useState(false)
 
@@ -298,7 +302,7 @@ const DesignStudio = () => {
     const loadDesignLibrary = async () => {
       setLoadingDesigns(true)
       try {
-        const response = await designAPI.listPublishedDesigns()
+        const response = await designLibraryAPI.listPublic()
         setDesignLibrary(Array.isArray(response) ? response : [])
       } catch { setDesignLibrary([]) }
       finally { setLoadingDesigns(false) }
@@ -562,6 +566,7 @@ const DesignStudio = () => {
           front: {
             hasLogo: !!frontLogoUrl,
             hasText: !!frontCustomText.trim(),
+            ...(frontLibraryDesignId ? { library_design_id: frontLibraryDesignId, design_library_item_id: frontLibraryDesignId } : {}),
             ...(frontLogoUrl && {
               imagePlacement: { 
                 x: rect ? frontImagePos.x / rect.width : 0.5, 
@@ -586,6 +591,7 @@ const DesignStudio = () => {
           back: {
             hasLogo: !!backLogoUrl,
             hasText: !!backCustomText.trim(),
+            ...(backLibraryDesignId ? { library_design_id: backLibraryDesignId, design_library_item_id: backLibraryDesignId } : {}),
             ...(backLogoUrl && {
               imagePlacement: { 
                 x: rect ? backImagePos.x / rect.width : 0.5, 
@@ -653,11 +659,13 @@ const DesignStudio = () => {
 
   const selectDesignFromLibrary = async (design: any) => {
     try {
-      const imageUrl = toUrl(design.design_logo || design.design_preview || design.image)
+      const imageUrl = toUrl(design.image || design.design_logo || design.design_preview)
       if (!imageUrl) return
       const response = await fetch(imageUrl)
       const blob = await response.blob()
-      setLogoFile(new File([blob], 'design.png', { type: blob.type }))
+      setLogoFile(new File([blob], `${design?.name || 'design'}.png`, { type: blob.type }))
+      const id = Number(design?.id)
+      setLibraryDesignId(Number.isFinite(id) ? id : null)
     } catch (e) { console.error('Failed to load design:', e) }
   }
 
@@ -744,7 +752,10 @@ const DesignStudio = () => {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+                      onChange={(e) => {
+                        setLibraryDesignId(null)
+                        setLogoFile(e.target.files?.[0] || null)
+                      }}
                       className="w-full text-sm border-2 border-dashed border-emerald-200 rounded-xl p-4 bg-gradient-to-br from-emerald-50 to-white hover:border-emerald-400 hover:bg-emerald-50 transition-all cursor-pointer file:mr-4 file:py-2 file:px-5 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer file:shadow-sm"
                     />
                   </div>
@@ -758,7 +769,10 @@ const DesignStudio = () => {
                         <p className="text-xs text-gray-500">{(logoFile.size / 1024).toFixed(1)} KB</p>
                       </div>
                       <button
-                        onClick={() => setLogoFile(null)}
+                        onClick={() => {
+                          setLibraryDesignId(null)
+                          setLogoFile(null)
+                        }}
                         className="text-red-500 hover:text-red-700 text-xs font-medium px-3 py-1 hover:bg-red-50 rounded-lg transition-colors"
                       >
                         Remove
@@ -1034,6 +1048,7 @@ const DesignStudio = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          setLibraryDesignId(null)
                           setLogoFile(null);
                         }}
                         className="absolute top-0 right-0 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all z-10"

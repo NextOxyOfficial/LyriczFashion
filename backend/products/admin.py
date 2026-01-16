@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 from urllib.parse import quote
-from .models import Category, SellerProfile, Store, Product, Order, OrderItem
+from .models import Category, SellerProfile, Store, Product, Order, OrderItem, DesignLibraryItem, DesignCommission
 from .mockup_models import MockupType, MockupVariant
 
 
@@ -13,9 +13,24 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(SellerProfile)
 class SellerProfileAdmin(admin.ModelAdmin):
-    list_display = ['user', 'is_seller', 'phone', 'created_at']
-    list_filter = ['is_seller', 'created_at']
+    list_display = ['user', 'status', 'is_seller', 'phone', 'created_at']
+    list_filter = ['status', 'is_seller', 'created_at']
+    list_editable = ['status']
     search_fields = ['user__username', 'user__email', 'phone']
+
+
+@admin.register(DesignLibraryItem)
+class DesignLibraryItemAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'owner', 'commission_per_use', 'is_active', 'created_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['name', 'owner__username', 'owner__email']
+
+
+@admin.register(DesignCommission)
+class DesignCommissionAdmin(admin.ModelAdmin):
+    list_display = ['id', 'design', 'owner', 'used_by', 'amount', 'quantity', 'status', 'created_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['owner__username', 'owner__email', 'used_by__username', 'used_by__email', 'design__name']
 
 
 @admin.register(Store)

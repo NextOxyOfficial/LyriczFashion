@@ -186,6 +186,57 @@ export const customProductsAPI = {
   },
 };
 
+export const designLibraryAPI = {
+  listPublic: async () => {
+    const response = await api.get('/design-library/')
+    return response.data
+  },
+
+  listMy: async (token: string) => {
+    const response = await api.get('/design-library/my/', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    return response.data
+  },
+
+  create: async (
+    token: string,
+    payload: {
+      name: string
+      image: File
+      commission_per_use?: number
+    }
+  ) => {
+    const form = new FormData()
+    form.append('name', payload.name)
+    form.append('image', payload.image)
+    if (payload.commission_per_use !== undefined) {
+      form.append('commission_per_use', String(payload.commission_per_use))
+    }
+
+    const response = await api.post('/design-library/', form, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+}
+
+export const designCommissionAPI = {
+  listMy: async (token: string) => {
+    const response = await api.get('/design-commissions/', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    return response.data
+  },
+}
+
 export const productsAPI = {
   getFeed: async () => {
     const response = await api.get('/feed')

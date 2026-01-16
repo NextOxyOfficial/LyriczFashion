@@ -21,9 +21,18 @@ class Category(models.Model):
 class SellerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='seller_profile')
     is_seller = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=20,
+        choices=[('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')],
+        default='pending',
+    )
     phone = models.CharField(max_length=30, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        self.is_seller = self.status == 'approved'
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"SellerProfile({self.user.username})"
@@ -159,3 +168,42 @@ class OrderItem(models.Model):
     @property
     def total_profit(self):
         return ((self.price or 0) - (self.buy_price or 0)) * self.quantity
+
+
+class DesignLibraryItem(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='design_library_items')
+    name = models.CharField(max_length=200)
+    image = models.ImageField(upload_to='design-library/')
+    commission_per_use = models.DecimalField(max_digits=10, decimal_places=2, default=49)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name
+
+
+class DesignCommission(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+    ]
+
+    design = models.ForeignKey(DesignLibraryItem, on_delete=models.CASCADE, related_name='commissions')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='design_commissions')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='design_commissions')
+    order_item = models.ForeignKey(OrderItem, on_delete=models.CASCADE, related_name='design_commissions')
+    used_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='design_commissions_paid')
+    quantity = models.IntegerField(default=1)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"DesignCommission({self.design_id} -> {self.owner_id}, {self.amount})"

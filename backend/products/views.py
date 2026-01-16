@@ -11,14 +11,21 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from decimal import Decimal
 import json
-from .models import Category, SellerProfile, Store, Product, Order, OrderItem
+from .models import Category, SellerProfile, Store, Product, Order, OrderItem, DesignLibraryItem, DesignCommission
 from .serializers import (
     UserSerializer, UserCreateSerializer, SellerProfileSerializer, StoreSerializer,
-    CategorySerializer, ProductSerializer, OrderSerializer
+    CategorySerializer, ProductSerializer, OrderSerializer, DesignLibraryItemSerializer, DesignCommissionSerializer
 )
 
 
 class IsStoreOwnerOrReadOnly(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in SAFE_METHODS:
+            return True
+        return getattr(obj, 'owner_id', None) == request.user.id
+
+
+class IsOwnerOrReadOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
             return True
@@ -101,12 +108,22 @@ def login(request):
 @permission_classes([IsAuthenticated])
 def get_current_user(request):
     user = request.user
+    seller_status = None
+    try:
+        if hasattr(user, 'seller_profile') and user.seller_profile:
+            seller_status = user.seller_profile.status
+    except Exception:
+        seller_status = None
     return Response({
         'id': user.id,
+        'username': user.username,
         'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
         'full_name': f"{user.first_name} {user.last_name}".strip() or user.username,
         'is_admin': user.is_staff or user.is_superuser,
         'is_seller': hasattr(user, 'seller_profile') and user.seller_profile.is_seller,
+        'seller_status': seller_status,
     })
 
 
@@ -115,7 +132,8 @@ def get_current_user(request):
 def become_seller(request):
     phone = request.data.get('phone')
     profile, _ = SellerProfile.objects.get_or_create(user=request.user)
-    profile.is_seller = True
+    if profile.status != 'approved':
+        profile.status = 'pending'
     if phone:
         profile.phone = phone
     profile.save()
@@ -244,6 +262,47 @@ class SellerProductViewSet(viewsets.ModelViewSet):
             except Exception:
                 pass
         serializer.save(store=store)
+
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def published(self, request):
+        qs = Product.objects.filter(is_active=True, is_published=True, kind='design').select_related('store', 'category')
+        return Response(ProductSerializer(qs, many=True, context={'request': request}).data)
+
+
+class DesignLibraryItemViewSet(viewsets.ModelViewSet):
+    serializer_class = DesignLibraryItemSerializer
+    parser_classes = [MultiPartParser, FormParser]
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        if self.action in ['update', 'partial_update', 'destroy', 'my']:
+            return DesignLibraryItem.objects.filter(owner=self.request.user).select_related('owner')
+        return DesignLibraryItem.objects.filter(is_active=True).select_related('owner')
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'my']:
+            return [IsAuthenticated(), IsOwnerOrReadOnly()]
+        return [AllowAny()]
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def my(self, request):
+        qs = DesignLibraryItem.objects.filter(owner=request.user).select_related('owner')
+        return Response(DesignLibraryItemSerializer(qs, many=True, context={'request': request}).data)
+
+
+class DesignCommissionViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = DesignCommissionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return (
+            DesignCommission.objects
+            .filter(owner=self.request.user)
+            .select_related('design', 'owner', 'used_by', 'order', 'order_item')
+        )
 
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -398,13 +457,62 @@ class OrderViewSet(viewsets.ModelViewSet):
 
                 price = product.effective_price
                 buy_price = product.buy_price
-                OrderItem.objects.create(
+                order_item = OrderItem.objects.create(
                     order=order,
                     product=product,
                     quantity=quantity,
                     buy_price=buy_price,
                     price=price,
                 )
+
+                if product.kind == 'custom':
+                    design_ids = set()
+                    design_data = product.design_data or {}
+                    if isinstance(design_data, str) and design_data:
+                        try:
+                            design_data = json.loads(design_data)
+                        except Exception:
+                            design_data = {}
+
+                    legacy_id = design_data.get('library_design_id')
+                    if legacy_id:
+                        try:
+                            design_ids.add(int(legacy_id))
+                        except Exception:
+                            pass
+
+                    sides = design_data.get('sides') or {}
+                    for side_key in ['front', 'back']:
+                        side = sides.get(side_key) or {}
+                        side_id = side.get('library_design_id') or side.get('design_library_item_id')
+                        if side_id:
+                            try:
+                                design_ids.add(int(side_id))
+                            except Exception:
+                                pass
+
+                    for design_id in design_ids:
+                        design = DesignLibraryItem.objects.filter(pk=design_id, is_active=True).select_related('owner').first()
+                        if not design:
+                            continue
+                        if design.owner_id == request.user.id:
+                            continue
+
+                        try:
+                            per_use = Decimal(str(design.commission_per_use))
+                        except Exception:
+                            per_use = Decimal('49')
+
+                        amount = per_use * Decimal(str(quantity))
+                        DesignCommission.objects.create(
+                            design=design,
+                            owner=design.owner,
+                            used_by=request.user,
+                            order=order,
+                            order_item=order_item,
+                            quantity=quantity,
+                            amount=amount,
+                        )
 
                 try:
                     total += Decimal(str(price)) * Decimal(str(quantity))
