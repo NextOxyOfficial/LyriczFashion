@@ -10,6 +10,7 @@ router.register(r'custom-products', views.CustomProductViewSet, basename='custom
 router.register(r'stores', views.StoreViewSet, basename='store')
 router.register(r'seller-products', views.SellerProductViewSet, basename='seller-products')
 router.register(r'design-library', views.DesignLibraryItemViewSet, basename='design-library')
+router.register(r'design-categories', views.DesignCategoryViewSet, basename='design-category')
 router.register(r'design-commissions', views.DesignCommissionViewSet, basename='design-commissions')
 router.register(r'orders', views.OrderViewSet, basename='order')
 router.register(r'mockup-types', mockup_views.MockupTypeViewSet, basename='mockup-types')

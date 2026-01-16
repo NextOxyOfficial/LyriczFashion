@@ -11,10 +11,10 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from decimal import Decimal
 import json
-from .models import Category, SellerProfile, Store, Product, Order, OrderItem, DesignLibraryItem, DesignCommission
+from .models import Category, SellerProfile, Store, Product, Order, OrderItem, DesignLibraryItem, DesignCommission, DesignCategory
 from .serializers import (
     UserSerializer, UserCreateSerializer, SellerProfileSerializer, StoreSerializer,
-    CategorySerializer, ProductSerializer, OrderSerializer, DesignLibraryItemSerializer, DesignCommissionSerializer
+    CategorySerializer, ProductSerializer, OrderSerializer, DesignLibraryItemSerializer, DesignCommissionSerializer, DesignCategorySerializer
 )
 
 
@@ -114,6 +114,14 @@ def get_current_user(request):
             seller_status = user.seller_profile.status
     except Exception:
         seller_status = None
+    # Get user balance
+    balance = Decimal('0.00')
+    try:
+        if hasattr(user, 'profile') and user.profile:
+            balance = user.profile.balance
+    except Exception:
+        pass
+    
     return Response({
         'id': user.id,
         'username': user.username,
@@ -121,6 +129,7 @@ def get_current_user(request):
         'first_name': user.first_name,
         'last_name': user.last_name,
         'full_name': f"{user.first_name} {user.last_name}".strip() or user.username,
+        'balance': str(balance),
         'is_admin': user.is_staff or user.is_superuser,
         'is_seller': hasattr(user, 'seller_profile') and user.seller_profile.is_seller,
         'seller_status': seller_status,
@@ -323,12 +332,27 @@ class DesignLibraryItemViewSet(viewsets.ModelViewSet):
         return [AllowAny()]
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        print(f"Creating design library item for user: {self.request.user.username}")
+        print(f"Data received: {self.request.data}")
+        try:
+            instance = serializer.save(owner=self.request.user)
+            print(f"Successfully created design library item: ID {instance.id}, Name: {instance.name}")
+        except Exception as e:
+            print(f"Error creating design library item: {e}")
+            raise
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my(self, request):
         qs = DesignLibraryItem.objects.filter(owner=request.user).select_related('owner')
         return Response(DesignLibraryItemSerializer(qs, many=True, context={'request': request}).data)
+
+
+class DesignCategoryViewSet(viewsets.ModelViewSet):
+    serializer_class = DesignCategorySerializer
+    permission_classes = [AllowAny]
+    
+    def get_queryset(self):
+        return DesignCategory.objects.filter(is_active=True)
 
 
 class DesignCommissionViewSet(viewsets.ReadOnlyModelViewSet):

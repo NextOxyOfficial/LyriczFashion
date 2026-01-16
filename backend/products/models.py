@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from .mockup_models import MockupType, MockupVariant
 
 
@@ -17,6 +19,15 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Profile({self.user.username}) - Balance: {self.balance}"
 
 class SellerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='seller_profile')
@@ -170,28 +181,44 @@ class OrderItem(models.Model):
         return ((self.price or 0) - (self.buy_price or 0)) * self.quantity
 
 
+class DesignCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = 'Design Categories'
+
+
 class DesignLibraryItem(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='design_library_items')
     name = models.CharField(max_length=200)
     image = models.ImageField(upload_to='design-library/')
     category = models.CharField(max_length=100, blank=True, default='')
     search_keywords = models.TextField(blank=True, default='')
-    commission_per_use = models.DecimalField(max_digits=10, decimal_places=2, default=49)
+    commission_per_use = models.DecimalField(max_digits=10, decimal_places=2, default=49.00)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return f"{self.name} by {self.owner.username}"
+
     class Meta:
         ordering = ['-created_at']
-
-    def __str__(self):
-        return self.name
 
 
 class DesignCommission(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
-        ('paid', 'Paid'),
+        ('completed', 'Completed'),
     ]
 
     design = models.ForeignKey(DesignLibraryItem, on_delete=models.CASCADE, related_name='commissions')
@@ -209,3 +236,34 @@ class DesignCommission(models.Model):
 
     def __str__(self):
         return f"DesignCommission({self.design_id} -> {self.owner_id}, {self.amount})"
+
+
+# Signal to automatically create UserProfile when User is created
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+# Signal to pay commissions when order status changes to delivered
+@receiver(post_save, sender=Order)
+def pay_commissions_on_delivery(sender, instance, **kwargs):
+    if instance.status == 'delivered':
+        # Get all pending commissions for this order
+        pending_commissions = DesignCommission.objects.filter(
+            order=instance, 
+            status='pending'
+        ).select_related('owner')
+        
+        for commission in pending_commissions:
+            # Get or create user profile
+            profile, created = UserProfile.objects.get_or_create(user=commission.owner)
+            
+            # Add commission amount to user balance
+            profile.balance += commission.amount
+            profile.save()
+            
+            # Mark commission as completed
+            commission.status = 'completed'
+            commission.save()
+            
+            print(f"Completed commission: {commission.amount} to {commission.owner.username}")

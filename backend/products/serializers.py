@@ -1,12 +1,14 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, SellerProfile, Store, Product, Order, OrderItem, DesignLibraryItem, DesignCommission
+from .models import Category, SellerProfile, Store, Product, Order, OrderItem, DesignLibraryItem, DesignCommission, DesignCategory, UserProfile
 
 
 class UserSerializer(serializers.ModelSerializer):
+    balance = serializers.DecimalField(max_digits=10, decimal_places=2, source='profile.balance', read_only=True)
+    
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'balance']
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -97,10 +99,17 @@ class DesignLibraryItemSerializer(serializers.ModelSerializer):
         read_only_fields = ['owner', 'created_at', 'updated_at']
 
 
+class DesignCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DesignCategory
+        fields = '__all__'
+        read_only_fields = ['slug', 'created_at', 'updated_at']
+
 class DesignCommissionSerializer(serializers.ModelSerializer):
     design = DesignLibraryItemSerializer(read_only=True)
     owner = UserSerializer(read_only=True)
     used_by = UserSerializer(read_only=True)
+    order_status = serializers.CharField(source='order.status', read_only=True)
 
     class Meta:
         model = DesignCommission

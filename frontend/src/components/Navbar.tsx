@@ -213,11 +213,16 @@ const Navbar = () => {
                       <div className="p-3 bg-gradient-to-br from-emerald-50 to-white border-b border-gray-100">
                         <div className="text-sm font-semibold text-gray-900 truncate">{displayName}</div>
                         <div className="text-xs text-gray-500 truncate">{user.email}</div>
-                        {!isSeller && sellerStatus === 'pending' && (
-                          <div className="mt-2 inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                            Seller request pending
+                        <div className="mt-2 flex items-center justify-between">
+                          <div className="text-xs font-semibold text-emerald-600">
+                            Balance: ৳{user.balance || '0.00'}
                           </div>
-                        )}
+                          {!isSeller && sellerStatus === 'pending' && (
+                            <div className="inline-flex px-2 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                              Seller request pending
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       <div className="p-3 grid grid-cols-2 gap-2">

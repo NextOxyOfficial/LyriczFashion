@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { authAPI, designCommissionAPI, designLibraryAPI } from '../services/api'
+import { authAPI, designCommissionAPI, designLibraryAPI, designCategoryAPI } from '../services/api'
 
 const API_BASE_URL = 'http://localhost:8000'
 
@@ -26,10 +26,12 @@ const SellYourDesign = () => {
   const [searchKeywords, setSearchKeywords] = useState('')
   const [myItems, setMyItems] = useState<any[]>([])
   const [commissions, setCommissions] = useState<any[]>([])
+  const [categories, setCategories] = useState<any[]>([])
 
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState<{id: number, name: string} | null>(null)
 
   const fetchData = async () => {
     if (!token) {
@@ -45,6 +47,10 @@ const SellYourDesign = () => {
 
       const com = await designCommissionAPI.listMy(token)
       setCommissions(Array.isArray(com) ? com : [])
+
+      // Fetch categories
+      const cats = await designCategoryAPI.list()
+      setCategories(Array.isArray(cats) ? cats : [])
     } catch {
       localStorage.removeItem('token')
       navigate('/login')
@@ -58,6 +64,32 @@ const SellYourDesign = () => {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleDeleteLogo = (id: number, name: string) => {
+    setDeleteConfirm({ id, name })
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm || !token) return
+    
+    try {
+      await designLibraryAPI.delete(token, deleteConfirm.id)
+      setMyItems(prev => prev.filter(item => item.id !== deleteConfirm.id))
+      setSuccess(`Logo "${deleteConfirm.name}" deleted successfully`)
+      
+      // Trigger design library refresh
+      window.dispatchEvent(new Event('designLibraryUpdated'))
+      localStorage.setItem('designLibraryUpdatedAt', Date.now().toString())
+    } catch (error) {
+      setError('Failed to delete logo')
+    } finally {
+      setDeleteConfirm(null)
+    }
+  }
+
+  const cancelDelete = () => {
+    setDeleteConfirm(null)
   }
 
   useEffect(() => {
@@ -83,7 +115,17 @@ const SellYourDesign = () => {
   const totalPending = useMemo(() => {
     let sum = 0
     for (const c of commissions) {
-      if (c.status === 'paid') continue
+      if (c.status === 'completed') continue
+      const amt = Number(c.amount)
+      if (!Number.isNaN(amt)) sum += amt
+    }
+    return sum
+  }, [commissions])
+
+  const totalEarnings = useMemo(() => {
+    let sum = 0
+    for (const c of commissions) {
+      if (c.status !== 'completed') continue
       const amt = Number(c.amount)
       if (!Number.isNaN(amt)) sum += amt
     }
@@ -104,13 +146,25 @@ const SellYourDesign = () => {
 
     setSubmitting(true)
     try {
-      await designLibraryAPI.create(token, {
+      console.log('Uploading logo:', {
+        name: name.trim(),
+        category: category.trim(),
+        search_keywords: searchKeywords.trim(),
+        image: image?.name,
+        imageSize: image?.size,
+        imageType: image?.type,
+        token: token ? `${token.substring(0, 10)}...` : 'missing'
+      })
+      
+      const result = await designLibraryAPI.create(token, {
         name: name.trim(),
         image,
         category: category.trim(),
         search_keywords: searchKeywords.trim(),
         commission_per_use: 49,
       })
+      
+      console.log('Upload successful:', result)
       setSuccess('Published! Your logo is now available in the Design Studio library.')
       setName('')
       setImage(null)
@@ -122,7 +176,9 @@ const SellYourDesign = () => {
 
       await fetchData()
     } catch (e: any) {
-      setError(e?.response?.data?.detail || e?.message || 'Upload failed')
+      console.error('Upload failed:', e)
+      console.error('Error response:', e?.response?.data)
+      setError(e?.response?.data?.detail || e?.response?.data?.error || e?.message || 'Upload failed')
     } finally {
       setSubmitting(false)
     }
@@ -184,12 +240,16 @@ const SellYourDesign = () => {
                   placeholder="Logo name (e.g., Brand Logo)"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
-                <input
+                <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  placeholder="Category (e.g., Business, Sports, Tech)"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                  ))}
+                </select>
                 <textarea
                   value={searchKeywords}
                   onChange={(e) => setSearchKeywords(e.target.value)}
@@ -237,6 +297,7 @@ const SellYourDesign = () => {
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
               <div className="font-semibold text-gray-900">Commission</div>
+              <div className="text-sm text-gray-600 mt-1">Total earnings: <span className="font-semibold text-emerald-600">৳{totalEarnings}</span></div>
               <div className="text-sm text-gray-600 mt-1">Pending total: <span className="font-semibold text-gray-900">৳{totalPending}</span></div>
               <div className="text-xs text-gray-500 mt-2">Commission records are created when someone places an order using your logo.</div>
             </div>
@@ -268,12 +329,21 @@ const SellYourDesign = () => {
                           <div className="text-xs text-gray-400 mt-1 truncate">Keywords: {d.search_keywords}</div>
                         )}
                       </div>
-                      <Link
-                        to="/design-studio"
-                        className="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-sm hover:bg-emerald-100 transition-colors"
-                      >
-                        View in Studio
-                      </Link>
+                      <div className="flex gap-2">
+                        <Link
+                          to="/design-studio"
+                          className="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-sm hover:bg-emerald-100 transition-colors"
+                        >
+                          View in Studio
+                        </Link>
+                        <button
+                          onClick={() => handleDeleteLogo(d.id, d.name)}
+                          className="px-3 py-2 rounded-xl bg-red-50 text-red-700 border border-red-200 font-semibold text-sm hover:bg-red-100 transition-colors"
+                          title="Delete logo"
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -301,8 +371,8 @@ const SellYourDesign = () => {
                           <td className="py-3 pr-4 font-medium">{c.design?.name || 'Design'}</td>
                           <td className="py-3 pr-4">৳{c.amount}</td>
                           <td className="py-3 pr-4">
-                            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${c.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'}`}>
-                              {c.status}
+                            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${c.status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'}`}>
+                              {c.status === 'completed' ? 'Completed' : 'Pending'}
                             </span>
                           </td>
                           <td className="py-3">#{c.order}</td>
@@ -316,6 +386,32 @@ const SellYourDesign = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Logo</h3>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to delete "{deleteConfirm.name}"? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={cancelDelete}
+                className="flex-1 px-4 py-2 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

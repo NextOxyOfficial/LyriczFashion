@@ -15,6 +15,12 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
+  // Don't override Content-Type for multipart/form-data requests
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  }
+  
   return config;
 });
 
@@ -22,7 +28,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Only redirect on 401 if it's actually an authentication error, not other API errors
+    if (error.response?.status === 401 && error.response?.data?.code === 'token_not_valid') {
       localStorage.removeItem('token');
       // Only redirect to login if we're not already on login/register pages
       if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
@@ -235,6 +242,7 @@ export const designLibraryAPI = {
       commission_per_use?: number
     }
   ) => {
+    // Token is handled by interceptor, but keep parameter for API consistency
     const form = new FormData()
     form.append('name', payload.name)
     form.append('image', payload.image)
@@ -248,12 +256,23 @@ export const designLibraryAPI = {
       form.append('commission_per_use', String(payload.commission_per_use))
     }
 
-    const response = await api.post('/design-library/', form, {
+    const response = await api.post('/design-library/', form)
+    return response.data
+  },
+
+  delete: async (token: string, id: number) => {
+    const response = await api.delete(`/design-library/${id}/`, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data',
       },
     })
+    return response.data
+  },
+}
+
+export const designCategoryAPI = {
+  list: async () => {
+    const response = await api.get('/design-categories/')
     return response.data
   },
 }

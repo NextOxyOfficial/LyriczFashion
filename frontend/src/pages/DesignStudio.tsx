@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { customProductsAPI, designLibraryAPI, mockupAPI } from '../services/api'
+import { customProductsAPI, designLibraryAPI, designCategoryAPI, mockupAPI } from '../services/api'
 import { useCartStore } from '../store/cartStore'
 import { RotateCw, RotateCcw, ZoomIn, ZoomOut, Type, Layers, Sparkles, ShoppingCart, ImageIcon } from 'lucide-react'
 
@@ -223,6 +223,7 @@ const DesignStudio = () => {
   const [libraryPage, setLibraryPage] = useState(1)
   const [libraryHasMore, setLibraryHasMore] = useState(true)
   const [libraryLoadingMore, setLibraryLoadingMore] = useState(false)
+  const [categories, setCategories] = useState<any[]>([])
 
   useEffect(() => {
     // Remove automatic redirect - let interceptors handle it
@@ -340,7 +341,17 @@ const DesignStudio = () => {
       }
     }
 
+    const loadCategories = async () => {
+      try {
+        const cats = await designCategoryAPI.list()
+        setCategories(Array.isArray(cats) ? cats : [])
+      } catch {
+        setCategories([])
+      }
+    }
+
     loadDesignLibrary(1, false)
+    loadCategories()
 
     const handleDesignLibraryUpdated = () => {
       loadDesignLibrary(1, false).catch(() => {})
@@ -998,11 +1009,9 @@ const DesignStudio = () => {
                   className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 >
                   <option value="">All Categories</option>
-                  <option value="Business">Business</option>
-                  <option value="Sports">Sports</option>
-                  <option value="Tech">Tech</option>
-                  <option value="Fashion">Fashion</option>
-                  <option value="Art">Art</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                  ))}
                 </select>
                 <input
                   type="text"
