@@ -256,7 +256,7 @@ class OrderAdmin(admin.ModelAdmin):
 class MockupVariantInline(admin.TabularInline):
     model = MockupVariant
     extra = 1
-    fields = ['color_name', 'color_hex', 'front_image', 'back_image', 'thumbnail', 'price_modifier', 'is_active']
+    fields = ['color_name', 'color_hex', 'front_image', 'back_image', 'thumbnail', 'price_modifier', 'stock', 'is_active']
 
 
 @admin.register(MockupType)
@@ -282,7 +282,7 @@ class MockupTypeAdmin(admin.ModelAdmin):
 
 @admin.register(MockupVariant)
 class MockupVariantAdmin(admin.ModelAdmin):
-    list_display = ['mockup_type', 'color_name', 'color_hex', 'effective_price', 'is_active', 'created_at']
+    list_display = ['mockup_type', 'color_name', 'color_hex', 'effective_price', 'stock', 'is_active', 'created_at']
     list_filter = ['mockup_type', 'is_active', 'created_at']
     search_fields = ['mockup_type__name', 'color_name']
     list_select_related = ['mockup_type']
@@ -295,7 +295,7 @@ class MockupVariantAdmin(admin.ModelAdmin):
             'description': 'Upload front and back mockup images. Front image shows the front view, back image shows the back view.'
         }),
         ('Pricing', {
-            'fields': ('price_modifier',),
+            'fields': ('price_modifier', 'stock'),
             'description': 'Additional price for this color variant (added to base price)'
         }),
         ('Status', {

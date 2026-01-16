@@ -112,7 +112,7 @@ const Navbar = () => {
 
   const isSeller = Boolean(user?.is_seller)
   const sellerStatus = user?.seller_status as string | null | undefined
-  const createHref = isSeller ? '/seller/designs/new' : '/design-studio'
+  const createHref = '/design-studio'
 
   return (
     <>
@@ -256,7 +256,7 @@ const Navbar = () => {
 
                         {isSeller && (
                           <Link
-                            to="/my-store"
+                            to="/seller"
                             className="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
                             onClick={() => setIsUserMenuOpen(false)}
                           >

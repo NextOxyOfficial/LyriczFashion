@@ -23,10 +23,7 @@ const Checkout = () => {
   const placeOrder = async () => {
     setError('')
     const token = localStorage.getItem('token')
-    if (!token) {
-      navigate('/login')
-      return
-    }
+    
     if (!shippingAddress.trim()) {
       setError('Please enter your shipping address')
       return
@@ -45,7 +42,12 @@ const Checkout = () => {
         payment_method: 'cod' as const,
         items: items.map((x) => ({ product_id: x.productId, quantity: x.quantity })),
       }
-      const data = await ordersAPI.createOrder(token, payload)
+      
+      // Use guest API if not logged in, otherwise use authenticated API
+      const data = token 
+        ? await ordersAPI.createOrder(token, payload)
+        : await ordersAPI.createGuestOrder(payload)
+      
       setOrderId(data.id)
       clear()
     } catch (err: any) {
@@ -104,9 +106,52 @@ const Checkout = () => {
 
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Checkout</h1>
 
+        {!localStorage.getItem('token') && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center mt-0.5">
+                <span className="text-white text-xs font-bold">!</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-blue-900 mb-1">Checking out as Guest</h3>
+                <p className="text-blue-800 text-sm mb-3">
+                  You're placing an order without an account. This is totally fine! But if you create an account, you'll get:
+                </p>
+                <ul className="text-blue-800 text-sm space-y-1 mb-3">
+                  <li>• Order history and tracking</li>
+                  <li>• Faster checkout next time</li>
+                  <li>• Exclusive member discounts</li>
+                  <li>• Save your favorite designs</li>
+                </ul>
+                <div className="flex gap-2">
+                  <Link 
+                    to="/register" 
+                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Create Account
+                  </Link>
+                  <Link 
+                    to="/login" 
+                    className="px-4 py-2 border border-blue-300 text-blue-700 text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Shipping Information</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Shipping Information</h2>
+              {!localStorage.getItem('token') && (
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                  Guest Checkout
+                </span>
+              )}
+            </div>
             
             {error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">

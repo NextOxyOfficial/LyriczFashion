@@ -12,6 +12,7 @@ from django.db import transaction
 from decimal import Decimal
 import json
 from .models import Category, SellerProfile, Store, Product, Order, OrderItem, DesignLibraryItem, DesignCommission, DesignCategory
+from .mockup_models import MockupVariant
 from .serializers import (
     UserSerializer, UserCreateSerializer, SellerProfileSerializer, StoreSerializer,
     CategorySerializer, ProductSerializer, OrderSerializer, DesignLibraryItemSerializer, DesignCommissionSerializer, DesignCategorySerializer
@@ -152,7 +153,7 @@ def become_seller(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def feed(request):
-    qs = Product.objects.filter(is_active=True, is_published=True, kind='design').select_related('store', 'category')
+    qs = Product.objects.filter(is_active=True, is_published=True, kind='design').select_related('store', 'category', 'mockup_variant', 'mockup_variant__mockup_type')
     data = ProductSerializer(qs, many=True, context={'request': request}).data
     return Response(data)
 
@@ -168,7 +169,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        qs = Product.objects.filter(is_active=True, is_published=True, kind='design').select_related('store', 'category')
+        qs = Product.objects.filter(is_active=True, is_published=True, kind='design').select_related('store', 'category', 'mockup_variant', 'mockup_variant__mockup_type')
         store_slug = self.request.query_params.get('store')
         category_id = self.request.query_params.get('category')
         if store_slug:
@@ -202,6 +203,34 @@ class CustomProductViewSet(viewsets.ModelViewSet):
         design_data = self.request.data.get('design_data')
         payload = {
             'created_by': self.request.user,
+            'kind': 'custom',
+            'store': None,
+            'is_published': True,
+            'is_active': True,
+            'buy_price': Decimal('350'),
+        }
+        if isinstance(design_data, str) and design_data:
+            try:
+                serializer.save(**payload, design_data=json.loads(design_data))
+                return
+            except Exception:
+                pass
+        serializer.save(**payload)
+
+
+class GuestCustomProductViewSet(viewsets.ModelViewSet):
+    serializer_class = ProductSerializer
+    permission_classes = [AllowAny]
+    parser_classes = [MultiPartParser, FormParser]
+    http_method_names = ['post']  # Only allow POST for creating products
+
+    def get_queryset(self):
+        return Product.objects.none()  # Guests can't list products
+
+    def perform_create(self, serializer):
+        design_data = self.request.data.get('design_data')
+        payload = {
+            'created_by': None,  # No user for guest products
             'kind': 'custom',
             'store': None,
             'is_published': True,
@@ -254,7 +283,7 @@ class SellerProductViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
-        return Product.objects.filter(store__owner=self.request.user).select_related('store', 'category')
+        return Product.objects.filter(store__owner=self.request.user).select_related('store', 'category', 'mockup_variant', 'mockup_variant__mockup_type')
 
     def perform_create(self, serializer):
         profile, _ = SellerProfile.objects.get_or_create(user=self.request.user)
@@ -263,18 +292,74 @@ class SellerProductViewSet(viewsets.ModelViewSet):
         store = Store.objects.filter(owner=self.request.user).first()
         if not store:
             raise ValidationError('Create your store first')
-        design_data = self.request.data.get('design_data')
-        if isinstance(design_data, str) and design_data:
+
+        design_data_raw = self.request.data.get('design_data')
+        parsed_design_data = None
+        if isinstance(design_data_raw, str) and design_data_raw:
             try:
-                serializer.save(store=store, design_data=json.loads(design_data))
-                return
+                parsed_design_data = json.loads(design_data_raw)
             except Exception:
-                pass
-        serializer.save(store=store)
+                parsed_design_data = None
+
+        mockup_variant_id = self.request.data.get('mockup_variant') or self.request.data.get('mockupVariant')
+        if not mockup_variant_id and isinstance(parsed_design_data, dict):
+            mockup_variant_id = (
+                parsed_design_data.get('mockupVariantId') or
+                parsed_design_data.get('mockup_variant_id') or
+                parsed_design_data.get('mockup_variant')
+            )
+
+        variant = None
+        if mockup_variant_id:
+            try:
+                mockup_variant_id = int(mockup_variant_id)
+            except Exception:
+                mockup_variant_id = None
+
+        if mockup_variant_id:
+            variant = (
+                MockupVariant.objects
+                .filter(pk=mockup_variant_id, is_active=True)
+                .select_related('mockup_type')
+                .first()
+            )
+
+        if not variant:
+            raise ValidationError('mockup_variant is required')
+
+        save_kwargs = {
+            'store': store,
+            'created_by': self.request.user,
+            'kind': 'design',
+        }
+        if isinstance(parsed_design_data, dict):
+            save_kwargs['design_data'] = parsed_design_data
+
+        save_kwargs['mockup_variant'] = variant
+        save_kwargs['buy_price'] = variant.effective_price
+        save_kwargs['stock'] = int(variant.stock or 0)
+
+        serializer.save(**save_kwargs)
+
+    def perform_update(self, serializer):
+        instance = getattr(serializer, 'instance', None)
+        save_kwargs = {}
+        if instance and getattr(instance, 'mockup_variant_id', None):
+            variant = (
+                MockupVariant.objects
+                .filter(pk=instance.mockup_variant_id, is_active=True)
+                .select_related('mockup_type')
+                .first()
+            )
+            if variant:
+                save_kwargs['mockup_variant'] = instance.mockup_variant
+                save_kwargs['buy_price'] = variant.effective_price
+                save_kwargs['stock'] = int(variant.stock or 0)
+        serializer.save(**save_kwargs)
 
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def published(self, request):
-        qs = Product.objects.filter(is_active=True, is_published=True, kind='design').select_related('store', 'category')
+        qs = Product.objects.filter(is_active=True, is_published=True, kind='design').select_related('store', 'category', 'mockup_variant', 'mockup_variant__mockup_type')
         return Response(ProductSerializer(qs, many=True, context={'request': request}).data)
 
 
@@ -369,10 +454,17 @@ class DesignCommissionViewSet(viewsets.ReadOnlyModelViewSet):
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [AllowAny()]
+        return [IsAuthenticated()]
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        if not self.request.user.is_authenticated:
+            return Order.objects.none()
+        return Order.objects.filter(user=self.request.user).order_by('-created_at')
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def seller(self, request):
@@ -483,7 +575,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         with transaction.atomic():
             order = Order.objects.create(
-                user=request.user,
+                user=request.user if request.user.is_authenticated else None,
                 total_amount=0,
                 payment_method='cod',
                 shipping_address=shipping_address,
@@ -512,13 +604,33 @@ class OrderViewSet(viewsets.ModelViewSet):
                     if not product.is_published:
                         raise ValidationError('Invalid product')
                 elif product.kind == 'custom':
-                    if product.created_by_id != request.user.id:
+                    if request.user.is_authenticated and product.created_by_id != request.user.id:
                         raise ValidationError('Invalid product')
+                    elif not request.user.is_authenticated:
+                        # For guest users, allow ordering any custom product since they can't own products
+                        pass
                 else:
                     raise ValidationError('Invalid product')
 
                 price = product.effective_price
-                buy_price = product.buy_price
+
+                variant = None
+                if getattr(product, 'mockup_variant_id', None):
+                    variant = (
+                        MockupVariant.objects
+                        .select_for_update()
+                        .filter(pk=product.mockup_variant_id, is_active=True)
+                        .select_related('mockup_type')
+                        .first()
+                    )
+                    if not variant:
+                        raise ValidationError('Invalid product')
+                    if int(variant.stock or 0) < int(quantity):
+                        raise ValidationError('Out of stock')
+                    variant.stock = int(variant.stock or 0) - int(quantity)
+                    variant.save(update_fields=['stock'])
+
+                buy_price = variant.effective_price if variant else product.buy_price
                 order_item = OrderItem.objects.create(
                     order=order,
                     product=product,
@@ -557,7 +669,8 @@ class OrderViewSet(viewsets.ModelViewSet):
                         design = DesignLibraryItem.objects.filter(pk=design_id, is_active=True).select_related('owner').first()
                         if not design:
                             continue
-                        if design.owner_id == request.user.id:
+                        # Skip commission if guest user or if user owns the design
+                        if request.user.is_authenticated and design.owner_id == request.user.id:
                             continue
 
                         try:
@@ -569,7 +682,7 @@ class OrderViewSet(viewsets.ModelViewSet):
                         DesignCommission.objects.create(
                             design=design,
                             owner=design.owner,
-                            used_by=request.user,
+                            used_by=request.user if request.user.is_authenticated else None,
                             order=order,
                             order_item=order_item,
                             quantity=quantity,

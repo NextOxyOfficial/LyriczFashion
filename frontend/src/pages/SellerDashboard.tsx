@@ -31,6 +31,8 @@ type Product = {
   design_preview?: string | null
   image?: string | null
   profit_per_unit?: string
+  available_stock?: number
+  admin_buy_price?: string
 }
 
 type SellerOrderItem = {
@@ -442,7 +444,10 @@ const SellerDashboard = () => {
                         <div>
                           <div className="font-semibold text-gray-900 line-clamp-1">{p.name}</div>
                           <div className="text-sm text-gray-600 mt-1">
-                            Buy: ৳{Number(p.buy_price)} | Sell: ৳{Number(p.price)}
+                            Buy: ৳{Number(p.admin_buy_price ?? p.buy_price)} | Sell: ৳{Number(p.price)}
+                          </div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            Stock: {Number(p.available_stock ?? p.stock ?? 0)}
                           </div>
                           <div className="text-sm text-green-700 mt-1">
                             Profit/unit: ৳{Number(p.profit_per_unit || 0)}

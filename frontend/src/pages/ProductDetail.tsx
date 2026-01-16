@@ -105,6 +105,16 @@ const ProductDetail = () => {
 
   const imageUrl = productImages[selectedImage] || 'https://via.placeholder.com/600'
   const unitPrice = product.discount_price ? Number(product.discount_price) : Number(product.price)
+  const availableStock = Number(product.available_stock ?? product.stock ?? 0)
+
+  useEffect(() => {
+    if (availableStock > 0 && quantity > availableStock) {
+      setQuantity(availableStock)
+    }
+    if (availableStock === 0) {
+      setQuantity(1)
+    }
+  }, [availableStock, quantity])
 
   const handleAddToCart = () => {
     addItem({
@@ -192,9 +202,9 @@ const ProductDetail = () => {
               </div>
 
               <div className="mb-4">
-                {product.stock > 0 ? (
+                {availableStock > 0 ? (
                   <span className="inline-flex items-center gap-1 text-sm text-green-700 bg-green-50 px-3 py-1 rounded-full">
-                    <Check className="w-4 h-4" /> In Stock ({product.stock})
+                    <Check className="w-4 h-4" /> In Stock ({availableStock})
                   </span>
                 ) : (
                   <span className="text-sm text-red-600 bg-red-50 px-3 py-1 rounded-full">Out of Stock</span>
@@ -239,18 +249,22 @@ const ProductDetail = () => {
                       <Minus className="w-4 h-4" />
                     </button>
                     <span className="px-4 py-2 font-medium">{quantity}</span>
-                    <button onClick={() => setQuantity(quantity + 1)} className="px-3 py-2 hover:bg-gray-50">
+                    <button
+                      disabled={availableStock > 0 ? quantity >= availableStock : true}
+                      onClick={() => setQuantity(availableStock > 0 ? Math.min(availableStock, quantity + 1) : quantity)}
+                      className="px-3 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
-                  <span className="text-sm text-gray-500">{product.stock} available</span>
+                  <span className="text-sm text-gray-500">{availableStock} available</span>
                 </div>
               </div>
 
               <div className="flex gap-3 mb-6">
                 <button
                   onClick={handleAddToCart}
-                  disabled={product.stock === 0}
+                  disabled={availableStock === 0}
                   className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${addedToCart ? 'bg-emerald-700 text-white' : 'bg-emerald-600 text-white hover:bg-emerald-700'} disabled:bg-gray-300 disabled:cursor-not-allowed`}
                 >
                   {addedToCart ? <><Check className="w-5 h-5" /> Added!</> : <><ShoppingCart className="w-5 h-5" /> Add to Cart</>}

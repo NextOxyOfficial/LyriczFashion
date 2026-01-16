@@ -53,6 +53,8 @@ class ProductSerializer(serializers.ModelSerializer):
     profit_per_unit = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     store_name = serializers.CharField(source='store.name', read_only=True)
     store_slug = serializers.CharField(source='store.slug', read_only=True)
+    available_stock = serializers.SerializerMethodField()
+    admin_buy_price = serializers.SerializerMethodField()
      
     class Meta:
         model = Product
@@ -60,6 +62,28 @@ class ProductSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'created_by': {'read_only': True},
         }
+
+    def get_available_stock(self, obj: Product):
+        try:
+            if getattr(obj, 'mockup_variant_id', None) and getattr(obj, 'mockup_variant', None):
+                return int(obj.mockup_variant.stock or 0)
+        except Exception:
+            pass
+        try:
+            return int(obj.stock or 0)
+        except Exception:
+            return 0
+
+    def get_admin_buy_price(self, obj: Product):
+        try:
+            if getattr(obj, 'mockup_variant_id', None) and getattr(obj, 'mockup_variant', None):
+                return str(obj.mockup_variant.effective_price)
+        except Exception:
+            pass
+        try:
+            return str(obj.buy_price)
+        except Exception:
+            return '0'
 
 
 class OrderItemSerializer(serializers.ModelSerializer):

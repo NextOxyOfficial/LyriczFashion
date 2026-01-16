@@ -36,6 +36,7 @@ type MockupVariant = {
   back_image: string
   thumbnail?: string | null
   price_modifier: string
+  stock: number
   effective_price: string
   is_active: boolean
 }
@@ -137,6 +138,7 @@ const DesignStudio = () => {
   const addItem = useCartStore((s) => s.addItem)
 
   const [isLoading, setIsLoading] = useState(false)
+  const [user, setUser] = useState<any>(null)
   const [isLoadingMockups, setIsLoadingMockups] = useState(false)
   const [mockupError, setMockupError] = useState<string | null>(null)
   const [mockupTypes, setMockupTypes] = useState<MockupTypeList[]>([])
@@ -226,9 +228,20 @@ const DesignStudio = () => {
   const [categories, setCategories] = useState<any[]>([])
 
   useEffect(() => {
-    // Remove automatic redirect - let interceptors handle it
-    // if (!token) { navigate('/login'); return }
-  }, [navigate, token])
+    const loadUser = async () => {
+      if (token) {
+        try {
+          const { authAPI } = await import('../services/api')
+          const userData = await authAPI.getMe(token)
+          setUser(userData)
+        } catch (error) {
+          // User data loading failed, but don't redirect - let interceptors handle it
+          setUser(null)
+        }
+      }
+    }
+    loadUser()
+  }, [token])
 
   useEffect(() => {
     const loadMockups = async () => {
@@ -418,7 +431,13 @@ const DesignStudio = () => {
     return () => URL.revokeObjectURL(url)
   }, [backLogoFile])
 
-  const hasDesign = !!frontLogoUrl || !!backLogoUrl || !!frontCustomText.trim() || !!backCustomText.trim()
+  const hasDesign =
+    !!frontLogoUrl ||
+    !!backLogoUrl ||
+    !!frontLibraryDesignId ||
+    !!backLibraryDesignId ||
+    !!frontCustomText.trim() ||
+    !!backCustomText.trim()
 
   const onMouseDownImage = (e: React.MouseEvent) => {
     if (!containerRef.current) return
@@ -616,10 +635,6 @@ const DesignStudio = () => {
   }
 
   const onSubmit = async () => {
-    if (!token) {
-      alert('Please login to continue')
-      return
-    }
     if (!selectedMockupType || !selectedVariant) {
       alert('Please select a product and color')
       return
@@ -718,7 +733,7 @@ const DesignStudio = () => {
       // Use front logo as primary, or back logo if front doesn't exist
       const primaryLogo = frontLogoFile || backLogoFile || undefined
 
-      const created = await customProductsAPI.createCustomProduct(token, {
+      const productPayload = {
         name: designName,
         price: unitPrice,
         stock: 9999,
@@ -729,7 +744,12 @@ const DesignStudio = () => {
         design_preview_front: frontPreviewFile || undefined,
         design_preview_back: backPreviewFile || undefined,
         design_data: designData,
-      })
+      }
+
+      // Use guest API if not logged in, otherwise use authenticated API
+      const created = token 
+        ? await customProductsAPI.createCustomProduct(token, productPayload)
+        : await customProductsAPI.createGuestCustomProduct(productPayload)
 
       addItem({
         productId: Number(created.id),
@@ -745,15 +765,104 @@ const DesignStudio = () => {
     } finally { setIsLoading(false) }
   }
 
+  const handleContinueToSell = () => {
+    if (!user?.is_seller) {
+      alert('You need to be a seller to create products for sale')
+      return
+    }
+    
+    if (!selectedMockupType || !selectedVariant) {
+      alert('Please select a product and color')
+      return
+    }
+    if (!hasDesign) {
+      alert('Please upload an image or enter some text')
+      return
+    }
+
+    // Store design data in localStorage to pass to seller page
+    const rect = containerRef.current?.getBoundingClientRect()
+    const hasAnyLogo = !!frontLogoUrl || !!backLogoUrl || !!frontLibraryDesignId || !!backLibraryDesignId
+    const hasAnyText = !!frontCustomText.trim() || !!backCustomText.trim()
+    
+    const designData = {
+      type: hasAnyLogo && hasAnyText ? 'image_and_text' : hasAnyLogo ? 'logo_on_mockup' : 'text_on_mockup',
+      mockupType: selectedMockupType.slug,
+      mockupTypeId: selectedMockupType.id,
+      mockupVariantId: selectedVariant.id,
+      variant: { size: selectedSize, color: selectedColor },
+      sides: {
+        front: {
+          hasLogo: !!frontLogoUrl,
+          hasText: !!frontCustomText.trim(),
+          ...(frontLibraryDesignId ? { library_design_id: frontLibraryDesignId, design_library_item_id: frontLibraryDesignId } : {}),
+          ...(frontLogoUrl && {
+            imagePlacement: { 
+              x: rect ? frontImagePos.x / rect.width : 0.5, 
+              y: rect ? frontImagePos.y / rect.height : 0.4, 
+              scale: frontImageScale, 
+              rotation: frontImageRotation 
+            }
+          }),
+          ...(frontCustomText.trim() && {
+            textPlacement: { 
+              x: rect ? frontTextPos.x / rect.width : 0.5, 
+              y: rect ? frontTextPos.y / rect.height : 0.6, 
+              scale: frontTextScale, 
+              rotation: frontTextRotation 
+            },
+            text: frontCustomText,
+            textColor: frontTextColor,
+            textFont: frontTextFont,
+            charColors: frontCharColors
+          }),
+        },
+        back: {
+          hasLogo: !!backLogoUrl,
+          hasText: !!backCustomText.trim(),
+          ...(backLibraryDesignId ? { library_design_id: backLibraryDesignId, design_library_item_id: backLibraryDesignId } : {}),
+          ...(backLogoUrl && {
+            imagePlacement: { 
+              x: rect ? backImagePos.x / rect.width : 0.5, 
+              y: rect ? backImagePos.y / rect.height : 0.4, 
+              scale: backImageScale, 
+              rotation: backImageRotation 
+            }
+          }),
+          ...(backCustomText.trim() && {
+            textPlacement: { 
+              x: rect ? backTextPos.x / rect.width : 0.5, 
+              y: rect ? backTextPos.y / rect.height : 0.6, 
+              scale: backTextScale, 
+              rotation: backTextRotation 
+            },
+            text: backCustomText,
+            textColor: backTextColor,
+            textFont: backTextFont,
+            charColors: backCharColors
+          }),
+        }
+      }
+    }
+
+    localStorage.setItem('sellerDesignData', JSON.stringify({
+      designData,
+      mockupType: selectedMockupType,
+      variant: selectedVariant
+    }))
+
+    navigate('/seller/designs/new')
+  }
+
   const selectDesignFromLibrary = async (design: any) => {
     try {
+      const id = Number(design?.id)
+      setLibraryDesignId(Number.isFinite(id) ? id : null)
       const imageUrl = toUrl(design.image || design.design_logo || design.design_preview)
       if (!imageUrl) return
       const response = await fetch(imageUrl)
       const blob = await response.blob()
       setLogoFile(new File([blob], `${design?.name || 'design'}.png`, { type: blob.type }))
-      const id = Number(design?.id)
-      setLibraryDesignId(Number.isFinite(id) ? id : null)
     } catch (e) { console.error('Failed to load design:', e) }
   }
 
@@ -1422,14 +1531,26 @@ const DesignStudio = () => {
                     </div>
                     <div className="text-2xl font-bold text-emerald-600">৳{Number(selectedVariant?.effective_price || selectedMockupType?.base_price || 0)}</div>
                   </div>
-                  <button
-                    disabled={isLoading || !hasDesign || !selectedVariant}
-                    onClick={onSubmit}
-                    className="w-full py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-                  >
-                    <ShoppingCart className="w-5 h-5" />
-                    {isLoading ? 'Creating...' : 'Add to Cart'}
-                  </button>
+                  <div className="space-y-2">
+                    <button
+                      disabled={isLoading || !hasDesign || !selectedVariant}
+                      onClick={onSubmit}
+                      className="w-full py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                    >
+                      <ShoppingCart className="w-5 h-5" />
+                      {isLoading ? 'Creating...' : 'Add to Cart'}
+                    </button>
+                    {user?.is_seller && (
+                      <button
+                        disabled={isLoading || !hasDesign || !selectedVariant}
+                        onClick={handleContinueToSell}
+                        className="w-full py-3 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                      >
+                        <Sparkles className="w-5 h-5" />
+                        Continue to Sell
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
               </>

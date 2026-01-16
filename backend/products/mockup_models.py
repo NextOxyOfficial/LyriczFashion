@@ -42,6 +42,8 @@ class MockupVariant(models.Model):
         default=0,
         help_text="Additional price for this color variant"
     )
+
+    stock = models.IntegerField(default=0)
     
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

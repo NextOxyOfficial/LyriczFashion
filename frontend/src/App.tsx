@@ -18,7 +18,6 @@ import Profile from './pages/Profile'
 import Orders from './pages/Orders'
 import Settings from './pages/Settings'
 import AddressBook from './pages/AddressBook'
-import MyStore from './pages/MyStore'
 import SellYourDesign from './pages/SellYourDesign'
 
 function App() {
@@ -37,7 +36,6 @@ function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/address-book" element={<AddressBook />} />
-            <Route path="/my-store" element={<MyStore />} />
             <Route path="/sell-your-design" element={<SellYourDesign />} />
             <Route path="/seller" element={<SellerDashboard />} />
             <Route path="/seller/designs/new" element={<SellerDesignCreate />} />

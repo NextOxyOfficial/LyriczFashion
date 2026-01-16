@@ -23,6 +23,7 @@ class MockupVariantSerializer(serializers.ModelSerializer):
             'back_image',
             'thumbnail',
             'price_modifier',
+            'stock',
             'effective_price',
             'is_active',
             'created_at',

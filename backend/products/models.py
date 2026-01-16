@@ -86,6 +86,7 @@ class Product(models.Model):
 
     store = models.ForeignKey(Store, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_products')
+    mockup_variant = models.ForeignKey(MockupVariant, on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     buy_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -121,7 +122,10 @@ class Product(models.Model):
     @property
     def profit_per_unit(self):
         try:
-            return self.effective_price - self.buy_price
+            base_cost = self.buy_price
+            if self.mockup_variant_id and getattr(self, 'mockup_variant', None):
+                base_cost = self.mockup_variant.effective_price
+            return self.effective_price - base_cost
         except Exception:
             return 0
 
@@ -145,7 +149,7 @@ class Order(models.Model):
         ('cod', 'Cash On Delivery'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders', null=True, blank=True)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cod')
@@ -159,7 +163,8 @@ class Order(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Order #{self.id} - {self.user.username}"
+        username = self.user.username if self.user else "Guest"
+        return f"Order #{self.id} - {username}"
 
 
 class OrderItem(models.Model):
@@ -225,7 +230,7 @@ class DesignCommission(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='design_commissions')
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='design_commissions')
     order_item = models.ForeignKey(OrderItem, on_delete=models.CASCADE, related_name='design_commissions')
-    used_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='design_commissions_paid')
+    used_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='design_commissions_paid', null=True, blank=True)
     quantity = models.IntegerField(default=1)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')

@@ -126,10 +126,11 @@ export const designAPI = {
     name: string
     description?: string
     category?: number | null
-    buy_price: number
+    buy_price?: number
     price: number
     stock?: number
     is_published?: boolean
+    mockup_variant?: number
     design_logo?: File | null
     design_preview?: File | null
     design_data?: any
@@ -138,11 +139,12 @@ export const designAPI = {
     form.append('name', payload.name)
     if (payload.description) form.append('description', payload.description)
     if (payload.category) form.append('category', String(payload.category))
-    form.append('buy_price', String(payload.buy_price))
+    if (payload.buy_price !== undefined) form.append('buy_price', String(payload.buy_price))
     form.append('price', String(payload.price))
     form.append('kind', 'design')
     form.append('is_published', String(Boolean(payload.is_published)))
     if (payload.stock !== undefined) form.append('stock', String(payload.stock))
+    if (payload.mockup_variant !== undefined) form.append('mockup_variant', String(payload.mockup_variant))
     if (payload.design_logo) form.append('design_logo', payload.design_logo)
     if (payload.design_preview) form.append('design_preview', payload.design_preview)
     if (payload.design_data) form.append('design_data', JSON.stringify(payload.design_data))
@@ -207,6 +209,40 @@ export const customProductsAPI = {
     return response.data
   },
 
+  createGuestCustomProduct: async (payload: {
+    name: string
+    description?: string
+    price: number
+    stock?: number
+    design_logo?: File | null
+    design_preview?: File | null
+    design_logo_front?: File | null
+    design_logo_back?: File | null
+    design_preview_front?: File | null
+    design_preview_back?: File | null
+    design_data?: any
+  }) => {
+    const form = new FormData()
+    form.append('name', payload.name)
+    if (payload.description) form.append('description', payload.description)
+    form.append('price', String(payload.price))
+    if (payload.stock !== undefined) form.append('stock', String(payload.stock))
+    if (payload.design_logo) form.append('design_logo', payload.design_logo)
+    if (payload.design_preview) form.append('design_preview', payload.design_preview)
+    if (payload.design_logo_front) form.append('design_logo_front', payload.design_logo_front)
+    if (payload.design_logo_back) form.append('design_logo_back', payload.design_logo_back)
+    if (payload.design_preview_front) form.append('design_preview_front', payload.design_preview_front)
+    if (payload.design_preview_back) form.append('design_preview_back', payload.design_preview_back)
+    if (payload.design_data) form.append('design_data', JSON.stringify(payload.design_data))
+
+    const response = await api.post('/guest-custom-products/', form, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+
   listMyCustomProducts: async (token: string) => {
     const response = await api.get('/custom-products/', {
       headers: {
@@ -232,17 +268,14 @@ export const designLibraryAPI = {
     return response.data
   },
 
-  create: async (
-    token: string,
-    payload: {
-      name: string
-      image: File
-      category?: string
-      search_keywords?: string
-      commission_per_use?: number
-    }
-  ) => {
-    // Token is handled by interceptor, but keep parameter for API consistency
+  create: async (payload: {
+    name: string
+    image: File
+    category?: string
+    search_keywords?: string
+    commission_per_use?: number
+  }) => {
+    // Token is handled by interceptor
     const form = new FormData()
     form.append('name', payload.name)
     form.append('image', payload.image)
@@ -330,6 +363,17 @@ export const ordersAPI = {
         Authorization: `Bearer ${token}`,
       },
     })
+    return response.data
+  },
+
+  createGuestOrder: async (payload: {
+    customer_name?: string
+    customer_phone?: string
+    shipping_address: string
+    payment_method?: 'cod'
+    items: Array<{ product_id: number; quantity: number }>
+  }) => {
+    const response = await api.post('/orders/', payload)
     return response.data
   },
 
