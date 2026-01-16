@@ -1,31 +1,59 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { customProductsAPI, designAPI } from '../services/api'
+import { customProductsAPI, designAPI, mockupAPI } from '../services/api'
 import { useCartStore } from '../store/cartStore'
-import { RotateCw, RotateCcw, ZoomIn, ZoomOut, Move, Type, Layers, Sparkles, ShoppingCart, ImageIcon, Palette } from 'lucide-react'
+import { RotateCw, RotateCcw, ZoomIn, ZoomOut, Type, Layers, Sparkles, ShoppingCart, ImageIcon } from 'lucide-react'
 
 const API_BASE_URL = 'http://localhost:8000'
 
 const toUrl = (path?: string | null) => {
   if (!path) return ''
-  if (path.startsWith('http://') || path.startsWith('https://')) return path
-  return `${API_BASE_URL}${path}`
+  const str = String(path).trim()
+  if (str.startsWith('http://') || str.startsWith('https://')) return str
+  const normalized = str.startsWith('/') ? str : `/${str}`
+  return `${API_BASE_URL}${normalized}`
 }
 
-const MOCKUP_TYPES = [
-  { id: 'tshirt', name: 'T-Shirt', price: 699, svg: `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900"><rect width="900" height="900" fill="#f3f4f6"/><path d="M320 170 L240 210 L140 320 L210 420 L280 360 L280 780 L620 780 L620 360 L690 420 L760 320 L660 210 L580 170 L520 240 L380 240 Z" fill="#ffffff" stroke="#d1d5db" stroke-width="12" stroke-linejoin="round"/><path d="M380 240 C410 300 490 300 520 240" fill="none" stroke="#e5e7eb" stroke-width="10" stroke-linecap="round"/></svg>` },
-  { id: 'hoodie', name: 'Hoodie', price: 1299, svg: `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900"><rect width="900" height="900" fill="#f3f4f6"/><path d="M280 180 L200 220 L120 350 L180 420 L250 380 L250 780 L650 780 L650 380 L720 420 L780 350 L700 220 L620 180 L560 180 L560 280 C560 320 500 360 450 360 C400 360 340 320 340 280 L340 180 Z" fill="#ffffff" stroke="#d1d5db" stroke-width="12" stroke-linejoin="round"/><ellipse cx="450" cy="160" rx="80" ry="40" fill="#ffffff" stroke="#d1d5db" stroke-width="10"/></svg>` },
-  { id: 'longsleeve', name: 'Long Sleeve', price: 899, svg: `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900"><rect width="900" height="900" fill="#f3f4f6"/><path d="M320 170 L240 210 L100 650 L180 680 L280 360 L280 780 L620 780 L620 360 L720 680 L800 650 L660 210 L580 170 L520 240 L380 240 Z" fill="#ffffff" stroke="#d1d5db" stroke-width="12" stroke-linejoin="round"/><path d="M380 240 C410 300 490 300 520 240" fill="none" stroke="#e5e7eb" stroke-width="10" stroke-linecap="round"/></svg>` },
-  { id: 'tanktop', name: 'Tank Top', price: 499, svg: `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900"><rect width="900" height="900" fill="#f3f4f6"/><path d="M340 170 L280 200 L280 780 L620 780 L620 200 L560 170 L520 240 L380 240 Z" fill="#ffffff" stroke="#d1d5db" stroke-width="12" stroke-linejoin="round"/><path d="M380 240 C410 300 490 300 520 240" fill="none" stroke="#e5e7eb" stroke-width="10" stroke-linecap="round"/></svg>` },
-  { id: 'polo', name: 'Polo Shirt', price: 999, svg: `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900"><rect width="900" height="900" fill="#f3f4f6"/><path d="M320 170 L240 210 L140 320 L210 420 L280 360 L280 780 L620 780 L620 360 L690 420 L760 320 L660 210 L580 170 L520 240 L380 240 Z" fill="#ffffff" stroke="#d1d5db" stroke-width="12" stroke-linejoin="round"/><path d="M380 240 L380 320 L450 350 L520 320 L520 240" fill="#ffffff" stroke="#d1d5db" stroke-width="8"/><circle cx="450" cy="290" r="8" fill="#d1d5db"/><circle cx="450" cy="320" r="8" fill="#d1d5db"/></svg>` },
-  { id: 'sweatshirt', name: 'Sweatshirt', price: 1099, svg: `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900"><rect width="900" height="900" fill="#f3f4f6"/><path d="M300 180 L220 220 L100 600 L180 630 L260 360 L260 780 L640 780 L640 360 L720 630 L800 600 L680 220 L600 180 L520 240 L380 240 Z" fill="#ffffff" stroke="#d1d5db" stroke-width="12" stroke-linejoin="round"/><path d="M380 240 C410 300 490 300 520 240" fill="none" stroke="#e5e7eb" stroke-width="10" stroke-linecap="round"/></svg>` },
-]
+type MockupTypeList = {
+  id: number
+  name: string
+  slug: string
+  base_price: string
+  description?: string | null
+  preview_image?: string | null
+  is_active: boolean
+  variant_count: number
+}
 
-const getMockupUrl = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+type MockupVariant = {
+  id: number
+  mockup_type: number
+  mockup_type_name: string
+  mockup_type_slug: string
+  color_name: string
+  color_hex?: string | null
+  front_image: string
+  back_image: string
+  thumbnail?: string | null
+  price_modifier: string
+  effective_price: string
+  is_active: boolean
+}
+
+type MockupTypeDetail = MockupTypeList & {
+  variants: MockupVariant[]
+}
+
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
 
+const variantImageUrl = (variant: MockupVariant | null, side: 'front' | 'back') => {
+  if (!variant) return ''
+  const preferred = side === 'front' ? variant.front_image : variant.back_image
+  const fallback = side === 'front' ? variant.back_image : variant.front_image
+  return toUrl(preferred || variant.thumbnail || fallback)
+}
+
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-const COLORS = ['White', 'Black', 'Navy', 'Gray', 'Red', 'Green']
 
 const TEXT_COLORS = [
   { name: 'Black', value: '#000000' },
@@ -109,30 +137,75 @@ const DesignStudio = () => {
   const addItem = useCartStore((s) => s.addItem)
 
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingMockups, setIsLoadingMockups] = useState(false)
+  const [mockupError, setMockupError] = useState<string | null>(null)
+  const [mockupTypes, setMockupTypes] = useState<MockupTypeList[]>([])
+  const [selectedMockupType, setSelectedMockupType] = useState<MockupTypeList | null>(null)
+  const [mockupVariants, setMockupVariants] = useState<MockupVariant[]>([])
+  const [selectedVariant, setSelectedVariant] = useState<MockupVariant | null>(null)
   const [selectedSize, setSelectedSize] = useState('M')
-  const [selectedColor, setSelectedColor] = useState('White')
-  const [selectedMockup, setSelectedMockup] = useState(MOCKUP_TYPES[0])
+  const [selectedColor, setSelectedColor] = useState('')
+  const [mockupImageFailed, setMockupImageFailed] = useState(false)
 
-  const [logoFile, setLogoFile] = useState<File | null>(null)
-  const logoUrl = useMemo(() => (logoFile ? URL.createObjectURL(logoFile) : ''), [logoFile])
+  // Front/Back side toggle
+  const [activeSide, setActiveSide] = useState<'front' | 'back'>('front')
 
-  const [customText, setCustomText] = useState('')
-  const [textColor, setTextColor] = useState(TEXT_COLORS[0].value)
-  const [textFont, setTextFont] = useState(FONTS[0].value)
-  const [charColors, setCharColors] = useState<string[]>([])
+  // Front side design states
+  const [frontLogoFile, setFrontLogoFile] = useState<File | null>(null)
+  const [frontLogoUrl, setFrontLogoUrl] = useState('')
+  const [frontCustomText, setFrontCustomText] = useState('')
+  const [frontTextColor, setFrontTextColor] = useState(TEXT_COLORS[0].value)
+  const [frontTextFont, setFrontTextFont] = useState(FONTS[0].value)
+  const [frontCharColors, setFrontCharColors] = useState<string[]>([])
+  const [frontImagePos, setFrontImagePos] = useState({ x: 220, y: 180 })
+  const [frontImageScale, setFrontImageScale] = useState(0.6)
+  const [frontImageRotation, setFrontImageRotation] = useState(0)
+  const [frontTextPos, setFrontTextPos] = useState({ x: 220, y: 280 })
+  const [frontTextScale, setFrontTextScale] = useState(0.6)
+  const [frontTextRotation, setFrontTextRotation] = useState(0)
+
+  // Back side design states
+  const [backLogoFile, setBackLogoFile] = useState<File | null>(null)
+  const [backLogoUrl, setBackLogoUrl] = useState('')
+  const [backCustomText, setBackCustomText] = useState('')
+  const [backTextColor, setBackTextColor] = useState(TEXT_COLORS[0].value)
+  const [backTextFont, setBackTextFont] = useState(FONTS[0].value)
+  const [backCharColors, setBackCharColors] = useState<string[]>([])
+  const [backImagePos, setBackImagePos] = useState({ x: 220, y: 180 })
+  const [backImageScale, setBackImageScale] = useState(0.6)
+  const [backImageRotation, setBackImageRotation] = useState(0)
+  const [backTextPos, setBackTextPos] = useState({ x: 220, y: 280 })
+  const [backTextScale, setBackTextScale] = useState(0.6)
+  const [backTextRotation, setBackTextRotation] = useState(0)
+
+  // Dynamic references based on active side
+  const logoFile = activeSide === 'front' ? frontLogoFile : backLogoFile
+  const setLogoFile = activeSide === 'front' ? setFrontLogoFile : setBackLogoFile
+  const logoUrl = activeSide === 'front' ? frontLogoUrl : backLogoUrl
+  const customText = activeSide === 'front' ? frontCustomText : backCustomText
+  const setCustomText = activeSide === 'front' ? setFrontCustomText : setBackCustomText
+  const textColor = activeSide === 'front' ? frontTextColor : backTextColor
+  const setTextColor = activeSide === 'front' ? setFrontTextColor : setBackTextColor
+  const textFont = activeSide === 'front' ? frontTextFont : backTextFont
+  const setTextFont = activeSide === 'front' ? setFrontTextFont : setBackTextFont
+  const charColors = activeSide === 'front' ? frontCharColors : backCharColors
+  const setCharColors = activeSide === 'front' ? setFrontCharColors : setBackCharColors
+  const imagePos = activeSide === 'front' ? frontImagePos : backImagePos
+  const setImagePos = activeSide === 'front' ? setFrontImagePos : setBackImagePos
+  const imageScale = activeSide === 'front' ? frontImageScale : backImageScale
+  const setImageScale = activeSide === 'front' ? setFrontImageScale : setBackImageScale
+  const imageRotation = activeSide === 'front' ? frontImageRotation : backImageRotation
+  const setImageRotation = activeSide === 'front' ? setFrontImageRotation : setBackImageRotation
+  const textPos = activeSide === 'front' ? frontTextPos : backTextPos
+  const setTextPos = activeSide === 'front' ? setFrontTextPos : setBackTextPos
+  const textScale = activeSide === 'front' ? frontTextScale : backTextScale
+  const setTextScale = activeSide === 'front' ? setFrontTextScale : setBackTextScale
+  const textRotation = activeSide === 'front' ? frontTextRotation : backTextRotation
+  const setTextRotation = activeSide === 'front' ? setFrontTextRotation : setBackTextRotation
+
   const [selectedCharIndex, setSelectedCharIndex] = useState<number | null>(null)
-
-  // Image controls
-  const [imagePos, setImagePos] = useState({ x: 220, y: 180 })
-  const [imageScale, setImageScale] = useState(0.6)
-  const [imageRotation, setImageRotation] = useState(0)
   const [draggingImage, setDraggingImage] = useState(false)
   const imageDragOffset = useRef({ dx: 0, dy: 0 })
-
-  // Text controls
-  const [textPos, setTextPos] = useState({ x: 220, y: 280 })
-  const [textScale, setTextScale] = useState(0.6)
-  const [textRotation, setTextRotation] = useState(0)
   const [draggingText, setDraggingText] = useState(false)
   const textDragOffset = useRef({ dx: 0, dy: 0 })
 
@@ -147,6 +220,81 @@ const DesignStudio = () => {
   }, [navigate, token])
 
   useEffect(() => {
+    const loadMockups = async () => {
+      setIsLoadingMockups(true)
+      setMockupError(null)
+      try {
+        const types: MockupTypeList[] = await mockupAPI.listMockupTypes()
+        const safeTypes = Array.isArray(types) ? types : []
+        setMockupTypes(safeTypes)
+
+        if (safeTypes.length === 0) {
+          setSelectedMockupType(null)
+          setMockupVariants([])
+          setSelectedVariant(null)
+          setSelectedColor('')
+          return
+        }
+
+        setSelectedMockupType((prev) => prev ?? safeTypes[0])
+      } catch {
+        setMockupError('Failed to load mockup types')
+        setMockupTypes([])
+        setSelectedMockupType(null)
+        setMockupVariants([])
+        setSelectedVariant(null)
+        setSelectedColor('')
+      } finally {
+        setIsLoadingMockups(false)
+      }
+    }
+
+    loadMockups()
+  }, [])
+
+  useEffect(() => {
+    const loadVariants = async () => {
+      if (!selectedMockupType) {
+        setMockupVariants([])
+        setSelectedVariant(null)
+        setSelectedColor('')
+        return
+      }
+      try {
+        const detail: MockupTypeDetail = await mockupAPI.getMockupType(selectedMockupType.slug)
+        const variants = Array.isArray(detail?.variants) ? detail.variants : []
+        setMockupVariants(variants)
+
+        const colors = Array.from(new Set(variants.map((v) => v.color_name))).filter(Boolean).sort()
+        const nextColor = colors.includes(selectedColor) ? selectedColor : (colors[0] || '')
+        setSelectedColor(nextColor)
+
+        const nextVariant = variants.find((v) => v.color_name === nextColor) || variants[0] || null
+        setSelectedVariant(nextVariant)
+      } catch {
+        setMockupVariants([])
+        setSelectedVariant(null)
+        setSelectedColor('')
+      }
+    }
+
+    loadVariants()
+  }, [selectedMockupType?.slug])
+
+  useEffect(() => {
+    if (!selectedColor) {
+      setSelectedVariant(mockupVariants[0] || null)
+      return
+    }
+    const next = mockupVariants.find((v) => v.color_name === selectedColor) || mockupVariants[0] || null
+    setSelectedVariant(next)
+  }, [mockupVariants, selectedColor])
+
+  useEffect(() => {
+    setMockupImageFailed(false)
+  }, [activeSide, selectedVariant?.id])
+
+  useEffect(() => {
     const loadDesignLibrary = async () => {
       setLoadingDesigns(true)
       try {
@@ -159,10 +307,26 @@ const DesignStudio = () => {
   }, [])
 
   useEffect(() => {
-    return () => { if (logoUrl) URL.revokeObjectURL(logoUrl) }
-  }, [logoUrl])
+    if (!frontLogoFile) {
+      setFrontLogoUrl('')
+      return
+    }
+    const url = URL.createObjectURL(frontLogoFile)
+    setFrontLogoUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [frontLogoFile])
 
-  const hasDesign = !!logoUrl || !!customText.trim()
+  useEffect(() => {
+    if (!backLogoFile) {
+      setBackLogoUrl('')
+      return
+    }
+    const url = URL.createObjectURL(backLogoFile)
+    setBackLogoUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [backLogoFile])
+
+  const hasDesign = !!frontLogoUrl || !!backLogoUrl || !!frontCustomText.trim() || !!backCustomText.trim()
 
   const onMouseDownImage = (e: React.MouseEvent) => {
     if (!containerRef.current) return
@@ -208,18 +372,22 @@ const DesignStudio = () => {
 
   const buildPreviewFile = async (): Promise<File | null> => {
     if (!containerRef.current || !hasDesign) return null
+    if (!selectedVariant) return null
     const rect = containerRef.current.getBoundingClientRect()
     const canvas = document.createElement('canvas')
     canvas.width = 900; canvas.height = 900
     const ctx = canvas.getContext('2d')
     if (!ctx) return null
 
+    const baseImageUrl = variantImageUrl(selectedVariant, activeSide)
+    if (!baseImageUrl) return null
+
     const tshirtImg = await new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new window.Image()
       img.crossOrigin = 'anonymous'
       img.onload = () => resolve(img)
       img.onerror = reject
-      img.src = getMockupUrl(selectedMockup.svg)
+      img.src = baseImageUrl
     })
     ctx.drawImage(tshirtImg, 0, 0, 900, 900)
 
@@ -273,25 +441,174 @@ const DesignStudio = () => {
     return new File([blob], 'custom_preview.png', { type: 'image/png' })
   }
 
+  const buildSidePreviewFile = async (side: 'front' | 'back'): Promise<File | null> => {
+    if (!containerRef.current) return null
+    if (!selectedVariant) return null
+
+    const rect = containerRef.current.getBoundingClientRect()
+    const canvas = document.createElement('canvas')
+    canvas.width = 900
+    canvas.height = 900
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+
+    const baseImageUrl = variantImageUrl(selectedVariant, side)
+    if (!baseImageUrl) return null
+
+    const tshirtImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new window.Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => resolve(img)
+      img.onerror = reject
+      img.src = baseImageUrl
+    })
+    ctx.drawImage(tshirtImg, 0, 0, 900, 900)
+
+    const sideLogoUrl = side === 'front' ? frontLogoUrl : backLogoUrl
+    const sideImagePos = side === 'front' ? frontImagePos : backImagePos
+    const sideImageScale = side === 'front' ? frontImageScale : backImageScale
+    const sideImageRotation = side === 'front' ? frontImageRotation : backImageRotation
+
+    const sideText = side === 'front' ? frontCustomText : backCustomText
+    const sideTextPos = side === 'front' ? frontTextPos : backTextPos
+    const sideTextScale = side === 'front' ? frontTextScale : backTextScale
+    const sideTextRotation = side === 'front' ? frontTextRotation : backTextRotation
+    const sideTextColor = side === 'front' ? frontTextColor : backTextColor
+    const sideTextFont = side === 'front' ? frontTextFont : backTextFont
+    const sideCharColors = side === 'front' ? frontCharColors : backCharColors
+
+    if (sideLogoUrl) {
+      const logoImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new window.Image()
+        img.onload = () => resolve(img)
+        img.onerror = reject
+        img.src = sideLogoUrl
+      })
+      const imgDrawX = (sideImagePos.x / rect.width) * 900
+      const imgDrawY = (sideImagePos.y / rect.height) * 900
+      ctx.save()
+      ctx.translate(imgDrawX, imgDrawY)
+      ctx.rotate((sideImageRotation * Math.PI) / 180)
+      const logoW = 260 * sideImageScale
+      const logoH = (logoW * logoImg.height) / logoImg.width
+      ctx.drawImage(logoImg, -logoW / 2, -logoH / 2, logoW, logoH)
+      ctx.restore()
+    }
+
+    if (sideText.trim()) {
+      const txtDrawX = (sideTextPos.x / rect.width) * 900
+      const txtDrawY = (sideTextPos.y / rect.height) * 900
+      ctx.save()
+      ctx.translate(txtDrawX, txtDrawY)
+      ctx.rotate((sideTextRotation * Math.PI) / 180)
+      ctx.font = `bold ${64 * sideTextScale}px ${sideTextFont}`
+      ctx.textBaseline = 'middle'
+
+      let totalWidth = 0
+      sideText.split('').forEach((char) => {
+        totalWidth += ctx.measureText(char).width
+      })
+
+      let xOffset = -totalWidth / 2
+      sideText.split('').forEach((char, idx) => {
+        ctx.fillStyle = sideCharColors[idx] || sideTextColor
+        ctx.fillText(char, xOffset, 0)
+        xOffset += ctx.measureText(char).width
+      })
+      ctx.restore()
+    }
+
+    const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
+    if (!blob) return null
+    return new File([blob], `custom_${side}_preview.png`, { type: 'image/png' })
+  }
+
   const onSubmit = async () => {
-    if (!token || !hasDesign) {
+    if (!token) {
+      alert('Please login to continue')
+      return
+    }
+    if (!selectedMockupType || !selectedVariant) {
+      alert('Please select a product and color')
+      return
+    }
+    if (!hasDesign) {
       alert('Please upload an image or enter some text')
       return
     }
     setIsLoading(true)
     try {
-      const previewFile = await buildPreviewFile()
+      const [frontPreviewFile, backPreviewFile] = await Promise.all([
+        buildSidePreviewFile('front'),
+        buildSidePreviewFile('back'),
+      ])
+      const previewFile = frontPreviewFile || backPreviewFile
       if (!previewFile) { alert('Failed to generate preview'); return }
 
       const rect = containerRef.current?.getBoundingClientRect()
       const designName = customText 
         ? `Custom: ${customText.substring(0, 25)}` 
-        : `Custom ${selectedMockup.name}`
+        : `Custom ${selectedMockupType.name}`
+
+      const unitPrice = Number(selectedVariant.effective_price || selectedMockupType.base_price || 0)
 
       const designData = {
         type: logoUrl && customText ? 'image_and_text' : logoUrl ? 'logo_on_mockup' : 'text_on_mockup',
-        mockupType: selectedMockup.id,
+        mockupType: selectedMockupType.slug,
+        mockupTypeId: selectedMockupType.id,
+        mockupVariantId: selectedVariant.id,
         variant: { size: selectedSize, color: selectedColor },
+        sides: {
+          front: {
+            hasLogo: !!frontLogoUrl,
+            hasText: !!frontCustomText.trim(),
+            ...(frontLogoUrl && {
+              imagePlacement: { 
+                x: rect ? frontImagePos.x / rect.width : 0.5, 
+                y: rect ? frontImagePos.y / rect.height : 0.4, 
+                scale: frontImageScale, 
+                rotation: frontImageRotation 
+              }
+            }),
+            ...(frontCustomText.trim() && {
+              textPlacement: { 
+                x: rect ? frontTextPos.x / rect.width : 0.5, 
+                y: rect ? frontTextPos.y / rect.height : 0.6, 
+                scale: frontTextScale, 
+                rotation: frontTextRotation 
+              },
+              text: frontCustomText,
+              textColor: frontTextColor,
+              textFont: frontTextFont,
+              charColors: frontCharColors
+            }),
+          },
+          back: {
+            hasLogo: !!backLogoUrl,
+            hasText: !!backCustomText.trim(),
+            ...(backLogoUrl && {
+              imagePlacement: { 
+                x: rect ? backImagePos.x / rect.width : 0.5, 
+                y: rect ? backImagePos.y / rect.height : 0.4, 
+                scale: backImageScale, 
+                rotation: backImageRotation 
+              }
+            }),
+            ...(backCustomText.trim() && {
+              textPlacement: { 
+                x: rect ? backTextPos.x / rect.width : 0.5, 
+                y: rect ? backTextPos.y / rect.height : 0.6, 
+                scale: backTextScale, 
+                rotation: backTextRotation 
+              },
+              text: backCustomText,
+              textColor: backTextColor,
+              textFont: backTextFont,
+              charColors: backCharColors
+            }),
+          }
+        },
+        // Legacy fields for backward compatibility
         ...(logoUrl && {
           imagePlacement: { x: rect ? imagePos.x / rect.width : 0.5, y: rect ? imagePos.y / rect.height : 0.4, scale: imageScale, rotation: imageRotation }
         }),
@@ -304,12 +621,19 @@ const DesignStudio = () => {
         }),
       }
 
+      // Use front logo as primary, or back logo if front doesn't exist
+      const primaryLogo = frontLogoFile || backLogoFile || undefined
+
       const created = await customProductsAPI.createCustomProduct(token, {
         name: designName,
-        price: selectedMockup.price,
+        price: unitPrice,
         stock: 9999,
-        design_logo: logoFile || undefined,
+        design_logo: primaryLogo,
         design_preview: previewFile,
+        design_logo_front: frontLogoFile || undefined,
+        design_logo_back: backLogoFile || undefined,
+        design_preview_front: frontPreviewFile || undefined,
+        design_preview_back: backPreviewFile || undefined,
         design_data: designData,
       })
 
@@ -356,25 +680,52 @@ const DesignStudio = () => {
             </h3>
             <span className="text-sm text-gray-500 mt-1 inline-block">Choose your apparel type</span>
           </div>
-          <div className="flex justify-center gap-4 mb-6 flex-wrap">
-            {MOCKUP_TYPES.map((m) => (
+          {isLoadingMockups ? (
+            <div className="py-10 text-center text-sm text-gray-500">Loading apparel types...</div>
+          ) : mockupError ? (
+            <div className="py-10 text-center">
+              <div className="text-sm text-red-600 font-semibold">{mockupError}</div>
               <button
-                key={m.id}
-                onClick={() => setSelectedMockup(m)}
-                className={`w-36 p-4 rounded-xl border-2 transition-all ${
-                  selectedMockup.id === m.id
-                    ? 'border-emerald-500 bg-emerald-50 shadow-sm scale-105'
-                    : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50 hover:shadow-sm'
-                }`}
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-3 px-4 py-2 text-sm font-semibold border border-red-200 text-red-700 rounded-lg hover:bg-red-50 transition-colors"
               >
-                <img src={getMockupUrl(m.svg)} alt={m.name} className="w-full h-20 object-contain" />
-                <div className="text-base font-bold text-center mt-3 truncate">{m.name}</div>
-                <div className={`text-base text-center font-semibold mt-1 ${selectedMockup.id === m.id ? 'text-emerald-600' : 'text-gray-600'}`}>
-                  ৳{m.price}
-                </div>
+                Retry
               </button>
-            ))}
-          </div>
+            </div>
+          ) : mockupTypes.length === 0 ? (
+            <div className="py-10 text-center text-sm text-gray-500">No apparel types found. Add mockups from Django Admin.</div>
+          ) : (
+            <div className="flex justify-center gap-4 mb-6 flex-wrap">
+              {mockupTypes.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => setSelectedMockupType(m)}
+                  className={`w-36 p-4 rounded-xl border-2 transition-all ${
+                    selectedMockupType?.id === m.id
+                      ? 'border-emerald-500 bg-emerald-50 shadow-sm scale-105'
+                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50 hover:shadow-sm'
+                  }`}
+                >
+                  {m.preview_image ? (
+                    <img
+                      src={m.preview_image}
+                      alt={m.name}
+                      className="w-full h-20 object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-20 rounded-lg bg-gray-100 flex items-center justify-center">
+                      <ImageIcon className="w-8 h-8 text-gray-300" />
+                    </div>
+                  )}
+                  <div className="text-base font-bold text-center mt-3 truncate">{m.name}</div>
+                  <div className={`text-base text-center font-semibold mt-1 ${selectedMockupType?.id === m.id ? 'text-emerald-600' : 'text-gray-600'}`}>
+                    ৳{Number(m.base_price)}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -426,7 +777,7 @@ const DesignStudio = () => {
               </div>
 
               {/* Text Design Section */}
-              <div className="bg-gradient-to-br p-4 from-gray-50 to-white border-2 border-gray-200 rounded-xl p-5 space-y-4">
+              <div className="bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 rounded-xl p-5 space-y-4">
                 {/* Text Input */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
@@ -541,152 +892,6 @@ const DesignStudio = () => {
                 </div>
             </div>
 
-            {/* Transform Controls */}
-            <div className="bg-white rounded-xl shadow-sm border-2 border-gray-200 p-4 space-y-4">
-              <div className="flex items-center gap-2 mb-1">
-                <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                </svg>
-                <h3 className="font-semibold text-gray-800 text-sm">Transform Controls</h3>
-              </div>
-              
-              {/* Element Selector */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setActiveElement('image')}
-                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
-                    activeElement === 'image' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  Image
-                </button>
-                <button
-                  onClick={() => setActiveElement('text')}
-                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
-                    activeElement === 'text' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  Text
-                </button>
-              </div>
-              
-              {/* Size Control */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                    <ZoomIn className="w-4 h-4 text-emerald-600" />
-                    Scale Size ({activeElement === 'image' ? 'Image' : 'Text'})
-                  </label>
-                  <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded text-xs font-bold">
-                    {Math.round((activeElement === 'image' ? imageScale : textScale) * 100)}%
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => activeElement === 'image' ? setImageScale(Math.max(0.2, imageScale - 0.1)) : setTextScale(Math.max(0.2, textScale - 0.1))} 
-                    className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all"
-                  >
-                    <ZoomOut className="w-4 h-4 text-gray-600" />
-                  </button>
-                  <input 
-                    type="range" 
-                    min={0.2} 
-                    max={1.5} 
-                    step={0.05} 
-                    value={activeElement === 'image' ? imageScale : textScale} 
-                    onChange={(e) => activeElement === 'image' ? setImageScale(Number(e.target.value)) : setTextScale(Number(e.target.value))}
-                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
-                  />
-                  <button 
-                    onClick={() => activeElement === 'image' ? setImageScale(Math.min(1.5, imageScale + 0.1)) : setTextScale(Math.min(1.5, textScale + 0.1))} 
-                    className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all"
-                  >
-                    <ZoomIn className="w-4 h-4 text-gray-600" />
-                  </button>
-                </div>
-                <div className="flex justify-between mt-1 text-xs text-gray-500">
-                  <span>20%</span>
-                  <span>150%</span>
-                </div>
-              </div>
-              
-              {/* Rotation Control */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                    <RotateCw className="w-4 h-4 text-emerald-600" />
-                    Rotate Angle ({activeElement === 'image' ? 'Image' : 'Text'})
-                  </label>
-                  <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded text-xs font-bold">
-                    {activeElement === 'image' ? imageRotation : textRotation}°
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => activeElement === 'image' ? setImageRotation(imageRotation - 15) : setTextRotation(textRotation - 15)} 
-                    className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all"
-                  >
-                    <RotateCcw className="w-4 h-4 text-gray-600" />
-                  </button>
-                  <input 
-                    type="range" 
-                    min={-180} 
-                    max={180} 
-                    step={1} 
-                    value={activeElement === 'image' ? imageRotation : textRotation} 
-                    onChange={(e) => activeElement === 'image' ? setImageRotation(Number(e.target.value)) : setTextRotation(Number(e.target.value))}
-                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
-                  />
-                  <button 
-                    onClick={() => activeElement === 'image' ? setImageRotation(imageRotation + 15) : setTextRotation(textRotation + 15)} 
-                    className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all"
-                  >
-                    <RotateCw className="w-4 h-4 text-gray-600" />
-                  </button>
-                </div>
-                <div className="flex justify-between mt-1 text-xs text-gray-500">
-                  <span>-180°</span>
-                  <span>0°</span>
-                  <span>180°</span>
-                </div>
-              </div>
-              
-              {/* Product Options */}
-              <div className="py-3 border-t border-gray-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
-                  <h4 className="font-semibold text-gray-800 text-sm">Product Specifications</h4>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-700 mb-2 block">
-                      Apparel Size
-                    </label>
-                    <select 
-                      value={selectedSize} 
-                      onChange={(e) => setSelectedSize(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium bg-white hover:border-gray-300 focus:ring-2 focus:ring-emerald-500 transition-all cursor-pointer"
-                    >
-                      {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-700 mb-2 block">
-                      Fabric Color
-                    </label>
-                    <select 
-                      value={selectedColor} 
-                      onChange={(e) => setSelectedColor(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium bg-white hover:border-gray-300 focus:ring-2 focus:ring-emerald-500 transition-all cursor-pointer"
-                    >
-                      {COLORS.map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Design Library */}
             <div className="bg-white rounded-xl shadow-sm border border-emerald-100 p-4">
@@ -731,20 +936,78 @@ const DesignStudio = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 bg-emerald-600 text-white text-xs font-semibold rounded-full">{selectedMockup.name}</span>
+                  <span className="px-3 py-1 bg-emerald-600 text-white text-xs font-semibold rounded-full">{selectedMockupType?.name || 'Select Product'}</span>
+                </div>
+              </div>
+
+              {/* Product Specifications */}
+              <div className="mb-4 bg-white rounded-xl shadow-sm border border-emerald-100 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  <h4 className="font-semibold text-gray-800 text-sm">Product Specifications</h4>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 mb-2 block">Apparel Size</label>
+                    <select
+                      value={selectedSize}
+                      onChange={(e) => setSelectedSize(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium bg-white hover:border-gray-300 focus:ring-2 focus:ring-emerald-500 transition-all cursor-pointer"
+                    >
+                      {SIZES.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 mb-2 block">Fabric Color</label>
+                    <select
+                      value={selectedColor}
+                      onChange={(e) => setSelectedColor(e.target.value)}
+                      disabled={!selectedMockupType || mockupVariants.length === 0}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium bg-white hover:border-gray-300 focus:ring-2 focus:ring-emerald-500 transition-all cursor-pointer"
+                    >
+                      {!selectedMockupType || mockupVariants.length === 0 ? (
+                        <option value="">No colors available</option>
+                      ) : null}
+                      {Array.from(new Set(mockupVariants.map((v) => v.color_name))).filter(Boolean).sort().map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
               <div
                 ref={containerRef}
-                className="relative w-full max-w-md mx-auto aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 border-4 border-white shadow-xl select-none"
+                className="relative w-full max-w-md mx-auto aspect-square select-none"
                 onMouseMove={onMouseMove}
                 onMouseUp={onMouseUp}
                 onMouseLeave={onMouseUp}
               >
-                <img src={getMockupUrl(selectedMockup.svg)} alt="mockup" className="absolute inset-0 w-full h-full object-cover" />
+                {selectedVariant && !mockupImageFailed ? (
+                  <img
+                    src={variantImageUrl(selectedVariant, activeSide)}
+                    alt="mockup"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={() => setMockupImageFailed(true)}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <ImageIcon className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">{selectedVariant ? 'Mockup image not found' : 'Select an apparel type'}</p>
+                    </div>
+                  </div>
+                )}
 
-                {logoUrl && (
+                {(activeSide === 'front' ? frontLogoUrl : backLogoUrl) && (
                   <div
                     className="absolute"
                     style={{
@@ -755,7 +1018,8 @@ const DesignStudio = () => {
                     onMouseLeave={() => setHoveredElement(null)}
                   >
                     <img
-                      src={logoUrl}
+                      key={activeSide}
+                      src={activeSide === 'front' ? frontLogoUrl : backLogoUrl}
                       alt="design"
                       onMouseDown={onMouseDownImage}
                       className="cursor-move drop-shadow-sm"
@@ -772,10 +1036,13 @@ const DesignStudio = () => {
                           e.stopPropagation();
                           setLogoFile(null);
                         }}
-                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg transition-all z-10"
+                        className="absolute top-0 right-0 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all z-10"
+                        style={{
+                          transform: 'translate(50%, -50%)'
+                        }}
                         title="Delete image"
                       >
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
@@ -783,7 +1050,7 @@ const DesignStudio = () => {
                   </div>
                 )}
 
-                {customText && (
+                {(activeSide === 'front' ? frontCustomText : backCustomText) && (
                   <div
                     className="absolute"
                     style={{
@@ -801,17 +1068,17 @@ const DesignStudio = () => {
                         transition: draggingText ? 'none' : 'transform 0.1s',
                         fontSize: '32px',
                         fontWeight: 'bold',
-                        fontFamily: textFont,
+                        fontFamily: activeSide === 'front' ? frontTextFont : backTextFont,
                         whiteSpace: 'nowrap',
                         display: 'flex',
                       }}
                     >
-                      {customText.split('').map((char, idx) => (
+                      {(activeSide === 'front' ? frontCustomText : backCustomText).split('').map((char, idx) => (
                         <span
                           key={idx}
                           style={{
-                            color: charColors[idx] || textColor,
-                            textShadow: (charColors[idx] || textColor) === '#FFFFFF' ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
+                            color: (activeSide === 'front' ? frontCharColors : backCharColors)[idx] || (activeSide === 'front' ? frontTextColor : backTextColor),
+                            textShadow: ((activeSide === 'front' ? frontCharColors : backCharColors)[idx] || (activeSide === 'front' ? frontTextColor : backTextColor)) === '#FFFFFF' ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
                             whiteSpace: 'pre',
                           }}
                         >
@@ -826,10 +1093,13 @@ const DesignStudio = () => {
                           setCustomText('');
                           setCharColors([]);
                         }}
-                        className="absolute -top-6 -right-6 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg transition-all z-10"
+                        className="absolute top-0 right-0 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all z-10"
+                        style={{
+                          transform: 'translate(50%, -50%)'
+                        }}
                         title="Delete text"
                       >
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
@@ -847,56 +1117,182 @@ const DesignStudio = () => {
                 )}
               </div>
 
-              {/* Quick Controls */}
-              {hasDesign && (
-                <div className="mt-3 flex items-center justify-center gap-3">
-                  <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                    <button onClick={() => activeElement === 'image' ? setImageRotation(imageRotation - 45) : setTextRotation(textRotation - 45)} className="p-1.5 hover:bg-white rounded" title="Rotate -45°">
-                      <RotateCcw className="w-4 h-4 text-gray-600" />
-                    </button>
-                    <button onClick={() => activeElement === 'image' ? setImageRotation(imageRotation + 45) : setTextRotation(textRotation + 45)} className="p-1.5 hover:bg-white rounded" title="Rotate +45°">
-                      <RotateCw className="w-4 h-4 text-gray-600" />
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                    <button onClick={() => activeElement === 'image' ? setImageScale(Math.max(0.2, imageScale - 0.1)) : setTextScale(Math.max(0.2, textScale - 0.1))} className="p-1.5 hover:bg-white rounded">
-                      <ZoomOut className="w-4 h-4 text-gray-600" />
-                    </button>
-                    <button onClick={() => activeElement === 'image' ? setImageScale(Math.min(1.5, imageScale + 0.1)) : setTextScale(Math.min(1.5, textScale + 0.1))} className="p-1.5 hover:bg-white rounded">
-                      <ZoomIn className="w-4 h-4 text-gray-600" />
-                    </button>
-                  </div>
-                  <button 
-                    onClick={() => {
-                      if (window.confirm('Are you sure you want to reset? All your current work will be discarded.')) {
-                        window.location.reload()
-                      }
-                    }}
-                    className="px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors border border-red-200 hover:border-red-300"
-                  >
-                    Reset
-                  </button>
-                </div>
-              )}
-
-              {/* Price & Add to Cart */}
-              <div className="mt-4 p-3 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <div className="text-sm font-medium text-gray-700">{selectedMockup.name}</div>
-                    <div className="text-xs text-gray-500">{selectedSize} • {selectedColor}</div>
-                  </div>
-                  <div className="text-2xl font-bold text-emerald-600">৳{selectedMockup.price}</div>
-                </div>
+              {/* Front/Back Toggle Tabs */}
+              <div className="flex gap-2 mt-4 justify-center">
                 <button
-                  disabled={isLoading || !hasDesign}
-                  onClick={onSubmit}
-                  className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm flex items-center justify-center gap-2"
+                  onClick={() => setActiveSide('front')}
+                  className={`py-2 px-6 rounded-lg text-sm font-semibold transition-all ${
+                    activeSide === 'front' 
+                      ? 'bg-emerald-600 text-white shadow-md' 
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  }`}
                 >
-                  <ShoppingCart className="w-5 h-5" />
-                  {isLoading ? 'Creating...' : 'Add to Cart'}
+                  Front Side
+                </button>
+                <button
+                  onClick={() => setActiveSide('back')}
+                  className={`py-2 px-6 rounded-lg text-sm font-semibold transition-all ${
+                    activeSide === 'back' 
+                      ? 'bg-emerald-600 text-white shadow-md' 
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  Back Side
                 </button>
               </div>
+
+              <>
+                {/* Quick Controls */}
+                {hasDesign && (
+                  <div className="mt-3 flex items-center justify-center gap-3">
+                    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                      <button onClick={() => activeElement === 'image' ? setImageRotation(imageRotation - 45) : setTextRotation(textRotation - 45)} className="p-1.5 hover:bg-white rounded" title="Rotate -45°">
+                        <RotateCcw className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <button onClick={() => activeElement === 'image' ? setImageRotation(imageRotation + 45) : setTextRotation(textRotation + 45)} className="p-1.5 hover:bg-white rounded" title="Rotate +45°">
+                        <RotateCw className="w-4 h-4 text-gray-600" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                      <button onClick={() => activeElement === 'image' ? setImageScale(Math.max(0.2, imageScale - 0.1)) : setTextScale(Math.max(0.2, textScale - 0.1))} className="p-1.5 hover:bg-white rounded">
+                        <ZoomOut className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <button onClick={() => activeElement === 'image' ? setImageScale(Math.min(1.5, imageScale + 0.1)) : setTextScale(Math.min(1.5, textScale + 0.1))} className="p-1.5 hover:bg-white rounded">
+                        <ZoomIn className="w-4 h-4 text-gray-600" />
+                      </button>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to reset? All your current work will be discarded.')) {
+                          window.location.reload()
+                        }
+                      }}
+                      className="px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors border border-red-200 hover:border-red-300"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                )}
+
+                {/* Transform Controls */}
+                <div className="mt-4 bg-white rounded-xl shadow-sm border-2 border-gray-200 p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                  </svg>
+                  <h3 className="font-semibold text-gray-800 text-sm">Transform Controls</h3>
+                </div>
+                
+                {/* Element Selector */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setActiveElement('image')}
+                    className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+                      activeElement === 'image' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    Image
+                  </button>
+                  <button
+                    onClick={() => setActiveElement('text')}
+                    className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all ${
+                      activeElement === 'text' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    Text
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Size Control */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-semibold text-gray-700">Scale</label>
+                      <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-xs font-bold">
+                        {Math.round((activeElement === 'image' ? imageScale : textScale) * 100)}%
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={() => activeElement === 'image' ? setImageScale(Math.max(0.2, imageScale - 0.1)) : setTextScale(Math.max(0.2, textScale - 0.1))} 
+                        className="p-1.5 bg-gray-100 rounded hover:bg-gray-200"
+                      >
+                        <ZoomOut className="w-3 h-3 text-gray-600" />
+                      </button>
+                      <input 
+                        type="range" 
+                        min={0.2} 
+                        max={1.5} 
+                        step={0.05} 
+                        value={activeElement === 'image' ? imageScale : textScale} 
+                        onChange={(e) => activeElement === 'image' ? setImageScale(Number(e.target.value)) : setTextScale(Number(e.target.value))}
+                        className="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                      />
+                      <button 
+                        onClick={() => activeElement === 'image' ? setImageScale(Math.min(1.5, imageScale + 0.1)) : setTextScale(Math.min(1.5, textScale + 0.1))} 
+                        className="p-1.5 bg-gray-100 rounded hover:bg-gray-200"
+                      >
+                        <ZoomIn className="w-3 h-3 text-gray-600" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Rotation Control */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-semibold text-gray-700">Rotate</label>
+                      <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-xs font-bold">
+                        {activeElement === 'image' ? imageRotation : textRotation}°
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={() => activeElement === 'image' ? setImageRotation(imageRotation - 15) : setTextRotation(textRotation - 15)} 
+                        className="p-1.5 bg-gray-100 rounded hover:bg-gray-200"
+                      >
+                        <RotateCcw className="w-3 h-3 text-gray-600" />
+                      </button>
+                      <input 
+                        type="range" 
+                        min={-180} 
+                        max={180} 
+                        step={1} 
+                        value={activeElement === 'image' ? imageRotation : textRotation} 
+                        onChange={(e) => activeElement === 'image' ? setImageRotation(Number(e.target.value)) : setTextRotation(Number(e.target.value))}
+                        className="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                      />
+                      <button 
+                        onClick={() => activeElement === 'image' ? setImageRotation(imageRotation + 15) : setTextRotation(textRotation + 15)} 
+                        className="p-1.5 bg-gray-100 rounded hover:bg-gray-200"
+                      >
+                        <RotateCw className="w-3 h-3 text-gray-600" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Price & Add to Cart */}
+              <div className="mt-4 max-w-md mx-auto">
+                <div className="p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl shadow-sm border border-emerald-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div className="text-sm font-semibold text-gray-800">{selectedMockupType?.name || 'Select Product'}</div>
+                      <div className="text-xs text-gray-600 mt-0.5">{selectedSize} • {selectedColor}</div>
+                    </div>
+                    <div className="text-2xl font-bold text-emerald-600">৳{Number(selectedVariant?.effective_price || selectedMockupType?.base_price || 0)}</div>
+                  </div>
+                  <button
+                    disabled={isLoading || !hasDesign || !selectedVariant}
+                    onClick={onSubmit}
+                    className="w-full py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                    {isLoading ? 'Creating...' : 'Add to Cart'}
+                  </button>
+                </div>
+              </div>
+              </>
             </div>
           </div>
         </div>

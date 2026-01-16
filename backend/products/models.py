@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
+from .mockup_models import MockupType, MockupVariant
 
 
 class Category(models.Model):
@@ -78,6 +79,10 @@ class Product(models.Model):
     is_published = models.BooleanField(default=False)
     design_logo = models.ImageField(upload_to='designs/logos/', blank=True, null=True)
     design_preview = models.ImageField(upload_to='designs/previews/', blank=True, null=True)
+    design_logo_front = models.ImageField(upload_to='designs/logos/front/', blank=True, null=True)
+    design_logo_back = models.ImageField(upload_to='designs/logos/back/', blank=True, null=True)
+    design_preview_front = models.ImageField(upload_to='designs/previews/front/', blank=True, null=True)
+    design_preview_back = models.ImageField(upload_to='designs/previews/back/', blank=True, null=True)
     design_data = models.JSONField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -149,8 +154,8 @@ class OrderItem(models.Model):
 
     @property
     def total_price(self):
-        return self.price * self.quantity
+        return (self.price or 0) * self.quantity
 
     @property
     def total_profit(self):
-        return (self.price - self.buy_price) * self.quantity
+        return ((self.price or 0) - (self.buy_price or 0)) * self.quantity

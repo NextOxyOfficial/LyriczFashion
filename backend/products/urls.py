@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
+from . import mockup_views
 
 router = DefaultRouter()
 router.register(r'categories', views.CategoryViewSet)
@@ -9,6 +10,8 @@ router.register(r'custom-products', views.CustomProductViewSet, basename='custom
 router.register(r'stores', views.StoreViewSet, basename='store')
 router.register(r'seller-products', views.SellerProductViewSet, basename='seller-products')
 router.register(r'orders', views.OrderViewSet, basename='order')
+router.register(r'mockup-types', mockup_views.MockupTypeViewSet, basename='mockup-types')
+router.register(r'mockup-variants', mockup_views.MockupVariantViewSet, basename='mockup-variants')
 
 urlpatterns = [
     path('auth/register', views.register, name='register'),

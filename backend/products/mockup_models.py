@@ -1,0 +1,60 @@
+from django.db import models
+
+
+class MockupType(models.Model):
+    """
+    Represents a type of apparel (T-Shirt, Hoodie, etc.)
+    """
+    name = models.CharField(max_length=100, unique=True)  # e.g., "T-Shirt", "Hoodie"
+    slug = models.SlugField(max_length=100, unique=True)
+    base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(blank=True, null=True)
+    preview_image = models.ImageField(upload_to='mockups/previews/', blank=True, null=True, help_text="Preview image for mockup type selector")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class MockupVariant(models.Model):
+    """
+    Represents a specific color variant of a mockup type with front and back images
+    """
+    mockup_type = models.ForeignKey(MockupType, on_delete=models.CASCADE, related_name='variants')
+    color_name = models.CharField(max_length=50)  # e.g., "White", "Black", "Navy"
+    color_hex = models.CharField(max_length=7, blank=True, null=True)  # e.g., "#FFFFFF"
+    
+    # Front and back mockup images
+    front_image = models.ImageField(upload_to='mockups/front/')
+    back_image = models.ImageField(upload_to='mockups/back/')
+    
+    # Optional: thumbnail for quick preview
+    thumbnail = models.ImageField(upload_to='mockups/thumbnails/', blank=True, null=True)
+    
+    price_modifier = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0,
+        help_text="Additional price for this color variant"
+    )
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['mockup_type', 'color_name']
+        unique_together = ['mockup_type', 'color_name']
+
+    def __str__(self):
+        return f"{self.mockup_type.name} - {self.color_name}"
+
+    @property
+    def effective_price(self):
+        """Calculate the effective price including the base price and modifier"""
+        return self.mockup_type.base_price + self.price_modifier

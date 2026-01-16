@@ -148,6 +148,10 @@ export const customProductsAPI = {
     stock?: number
     design_logo?: File | null
     design_preview?: File | null
+    design_logo_front?: File | null
+    design_logo_back?: File | null
+    design_preview_front?: File | null
+    design_preview_back?: File | null
     design_data?: any
   }) => {
     const form = new FormData()
@@ -157,6 +161,10 @@ export const customProductsAPI = {
     if (payload.stock !== undefined) form.append('stock', String(payload.stock))
     if (payload.design_logo) form.append('design_logo', payload.design_logo)
     if (payload.design_preview) form.append('design_preview', payload.design_preview)
+    if (payload.design_logo_front) form.append('design_logo_front', payload.design_logo_front)
+    if (payload.design_logo_back) form.append('design_logo_back', payload.design_logo_back)
+    if (payload.design_preview_front) form.append('design_preview_front', payload.design_preview_front)
+    if (payload.design_preview_back) form.append('design_preview_back', payload.design_preview_back)
     if (payload.design_data) form.append('design_data', JSON.stringify(payload.design_data))
 
     const response = await api.post('/custom-products/', form, {
@@ -238,6 +246,33 @@ export const ordersAPI = {
         Authorization: `Bearer ${token}`,
       },
     })
+    return response.data
+  },
+};
+
+export const mockupAPI = {
+  listMockupTypes: async () => {
+    const response = await api.get('/mockup-types/')
+    return response.data
+  },
+
+  getMockupType: async (slug: string) => {
+    const response = await api.get(`/mockup-types/${slug}/`)
+    return response.data
+  },
+
+  listMockupVariants: async (mockupType?: string, color?: string) => {
+    const response = await api.get('/mockup-variants/', {
+      params: {
+        mockup_type: mockupType,
+        color: color,
+      },
+    })
+    return response.data
+  },
+
+  getAvailableColors: async () => {
+    const response = await api.get('/mockup-variants/colors/')
     return response.data
   },
 };

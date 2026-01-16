@@ -1,14 +1,15 @@
 import { Link } from 'react-router-dom'
 import { ShoppingCart, User, Menu, X, Search, Phone, Heart, ChevronDown } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useCartStore } from '../store/cartStore'
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [isScrolled, setIsScrolled] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
+  const headerRef = useRef<HTMLElement>(null)
+  const [headerHeight, setHeaderHeight] = useState(180)
   const cartCount = useCartStore((s) => s.items.reduce((sum, x) => sum + x.quantity, 0))
 
   useEffect(() => {
@@ -27,28 +28,26 @@ const Navbar = () => {
     checkAuth()
   }, [])
 
-  useEffect(() => {
-    let lastScrollY = window.scrollY
-    let ticking = false
+  useLayoutEffect(() => {
+    const el = headerRef.current
+    if (!el) return
 
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY
-
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          // Only change state if scroll difference is significant (more than 50px)
-          if (Math.abs(currentScrollY - lastScrollY) > 50) {
-            setIsScrolled(currentScrollY > 100)
-            lastScrollY = currentScrollY
-          }
-          ticking = false
-        })
-        ticking = true
-      }
+    const measure = () => {
+      const next = Math.ceil(el.getBoundingClientRect().height)
+      setHeaderHeight((prev) => (next > prev ? next : prev))
     }
 
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    measure()
+    window.addEventListener('resize', measure)
+
+    const fonts = (document as any).fonts
+    if (fonts?.ready?.then) {
+      fonts.ready.then(measure).catch(() => {})
+    }
+
+    return () => {
+      window.removeEventListener('resize', measure)
+    }
   }, [])
 
   // Click outside to close user dropdown
@@ -75,11 +74,11 @@ const Navbar = () => {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-sm">
-      {/* Scrolling Text Banner */}
-      <div className={`bg-gray-900 text-white overflow-hidden relative transition-all duration-300 ${
-        isScrolled ? 'h-0 opacity-0' : 'h-auto opacity-100'
-      }`}>
+    <>
+    <div style={{ height: headerHeight }} />
+    <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
+      {/* Scrolling Text Banner - Not Sticky */}
+      <div className="bg-gray-900 text-white overflow-hidden relative">
         <div className="flex animate-marquee whitespace-nowrap py-2.5 text-sm font-medium">
           <span className="inline-flex items-center px-8">🔥 Extra Sale 30% off - Limited Time Offer!</span>
           <span className="inline-flex items-center px-8">✨ Free Shipping on Orders Over ৳2000</span>
@@ -93,16 +92,13 @@ const Navbar = () => {
         </div>
       </div>
 
+      {/* Sticky Header */}
       {/* Main Header */}
-      <div className={`border-gray-100 transition-all duration-300 ${
-        isScrolled ? 'mt-0' : 'mt-5'
-      }`}>
+      <div className="border-gray-100 py-4">
         <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`flex justify-between items-center transition-all duration-300 ${
-            isScrolled ? 'h-16' : 'h-20'
-          }`}>
+          <div className="flex justify-between items-center">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2 flex-shrink-0">
               <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">L</span>
               </div>
@@ -124,10 +120,8 @@ const Navbar = () => {
             </div>
 
             {/* Hotline & Icons */}
-            <div className="hidden md:flex items-center gap-6">
-              <div className={`flex items-center gap-3 transition-all duration-300 ${
-                isScrolled ? 'hidden' : 'flex'
-              }`}>
+            <div className="hidden md:flex items-center gap-6 flex-shrink-0">
+              <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                   <Phone className="w-5 h-5 text-gray-600" />
                 </div>
@@ -137,9 +131,7 @@ const Navbar = () => {
                 </div>
               </div>
 
-              <div className={`flex items-center transition-all duration-300 ${
-                isScrolled ? 'gap-2' : 'gap-3'
-              }`}>
+              <div className="flex items-center gap-3">
                 <Link to="/cart" className="relative p-2 text-gray-600 hover:text-emerald-600 transition-colors">
                   <Heart className="w-6 h-6" />
                   <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -232,10 +224,8 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Navigation Bar */}
-      <nav className={`bg-white transition-all duration-300 ${
-        isScrolled ? 'h-0 opacity-0 overflow-hidden py-0' : 'py-3 opacity-100'
-      }`}>
+      {/* Navigation Bar - Not Sticky */}
+      <nav className="bg-white py-3 shadow-sm">
         <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="hidden md:flex justify-between items-center">
             <div className="flex items-center gap-6">
@@ -299,6 +289,7 @@ const Navbar = () => {
         </div>
       )}
     </header>
+    </>
   )
 }
 
