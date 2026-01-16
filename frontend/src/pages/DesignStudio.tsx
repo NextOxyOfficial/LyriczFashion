@@ -218,9 +218,15 @@ const DesignStudio = () => {
 
   const [designLibrary, setDesignLibrary] = useState<any[]>([])
   const [loadingDesigns, setLoadingDesigns] = useState(false)
+  const [libraryCategory, setLibraryCategory] = useState('')
+  const [librarySearch, setLibrarySearch] = useState('')
+  const [libraryPage, setLibraryPage] = useState(1)
+  const [libraryHasMore, setLibraryHasMore] = useState(true)
+  const [libraryLoadingMore, setLibraryLoadingMore] = useState(false)
 
   useEffect(() => {
-    if (!token) { navigate('/login'); return }
+    // Remove automatic redirect - let interceptors handle it
+    // if (!token) { navigate('/login'); return }
   }, [navigate, token])
 
   useEffect(() => {
@@ -299,16 +305,87 @@ const DesignStudio = () => {
   }, [activeSide, selectedVariant?.id])
 
   useEffect(() => {
-    const loadDesignLibrary = async () => {
-      setLoadingDesigns(true)
+    const loadDesignLibrary = async (page = 1, append = false) => {
+      if (page === 1) {
+        setLoadingDesigns(true)
+        setLibraryPage(1)
+        setLibraryHasMore(true)
+      } else {
+        setLibraryLoadingMore(true)
+      }
+      
       try {
-        const response = await designLibraryAPI.listPublic()
-        setDesignLibrary(Array.isArray(response) ? response : [])
-      } catch { setDesignLibrary([]) }
-      finally { setLoadingDesigns(false) }
+        const params = new URLSearchParams()
+        if (libraryCategory) params.append('category', libraryCategory)
+        if (librarySearch) params.append('search', librarySearch)
+        params.append('page', String(page))
+        params.append('page_size', '20')
+        
+        const response = await designLibraryAPI.listPublic(params.toString() ? `?${params.toString()}` : '')
+        const results = Array.isArray(response?.results) ? response.results : Array.isArray(response) ? response : []
+        
+        if (append && page > 1) {
+          setDesignLibrary(prev => [...prev, ...results])
+        } else {
+          setDesignLibrary(results)
+        }
+        
+        setLibraryHasMore(results.length === 20)
+        setLibraryPage(page)
+      } catch {
+        if (!append) setDesignLibrary([])
+      } finally {
+        setLoadingDesigns(false)
+        setLibraryLoadingMore(false)
+      }
     }
-    loadDesignLibrary()
-  }, [])
+
+    loadDesignLibrary(1, false)
+
+    const handleDesignLibraryUpdated = () => {
+      loadDesignLibrary(1, false).catch(() => {})
+    }
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'designLibraryUpdatedAt') {
+        handleDesignLibraryUpdated()
+      }
+    }
+
+    window.addEventListener('designLibraryUpdated', handleDesignLibraryUpdated)
+    window.addEventListener('storage', handleStorage)
+
+    return () => {
+      window.removeEventListener('designLibraryUpdated', handleDesignLibraryUpdated)
+      window.removeEventListener('storage', handleStorage)
+    }
+  }, [libraryCategory, librarySearch])
+
+  const loadMoreDesigns = async () => {
+    if (!libraryHasMore || libraryLoadingMore) return
+    
+    const nextPage = libraryPage + 1
+    setLibraryLoadingMore(true)
+    
+    try {
+      const params = new URLSearchParams()
+      if (libraryCategory) params.append('category', libraryCategory)
+      if (librarySearch) params.append('search', librarySearch)
+      params.append('page', String(nextPage))
+      params.append('page_size', '20')
+      
+      const response = await designLibraryAPI.listPublic(params.toString() ? `?${params.toString()}` : '')
+      const results = Array.isArray(response?.results) ? response.results : Array.isArray(response) ? response : []
+      
+      setDesignLibrary(prev => [...prev, ...results])
+      setLibraryHasMore(results.length === 20)
+      setLibraryPage(nextPage)
+    } catch {
+      // Ignore errors for load more
+    } finally {
+      setLibraryLoadingMore(false)
+    }
+  }
 
   useEffect(() => {
     if (!frontLogoFile) {
@@ -912,20 +989,59 @@ const DesignStudio = () => {
               <h3 className="font-semibold text-emerald-700 mb-3 text-base flex items-center gap-2">
                 <Layers className="w-5 h-5" /> Design Library
               </h3>
+              
+              {/* Filters */}
+              <div className="mb-3 space-y-2">
+                <select
+                  value={libraryCategory}
+                  onChange={(e) => setLibraryCategory(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                >
+                  <option value="">All Categories</option>
+                  <option value="Business">Business</option>
+                  <option value="Sports">Sports</option>
+                  <option value="Tech">Tech</option>
+                  <option value="Fashion">Fashion</option>
+                  <option value="Art">Art</option>
+                </select>
+                <input
+                  type="text"
+                  value={librarySearch}
+                  onChange={(e) => setLibrarySearch(e.target.value)}
+                  placeholder="Search designs..."
+                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+
               {loadingDesigns ? (
                 <div className="flex justify-center py-6">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
                 </div>
               ) : designLibrary.length > 0 ? (
-                <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                <div 
+                  className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto"
+                  onScroll={(e) => {
+                    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
+                    if (scrollHeight - scrollTop <= clientHeight + 10 && libraryHasMore && !libraryLoadingMore) {
+                      loadMoreDesigns()
+                    }
+                  }}
+                >
                   {designLibrary.map((d) => (
                     <button key={d.id} onClick={() => selectDesignFromLibrary(d)}
                       className="p-1.5 border border-gray-100 rounded-lg hover:border-emerald-400 hover:shadow transition-all">
-                      <img src={toUrl(d.design_preview || d.design_logo || d.image) || ''} alt={d.name}
+                      <img src={toUrl(d.image || d.design_logo || d.design_preview) || ''} alt={d.name}
                         className="w-full aspect-square object-cover rounded" />
-                      <div className="text-xs truncate mt-1 text-gray-700">{d.name}</div>
+                      {d.category && (
+                        <div className="text-xs text-gray-500 truncate mt-1">{d.category}</div>
+                      )}
                     </button>
                   ))}
+                  {libraryLoadingMore && (
+                    <div className="col-span-3 flex justify-center py-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="text-xs text-gray-400 text-center py-4">No designs available</p>

@@ -21,6 +21,9 @@ const SellYourDesign = () => {
 
   const [name, setName] = useState('')
   const [image, setImage] = useState<File | null>(null)
+  const [imagePreviewUrl, setImagePreviewUrl] = useState('')
+  const [category, setCategory] = useState('')
+  const [searchKeywords, setSearchKeywords] = useState('')
   const [myItems, setMyItems] = useState<any[]>([])
   const [commissions, setCommissions] = useState<any[]>([])
 
@@ -28,13 +31,11 @@ const SellYourDesign = () => {
   const [success, setSuccess] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const load = async () => {
+  const fetchData = async () => {
     if (!token) {
       navigate('/login')
       return
     }
-
-    setIsLoading(true)
     try {
       const meData = await authAPI.getMe(token)
       setMe(meData)
@@ -47,6 +48,13 @@ const SellYourDesign = () => {
     } catch {
       localStorage.removeItem('token')
       navigate('/login')
+    }
+  }
+
+  const load = async () => {
+    setIsLoading(true)
+    try {
+      await fetchData()
     } finally {
       setIsLoading(false)
     }
@@ -56,6 +64,16 @@ const SellYourDesign = () => {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (!image) {
+      setImagePreviewUrl('')
+      return
+    }
+    const url = URL.createObjectURL(image)
+    setImagePreviewUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [image])
 
   const displayName = useMemo(() => {
     if (!me) return ''
@@ -89,12 +107,20 @@ const SellYourDesign = () => {
       await designLibraryAPI.create(token, {
         name: name.trim(),
         image,
+        category: category.trim(),
+        search_keywords: searchKeywords.trim(),
         commission_per_use: 49,
       })
-      setSuccess('Design uploaded successfully! It is now available in the Design Studio library.')
+      setSuccess('Published! Your logo is now available in the Design Studio library.')
       setName('')
       setImage(null)
-      await load()
+      setCategory('')
+      setSearchKeywords('')
+
+      localStorage.setItem('designLibraryUpdatedAt', String(Date.now()))
+      window.dispatchEvent(new Event('designLibraryUpdated'))
+
+      await fetchData()
     } catch (e: any) {
       setError(e?.response?.data?.detail || e?.message || 'Upload failed')
     } finally {
@@ -145,7 +171,7 @@ const SellYourDesign = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 space-y-4">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <div className="font-semibold text-gray-900">Upload a logo</div>
+              <div className="font-semibold text-gray-900">Publish your logo</div>
               <div className="text-sm text-gray-600 mt-1">Commission per use: <span className="font-semibold">৳49</span></div>
 
               {error && <div className="mt-3 text-sm text-red-600 font-medium">{error}</div>}
@@ -155,8 +181,21 @@ const SellYourDesign = () => {
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Design name (e.g., Brand Logo)"
+                  placeholder="Logo name (e.g., Brand Logo)"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <input
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  placeholder="Category (e.g., Business, Sports, Tech)"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <textarea
+                  value={searchKeywords}
+                  onChange={(e) => setSearchKeywords(e.target.value)}
+                  placeholder="Search keywords (e.g., modern, minimalist, corporate)"
+                  rows={2}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                 />
                 <input
                   type="file"
@@ -165,12 +204,33 @@ const SellYourDesign = () => {
                   className="w-full text-sm border-2 border-dashed border-emerald-200 rounded-xl p-4 bg-gradient-to-br from-emerald-50 to-white hover:border-emerald-400 hover:bg-emerald-50 transition-all cursor-pointer file:mr-4 file:py-2 file:px-5 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer file:shadow-sm"
                 />
 
+                {imagePreviewUrl ? (
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-white border border-emerald-100">
+                        <img src={imagePreviewUrl} alt="preview" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-gray-900 truncate">{image?.name}</div>
+                        <div className="text-xs text-gray-600 mt-1">{image ? `${(image.size / 1024).toFixed(1)} KB` : ''}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setImage(null)}
+                        className="px-3 py-2 rounded-xl border border-red-200 text-red-700 font-semibold hover:bg-red-50 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
                 <button
                   onClick={onSubmit}
                   disabled={submitting}
                   className="w-full px-5 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {submitting ? 'Uploading...' : 'Upload Design'}
+                  {submitting ? 'Publishing...' : 'Publish'}
                 </button>
               </div>
             </div>
@@ -184,25 +244,39 @@ const SellYourDesign = () => {
 
           <div className="lg:col-span-2 space-y-4">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <div className="font-semibold text-gray-900">My uploaded designs</div>
-              <div className="text-sm text-gray-600 mt-1">These designs will appear in Design Studio library.</div>
+              <div className="font-semibold text-gray-900">My published logos</div>
+              <div className="text-sm text-gray-600 mt-1">After you publish, your logos will appear here and also in Design Studio library.</div>
             </div>
 
             {myItems.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-sm text-gray-600">No designs uploaded yet.</div>
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-sm text-gray-600">No logos published yet.</div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {myItems.map((d) => (
-                  <div key={d.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                    <div className="aspect-square bg-gray-50">
-                      <img src={toUrl(d.image)} alt={d.name} className="w-full h-full object-cover" />
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="max-h-[520px] overflow-y-auto divide-y divide-gray-100">
+                  {myItems.map((d) => (
+                    <div key={d.id} className="p-4 flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex-shrink-0">
+                        <img src={toUrl(d.image)} alt={d.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-gray-900 truncate">{d.name}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {d.category && <span className="inline-block bg-gray-100 px-2 py-1 rounded mr-2">{d.category}</span>}
+                          Commission: ৳{d.commission_per_use}
+                        </div>
+                        {d.search_keywords && (
+                          <div className="text-xs text-gray-400 mt-1 truncate">Keywords: {d.search_keywords}</div>
+                        )}
+                      </div>
+                      <Link
+                        to="/design-studio"
+                        className="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-sm hover:bg-emerald-100 transition-colors"
+                      >
+                        View in Studio
+                      </Link>
                     </div>
-                    <div className="p-4">
-                      <div className="text-sm font-semibold text-gray-900 line-clamp-1">{d.name}</div>
-                      <div className="text-xs text-gray-500 mt-1">Commission: ৳{d.commission_per_use}</div>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
 

@@ -9,6 +9,30 @@ const api = axios.create({
   },
 });
 
+// Add request interceptor to automatically include token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Add response interceptor to handle token expiration
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      // Only redirect to login if we're not already on login/register pages
+      if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const authAPI = {
   login: async (email: string, password: string) => {
     const params = new URLSearchParams();
@@ -187,8 +211,8 @@ export const customProductsAPI = {
 };
 
 export const designLibraryAPI = {
-  listPublic: async () => {
-    const response = await api.get('/design-library/')
+  listPublic: async (queryString = '') => {
+    const response = await api.get(`/design-library/${queryString}`)
     return response.data
   },
 
@@ -206,12 +230,20 @@ export const designLibraryAPI = {
     payload: {
       name: string
       image: File
+      category?: string
+      search_keywords?: string
       commission_per_use?: number
     }
   ) => {
     const form = new FormData()
     form.append('name', payload.name)
     form.append('image', payload.image)
+    if (payload.category) {
+      form.append('category', payload.category)
+    }
+    if (payload.search_keywords) {
+      form.append('search_keywords', payload.search_keywords)
+    }
     if (payload.commission_per_use !== undefined) {
       form.append('commission_per_use', String(payload.commission_per_use))
     }

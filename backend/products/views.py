@@ -273,11 +273,49 @@ class DesignLibraryItemViewSet(viewsets.ModelViewSet):
     serializer_class = DesignLibraryItemSerializer
     parser_classes = [MultiPartParser, FormParser]
     lookup_field = 'id'
+    pagination_class = None
 
     def get_queryset(self):
         if self.action in ['update', 'partial_update', 'destroy', 'my']:
             return DesignLibraryItem.objects.filter(owner=self.request.user).select_related('owner')
-        return DesignLibraryItem.objects.filter(is_active=True).select_related('owner')
+        
+        qs = DesignLibraryItem.objects.filter(is_active=True).select_related('owner')
+        
+        # Add filtering by category and search
+        category = self.request.query_params.get('category')
+        search = self.request.query_params.get('search')
+        
+        if category:
+            qs = qs.filter(category__icontains=category)
+        
+        if search:
+            qs = qs.filter(
+                models.Q(name__icontains=search) |
+                models.Q(search_keywords__icontains=search) |
+                models.Q(category__icontains=search)
+            )
+        
+        return qs
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        
+        # Manual pagination
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 20))
+        
+        start = (page - 1) * page_size
+        end = start + page_size
+        
+        items = queryset[start:end]
+        serializer = self.get_serializer(items, many=True)
+        
+        return Response({
+            'results': serializer.data,
+            'page': page,
+            'page_size': page_size,
+            'has_more': len(items) == page_size
+        })
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy', 'my']:

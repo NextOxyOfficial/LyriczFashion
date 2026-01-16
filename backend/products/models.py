@@ -174,6 +174,8 @@ class DesignLibraryItem(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='design_library_items')
     name = models.CharField(max_length=200)
     image = models.ImageField(upload_to='design-library/')
+    category = models.CharField(max_length=100, blank=True, default='')
+    search_keywords = models.TextField(blank=True, default='')
     commission_per_use = models.DecimalField(max_digits=10, decimal_places=2, default=49)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
