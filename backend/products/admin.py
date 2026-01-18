@@ -7,8 +7,28 @@ from .mockup_models import MockupType, MockupVariant
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'created_at']
-    search_fields = ['name']
+    list_display = ['name', 'slug', 'is_active', 'order', 'get_product_count', 'created_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['name', 'slug']
+    list_editable = ['is_active', 'order']
+    prepopulated_fields = {'slug': ('name',)}
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('name', 'slug', 'description')
+        }),
+        ('Image', {
+            'fields': ('image', 'image_url'),
+            'description': 'Upload an image or provide an external URL'
+        }),
+        ('Display Settings', {
+            'fields': ('is_active', 'order')
+        }),
+    )
+    
+    def get_product_count(self, obj):
+        return obj.product_count
+    get_product_count.short_description = 'Products'
 
 
 @admin.register(SellerProfile)

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { customProductsAPI, designLibraryAPI, designCategoryAPI, mockupAPI } from '../services/api'
+import { customProductsAPI, designLibraryAPI, designCategoryAPI, mockupAPI, categoriesAPI } from '../services/api'
 import { useCartStore } from '../store/cartStore'
 import { RotateCw, RotateCcw, ZoomIn, ZoomOut, Type, Layers, Sparkles, ShoppingCart, ImageIcon } from 'lucide-react'
 
@@ -142,6 +142,9 @@ const DesignStudio = () => {
   const [isLoadingMockups, setIsLoadingMockups] = useState(false)
   const [mockupError, setMockupError] = useState<string | null>(null)
   const [mockupTypes, setMockupTypes] = useState<MockupTypeList[]>([])
+  const [allMockupTypes, setAllMockupTypes] = useState<MockupTypeList[]>([])
+  const [productCategories, setProductCategories] = useState<any[]>([])
+  const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [selectedMockupType, setSelectedMockupType] = useState<MockupTypeList | null>(null)
   const [mockupVariants, setMockupVariants] = useState<MockupVariant[]>([])
   const [selectedVariant, setSelectedVariant] = useState<MockupVariant | null>(null)
@@ -243,6 +246,19 @@ const DesignStudio = () => {
     loadUser()
   }, [token])
 
+  // Load categories
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await categoriesAPI.getActive()
+        setProductCategories(data)
+      } catch (error) {
+        console.error('Failed to load categories:', error)
+      }
+    }
+    loadCategories()
+  }, [])
+
   useEffect(() => {
     const loadMockups = async () => {
       setIsLoadingMockups(true)
@@ -250,6 +266,7 @@ const DesignStudio = () => {
       try {
         const types: MockupTypeList[] = await mockupAPI.listMockupTypes()
         const safeTypes = Array.isArray(types) ? types : []
+        setAllMockupTypes(safeTypes)
         setMockupTypes(safeTypes)
 
         if (safeTypes.length === 0) {
@@ -263,6 +280,7 @@ const DesignStudio = () => {
         setSelectedMockupType((prev) => prev ?? safeTypes[0])
       } catch {
         setMockupError('Failed to load mockup types')
+        setAllMockupTypes([])
         setMockupTypes([])
         setSelectedMockupType(null)
         setMockupVariants([])
@@ -275,6 +293,19 @@ const DesignStudio = () => {
 
     loadMockups()
   }, [])
+
+  // Filter mockup types by selected category
+  useEffect(() => {
+    if (!selectedCategory) {
+      setMockupTypes(allMockupTypes)
+    } else {
+      const filtered = allMockupTypes.filter((type: any) => type.category_slug === selectedCategory)
+      setMockupTypes(filtered)
+      if (filtered.length > 0 && !filtered.find(t => t.id === selectedMockupType?.id)) {
+        setSelectedMockupType(filtered[0])
+      }
+    }
+  }, [selectedCategory, allMockupTypes, selectedMockupType?.id])
 
   useEffect(() => {
     const loadVariants = async () => {
@@ -869,21 +900,17 @@ const DesignStudio = () => {
   return (
     <div className="bg-gradient-to-br from-emerald-50 via-white to-emerald-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent">
-            Design Studio
-          </h1>
-          <p className="text-gray-500 mt-1 text-sm">Create custom apparel with images or text</p>
-        </div>
-
-        {/* Mockup Selector - Centered */}
-        <div className="bg-white rounded-xl shadow-sm border border-emerald-100 p-5 mb-8">
-          <div className="text-center mb-4">
-            <h3 className="font-bold text-emerald-700 text-lg flex items-center justify-center gap-2">
+        {/* Header & Mockup Selector - Combined */}
+        <div className="bg-white rounded-xl shadow-sm border border-emerald-100 p-6 mb-8">
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent mb-2">
+              Design Studio
+            </h1>
+            <p className="text-gray-500 text-sm mb-4">Create custom apparel with images or text</p>
+            <div className="inline-flex items-center gap-2 text-emerald-700 font-bold text-lg">
               <Sparkles className="w-6 h-6" /> Select Product
-            </h3>
-            <span className="text-sm text-gray-500 mt-1 inline-block">Choose your apparel type</span>
+            </div>
+            <p className="text-sm text-gray-500 mt-1">Choose your apparel type</p>
           </div>
           {isLoadingMockups ? (
             <div className="py-10 text-center text-sm text-gray-500">Loading apparel types...</div>

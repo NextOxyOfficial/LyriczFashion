@@ -717,3 +717,12 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         data = OrderSerializer(order, context={'request': request}).data
         return Response(data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_categories(request):
+    """Get all active categories with product counts"""
+    categories = Category.objects.filter(is_active=True)
+    serializer = CategorySerializer(categories, many=True)
+    return Response(serializer.data)

@@ -7,6 +7,7 @@ class MockupType(models.Model):
     """
     name = models.CharField(max_length=100, unique=True)  # e.g., "T-Shirt", "Hoodie"
     slug = models.SlugField(max_length=100, unique=True)
+    category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True, related_name='mockup_types', help_text="Link to category for filtering")
     base_price = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField(blank=True, null=True)
     preview_image = models.ImageField(upload_to='mockups/previews/', blank=True, null=True, help_text="Preview image for mockup type selector")

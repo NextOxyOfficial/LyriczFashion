@@ -60,6 +60,9 @@ class MockupTypeSerializer(serializers.ModelSerializer):
     variants = MockupVariantSerializer(many=True, read_only=True)
     variant_count = serializers.SerializerMethodField()
     preview_image = serializers.SerializerMethodField()
+    category_id = serializers.IntegerField(source='category.id', read_only=True, allow_null=True)
+    category_name = serializers.CharField(source='category.name', read_only=True, allow_null=True)
+    category_slug = serializers.CharField(source='category.slug', read_only=True, allow_null=True)
     
     class Meta:
         model = MockupType
@@ -67,6 +70,9 @@ class MockupTypeSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'slug',
+            'category_id',
+            'category_name',
+            'category_slug',
             'base_price',
             'description',
             'preview_image',
@@ -94,6 +100,9 @@ class MockupTypeListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for listing mockup types without variants"""
     variant_count = serializers.SerializerMethodField()
     preview_image = serializers.SerializerMethodField()
+    category_id = serializers.IntegerField(source='category.id', read_only=True, allow_null=True)
+    category_name = serializers.CharField(source='category.name', read_only=True, allow_null=True)
+    category_slug = serializers.CharField(source='category.slug', read_only=True, allow_null=True)
     
     class Meta:
         model = MockupType
@@ -101,6 +110,9 @@ class MockupTypeListSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'slug',
+            'category_id',
+            'category_name',
+            'category_slug',
             'base_price',
             'description',
             'preview_image',

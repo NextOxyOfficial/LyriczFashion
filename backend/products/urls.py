@@ -24,5 +24,6 @@ urlpatterns = [
     path('auth/me', views.get_current_user, name='current-user'),
     path('seller/become', views.become_seller, name='become-seller'),
     path('feed', views.feed, name='feed'),
+    path('categories/active', views.get_categories, name='active-categories'),
     path('', include(router.urls)),
 ]

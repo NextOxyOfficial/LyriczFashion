@@ -8,16 +8,31 @@ from .mockup_models import MockupType, MockupVariant
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
+    slug = models.SlugField(max_length=120, unique=True, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to='categories/', blank=True, null=True, help_text="Category image (recommended: 300x300px)")
+    image_url = models.URLField(max_length=500, blank=True, null=True, help_text="External image URL (if not uploading)")
+    is_active = models.BooleanField(default=True, help_text="Show this category on the site")
+    order = models.IntegerField(default=0, help_text="Display order (lower numbers show first)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name_plural = "Categories"
-        ordering = ['name']
+        ordering = ['order', 'name']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
+    
+    @property
+    def product_count(self):
+        """Get count of published products in this category"""
+        return self.products.filter(is_published=True).count()
 
 
 class UserProfile(models.Model):

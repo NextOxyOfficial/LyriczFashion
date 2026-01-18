@@ -2,12 +2,13 @@ import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Truck, Shield, RefreshCw, Headphones, Wand2, Sparkles, Zap, Star } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
-import { productsAPI } from '../services/api'
+import { productsAPI, categoriesAPI } from '../services/api'
 
 const Home = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const imageRef = useRef<HTMLDivElement>(null)
   const [allProducts, setAllProducts] = useState<any[]>([])
+  const [categories, setCategories] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<'new' | 'bestseller' | 'sale'>('new')
   const [typedText1, setTypedText1] = useState('')
   const [typedText2, setTypedText2] = useState('')
@@ -80,6 +81,19 @@ const Home = () => {
       clearTimeout(timeout3)
       clearInterval(cursorInterval)
     }
+  }, [])
+
+  // Load categories
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await categoriesAPI.getActive()
+        setCategories(data)
+      } catch (error) {
+        console.error('Failed to load categories:', error)
+      }
+    }
+    loadCategories()
   }, [])
 
   useEffect(() => {
@@ -312,71 +326,36 @@ const Home = () => {
         `}</style>
       </section>
 
-      {/* Shopping by Categories */}
+      {/* Shopping by Categories - Dynamic */}
       <section className="py-8 bg-white">
         <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-12">Shopping by Categories</h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
-            {/* T-shirt */}
-            <Link to="/products?category=tshirt" className="flex flex-col items-center group">
-              <div className="w-40 h-40 rounded-full bg-gray-100 overflow-hidden mb-4 group-hover:shadow-lg transition-shadow">
-                <img
-                  src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop"
-                  alt="T-shirt"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <h3 className="text-base font-semibold text-gray-900">T-shirt <sup className="text-xs text-gray-500">15</sup></h3>
-            </Link>
-
-            {/* Long-sleeves */}
-            <Link to="/products?category=longsleeves" className="flex flex-col items-center group">
-              <div className="w-40 h-40 rounded-full bg-gray-100 overflow-hidden mb-4 group-hover:shadow-lg transition-shadow">
-                <img
-                  src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=300&h=300&fit=crop"
-                  alt="Long-sleeves"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <h3 className="text-base font-semibold text-gray-900">Long-sleeves <sup className="text-xs text-gray-500">8</sup></h3>
-            </Link>
-
-            {/* Sweater */}
-            <Link to="/products?category=sweater" className="flex flex-col items-center group">
-              <div className="w-40 h-40 rounded-full bg-gray-100 overflow-hidden mb-4 group-hover:shadow-lg transition-shadow">
-                <img
-                  src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=300&h=300&fit=crop"
-                  alt="Sweater"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <h3 className="text-base font-semibold text-gray-900">Sweater <sup className="text-xs text-gray-500">18</sup></h3>
-            </Link>
-
-            {/* Hoodies */}
-            <Link to="/products?category=hoodies" className="flex flex-col items-center group">
-              <div className="w-40 h-40 rounded-full bg-gray-100 overflow-hidden mb-4 group-hover:shadow-lg transition-shadow">
-                <img
-                  src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=300&h=300&fit=crop"
-                  alt="Hoodies"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <h3 className="text-base font-semibold text-gray-900">Hoodies <sup className="text-xs text-gray-500">9</sup></h3>
-            </Link>
-
-            {/* Tanktop */}
-            <Link to="/products?category=tanktop" className="flex flex-col items-center group">
-              <div className="w-40 h-40 rounded-full bg-gray-100 overflow-hidden mb-4 group-hover:shadow-lg transition-shadow">
-                <img
-                  src="https://images.unsplash.com/photo-1622445275463-afa2ab738c34?w=300&h=300&fit=crop"
-                  alt="Tanktop"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <h3 className="text-base font-semibold text-gray-900">Tanktop <sup className="text-xs text-gray-500">6</sup></h3>
-            </Link>
-          </div>
+          {categories.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+              {categories.map((category) => (
+                <Link 
+                  key={category.id}
+                  to={`/products?category=${category.slug}`} 
+                  className="flex flex-col items-center group"
+                >
+                  <div className="w-40 h-40 rounded-full bg-gray-100 overflow-hidden mb-4 group-hover:shadow-lg transition-shadow">
+                    <img
+                      src={category.image_url || category.image || 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop'}
+                      alt={category.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <h3 className="text-base font-semibold text-gray-900">
+                    {category.name} <sup className="text-xs text-gray-500">{category.product_count}</sup>
+                  </h3>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500">Loading categories...</p>
+            </div>
+          )}
         </div>
       </section>
 

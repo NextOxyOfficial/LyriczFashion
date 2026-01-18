@@ -396,6 +396,17 @@ export const productsAPI = {
   },
 };
 
+export const categoriesAPI = {
+  getActive: async () => {
+    try {
+      const response = await api.get('/categories/active');
+      return response.data;
+    } catch (error) {
+      return [];
+    }
+  },
+};
+
 export const settingsAPI = {
   getPromotionalBanners: async () => {
     try {
