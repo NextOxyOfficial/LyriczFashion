@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Trash2, Minus, Plus, ShoppingBag, ChevronRight, Truck, Shield, Tag, Gift, ArrowRight } from 'lucide-react'
 import { useCartStore } from '../store/cartStore'
@@ -11,6 +11,10 @@ const Cart = () => {
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null)
   const [couponError, setCouponError] = useState<string | null>(null)
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   const FREE_SHIPPING_THRESHOLD = 2000
   const SHIPPING_FEE = 100

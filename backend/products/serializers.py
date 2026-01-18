@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Category, SellerProfile, Store, Product, Order, OrderItem, DesignLibraryItem, DesignCommission, DesignCategory, UserProfile
+from .models import Category, SellerProfile, Store, Product, Order, OrderItem, DesignLibraryItem, DesignCommission, DesignCategory, UserProfile, WholesaleInquiry
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -53,6 +53,7 @@ class ProductSerializer(serializers.ModelSerializer):
     profit_per_unit = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     store_name = serializers.CharField(source='store.name', read_only=True)
     store_slug = serializers.CharField(source='store.slug', read_only=True)
+    designer_name = serializers.SerializerMethodField()
     available_stock = serializers.SerializerMethodField()
     admin_buy_price = serializers.SerializerMethodField()
      
@@ -73,6 +74,13 @@ class ProductSerializer(serializers.ModelSerializer):
             return int(obj.stock or 0)
         except Exception:
             return 0
+
+    def get_designer_name(self, obj: Product):
+        if obj.created_by:
+            # Return full name if available, otherwise username
+            full_name = f"{obj.created_by.first_name} {obj.created_by.last_name}".strip()
+            return full_name if full_name else obj.created_by.username
+        return None
 
     def get_admin_buy_price(self, obj: Product):
         try:
@@ -139,3 +147,10 @@ class DesignCommissionSerializer(serializers.ModelSerializer):
         model = DesignCommission
         fields = '__all__'
         read_only_fields = ['design', 'owner', 'used_by', 'order', 'order_item', 'created_at']
+
+
+class WholesaleInquirySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WholesaleInquiry
+        fields = '__all__'
+        read_only_fields = ['created_at']

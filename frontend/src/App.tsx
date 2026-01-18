@@ -13,12 +13,16 @@ import AdminDashboard from './pages/AdminDashboard'
 import SellerDashboard from './pages/SellerDashboard'
 import Dashboard from './pages/Dashboard'
 import SellerDesignCreate from './pages/SellerDesignCreate'
+import SellerOrdersReceived from './pages/SellerOrdersReceived'
 import StorePage from './pages/StorePage'
 import Profile from './pages/Profile'
 import Orders from './pages/Orders'
 import Settings from './pages/Settings'
 import AddressBook from './pages/AddressBook'
 import SellYourDesign from './pages/SellYourDesign'
+import Designers from './pages/Designers'
+import Help from './pages/Help'
+import Wholesale from './pages/Wholesale'
 
 function App() {
   return (
@@ -37,8 +41,12 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/address-book" element={<AddressBook />} />
             <Route path="/sell-your-design" element={<SellYourDesign />} />
+            <Route path="/designers" element={<Designers />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/wholesale" element={<Wholesale />} />
             <Route path="/seller" element={<SellerDashboard />} />
             <Route path="/seller/designs/new" element={<SellerDesignCreate />} />
+            <Route path="/seller/orders-received" element={<SellerOrdersReceived />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/design-studio" element={<DesignStudio />} />

@@ -14,6 +14,7 @@ router.register(r'design-library', views.DesignLibraryItemViewSet, basename='des
 router.register(r'design-categories', views.DesignCategoryViewSet, basename='design-category')
 router.register(r'design-commissions', views.DesignCommissionViewSet, basename='design-commissions')
 router.register(r'orders', views.OrderViewSet, basename='order')
+router.register(r'wholesale-inquiries', views.WholesaleInquiryViewSet, basename='wholesale-inquiry')
 router.register(r'mockup-types', mockup_views.MockupTypeViewSet, basename='mockup-types')
 router.register(r'mockup-variants', mockup_views.MockupVariantViewSet, basename='mockup-variants')
 

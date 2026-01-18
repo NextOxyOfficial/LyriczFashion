@@ -72,6 +72,36 @@ export const authAPI = {
     });
     return response.data;
   },
+
+  updateProfile: async (token: string, data: { first_name: string; last_name: string; email: string; phone: string }) => {
+    const response = await api.patch('/auth/profile', data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  },
+
+  changePassword: async (token: string, currentPassword: string, newPassword: string) => {
+    const response = await api.post('/auth/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  },
+
+  updatePayoutInfo: async (token: string, data: any) => {
+    const response = await api.post('/auth/payout-info', data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  },
 };
 
 export const sellerAPI = {
@@ -90,6 +120,11 @@ export const sellerAPI = {
 };
 
 export const storeAPI = {
+  listStores: async () => {
+    const response = await api.get('/stores/')
+    return response.data
+  },
+
   getMyStore: async (token: string) => {
     const response = await api.get('/stores/my/', {
       headers: {
@@ -120,6 +155,20 @@ export const storeAPI = {
     return response.data
   },
 };
+
+export const wholesaleAPI = {
+  createInquiry: async (payload: {
+    name: string
+    email: string
+    phone: string
+    company?: string
+    website?: string
+    message: string
+  }) => {
+    const response = await api.post('/wholesale-inquiries/', payload)
+    return response.data
+  },
+}
 
 export const designAPI = {
   createDesignProduct: async (token: string, payload: {
@@ -342,7 +391,7 @@ export const productsAPI = {
   },
 
   getById: async (id: number) => {
-    const response = await api.get(`/products/${id}`);
+    const response = await api.get(`/products/${id}/`);
     return response.data;
   },
 };

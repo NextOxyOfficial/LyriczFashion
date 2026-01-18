@@ -51,7 +51,11 @@ const Products = () => {
       list = list.filter((p: any) => {
         const name = String(p?.name ?? '').toLowerCase()
         const desc = String(p?.description ?? '').toLowerCase()
+        const store = String(p?.store_name ?? '').toLowerCase()
+        const designer = String(p?.designer_name ?? '').toLowerCase()
+        const category = String(p?.category_name ?? '').toLowerCase()
         return name.includes(q) || desc.includes(q)
+          || store.includes(q) || designer.includes(q) || category.includes(q)
       })
     }
 
@@ -145,6 +149,7 @@ const Products = () => {
                   toUrl(p.design_preview_front || p.design_preview || p.image || p.image_url) ||
                   'https://via.placeholder.com/600x600'
                 }
+                designerName={p.designer_name}
               />
             ))}
           </div>

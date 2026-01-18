@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission, SAFE_METHODS
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser, BasePermission, SAFE_METHODS
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -11,11 +11,11 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from decimal import Decimal
 import json
-from .models import Category, SellerProfile, Store, Product, Order, OrderItem, DesignLibraryItem, DesignCommission, DesignCategory
+from .models import Category, SellerProfile, Store, Product, Order, OrderItem, DesignLibraryItem, DesignCommission, DesignCategory, WholesaleInquiry
 from .mockup_models import MockupVariant
 from .serializers import (
     UserSerializer, UserCreateSerializer, SellerProfileSerializer, StoreSerializer,
-    CategorySerializer, ProductSerializer, OrderSerializer, DesignLibraryItemSerializer, DesignCommissionSerializer, DesignCategorySerializer
+    CategorySerializer, ProductSerializer, OrderSerializer, DesignLibraryItemSerializer, DesignCommissionSerializer, DesignCategorySerializer, WholesaleInquirySerializer
 )
 
 
@@ -277,6 +277,16 @@ class StoreViewSet(viewsets.ModelViewSet):
         return Response(StoreSerializer(store, context={'request': request}).data)
 
 
+class WholesaleInquiryViewSet(viewsets.ModelViewSet):
+    serializer_class = WholesaleInquirySerializer
+    queryset = WholesaleInquiry.objects.all().order_by('-created_at')
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [AllowAny()]
+        return [IsAdminUser()]
+
+
 class SellerProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated]
@@ -331,6 +341,8 @@ class SellerProductViewSet(viewsets.ModelViewSet):
             'store': store,
             'created_by': self.request.user,
             'kind': 'design',
+            'is_published': True,
+            'is_active': True,
         }
         if isinstance(parsed_design_data, dict):
             save_kwargs['design_data'] = parsed_design_data

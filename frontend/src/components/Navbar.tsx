@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ShoppingCart, User, Menu, X, Search, Phone, Heart, ChevronDown, Sparkles, ImageIcon, Store, Settings, MapPin } from 'lucide-react'
+import { ShoppingCart, User, Menu, X, Search, Phone, Heart, ChevronDown, Sparkles, ImageIcon, Store, MapPin, Package, LayoutDashboard } from 'lucide-react'
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useCartStore } from '../store/cartStore'
 
@@ -225,24 +225,26 @@ const Navbar = () => {
                         </div>
                       </div>
 
-                      <div className="p-3 grid grid-cols-2 gap-2">
-                        <Link
-                          to={createHref}
-                          className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          <Sparkles className="w-4 h-4" />
-                          Create
-                        </Link>
-                        <Link
-                          to="/sell-your-design"
-                          className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white border border-emerald-200 text-emerald-700 text-sm font-semibold hover:bg-emerald-50 transition-colors"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          <ImageIcon className="w-4 h-4" />
-                          Sell
-                        </Link>
-                      </div>
+                      {isSeller && (
+                        <div className="p-3 grid grid-cols-2 gap-2">
+                          <Link
+                            to={createHref}
+                            className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <Sparkles className="w-4 h-4" />
+                            Create
+                          </Link>
+                          <Link
+                            to="/sell-your-design"
+                            className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white border border-emerald-200 text-emerald-700 text-sm font-semibold hover:bg-emerald-50 transition-colors"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <ImageIcon className="w-4 h-4" />
+                            Sell
+                          </Link>
+                        </div>
+                      )}
 
                       <div className="py-2">
                         <Link
@@ -250,8 +252,8 @@ const Navbar = () => {
                           className="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
-                          <User className="w-4 h-4 mr-3" />
-                          My Dashboard
+                          <LayoutDashboard className="w-4 h-4 mr-3" />
+                          Dashboard
                         </Link>
 
                         {isSeller && (
@@ -274,13 +276,24 @@ const Navbar = () => {
                           My Orders
                         </Link>
 
+                        {isSeller && (
+                          <Link
+                            to="/seller/orders-received"
+                            className="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <Package className="w-4 h-4 mr-3" />
+                            Orders Received
+                          </Link>
+                        )}
+
                         <Link
                           to="/settings"
                           className="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
-                          <Settings className="w-4 h-4 mr-3" />
-                          Settings
+                          <User className="w-4 h-4 mr-3" />
+                          My Profile
                         </Link>
 
                         <Link
@@ -341,25 +354,20 @@ const Navbar = () => {
         <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="hidden md:flex justify-between items-center">
             <div className="flex items-center gap-6">
-              <Link to="/" className="flex items-center gap-1 text-emerald-500 text-[15px] font-bold hover:text-emerald-600 transition-colors">
+              <Link to="/" className="text-emerald-600 text-[15px] font-bold hover:text-emerald-700 transition-colors">
                 Home
-                <ChevronDown className="w-3.5 h-3.5" />
               </Link>
-              <Link to="/design-studio" className="flex items-center gap-1 text-gray-600 text-[15px] font-bold hover:text-emerald-500 transition-colors">
-                TeeSpace
-                <ChevronDown className="w-3.5 h-3.5" />
+              <Link to="/designers" className="text-gray-700 text-[15px] font-bold hover:text-emerald-600 transition-colors">
+                Designers
               </Link>
-              <Link to="/products" className="flex items-center gap-1 text-gray-600 text-[15px] font-bold hover:text-emerald-500 transition-colors">
-                Shop
-                <ChevronDown className="w-3.5 h-3.5" />
+              <Link to="/design-studio" className="text-gray-700 text-[15px] font-bold hover:text-emerald-600 transition-colors">
+                Design Studio
               </Link>
-              <Link to="/seller" className="flex items-center gap-1 text-gray-600 text-[15px] font-bold hover:text-emerald-500 transition-colors">
-                Blog
-                <ChevronDown className="w-3.5 h-3.5" />
+              <Link to="/help" className="text-gray-700 text-[15px] font-bold hover:text-emerald-600 transition-colors">
+                Help
               </Link>
-              <Link to="/seller" className="flex items-center gap-1 text-gray-600 text-[15px] font-bold hover:text-emerald-500 transition-colors">
-                Pages
-                <ChevronDown className="w-3.5 h-3.5" />
+              <Link to="/wholesale" className="text-gray-700 text-[15px] font-bold hover:text-emerald-600 transition-colors">
+                Wholesale
               </Link>
             </div>
 
@@ -387,15 +395,16 @@ const Navbar = () => {
                 <Search className="w-5 h-5" />
               </button>
             </div>
-            <Link to="/" className="block py-2 text-gray-700 font-medium">Home</Link>
-            <Link to="/design-studio" className="block py-2 text-gray-700 font-medium">Design Studio</Link>
-            <Link to="/products" className="block py-2 text-gray-700 font-medium">Shop</Link>
-            <Link to="/seller" className="block py-2 text-gray-700 font-medium">Sell</Link>
-            <Link to="/cart" className="block py-2 text-gray-700 font-medium">Cart ({cartCount})</Link>
+            <Link to="/" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Home</Link>
+            <Link to="/designers" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Designers</Link>
+            <Link to="/design-studio" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Design Studio</Link>
+            <Link to="/help" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Help</Link>
+            <Link to="/wholesale" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Wholesale</Link>
+            <Link to="/cart" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Cart ({cartCount})</Link>
             {user ? (
               <button onClick={handleLogout} className="block py-2 text-red-600 font-medium">Logout</button>
             ) : (
-              <Link to="/login" className="block py-2 text-gray-700 font-medium">Login</Link>
+              <Link to="/login" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Login</Link>
             )}
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Copy, ExternalLink, ShoppingBag, Sparkles, Store as StoreIcon, Phone, FileText, CheckCircle, Clock, XCircle, ArrowRight } from 'lucide-react'
 import { sellerAPI, storeAPI, designAPI, ordersAPI } from '../services/api'
 
 type Me = {
@@ -90,11 +91,25 @@ const SellerDashboard = () => {
   const [storeDescription, setStoreDescription] = useState('')
   const [storeLogo, setStoreLogo] = useState<File | null>(null)
   const [storeBanner, setStoreBanner] = useState<File | null>(null)
+  const [copied, setCopied] = useState(false)
 
   const [designs, setDesigns] = useState<Product[]>([])
   const [sellerOrders, setSellerOrders] = useState<SellerOrderSummary | null>(null)
 
   const token = localStorage.getItem('token')
+
+  const storePublicUrl = store?.slug ? `${window.location.origin}/store/${store.slug}` : ''
+
+  const onCopyStoreLink = async () => {
+    if (!storePublicUrl) return
+    try {
+      await navigator.clipboard.writeText(storePublicUrl)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 1500)
+    } catch {
+      alert('Copy failed')
+    }
+  }
 
   const load = async () => {
     if (!token) {
@@ -174,8 +189,11 @@ const SellerDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        <div className="text-lg">Loading...</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto" />
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
       </div>
     )
   }
@@ -185,249 +203,332 @@ const SellerDashboard = () => {
   const sellerStatus = me.seller_status
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Seller Dashboard</h1>
-          <p className="text-gray-600 mt-1">Manage your store and designs</p>
+    <div className="min-h-screen bg-gray-50 py-10">
+      <div className="max-w-6xl mx-auto px-4">
+        {/* Header Section */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <div className="text-sm font-medium text-emerald-700">{store ? 'My Store' : 'Seller Dashboard'}</div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mt-1">{store ? store.name : 'Become a Seller'}</h1>
+              <p className="text-gray-600 mt-1">{store ? 'Manage your store and products' : 'Start selling your designs and earn commissions'}</p>
+            </div>
+
+            {store && (
+              <Link
+                to="/seller/designs/new"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors"
+              >
+                <Sparkles className="w-4 h-4" />
+                Create New Product
+              </Link>
+            )}
+          </div>
         </div>
-        {store?.slug && (
-          <Link
-            to={`/store/${store.slug}`}
-            className="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-white border border-gray-200 hover:bg-gray-50"
-          >
-            View Store
-          </Link>
-        )}
-      </div>
 
       {!me.is_seller ? (
         sellerStatus === 'pending' ? (
-          <div className="bg-white rounded-2xl shadow p-6 border border-amber-200">
-            <h2 className="text-xl font-semibold mb-2 text-amber-900">Seller application pending</h2>
-            <p className="text-amber-800 mb-4">Your request is under review. Once approved, you will be able to create your store and publish designs.</p>
-            <div className="flex flex-wrap gap-2">
-              <Link
-                to="/sell-your-design"
-                className="px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700"
-              >
-                Sell Your Design
-              </Link>
-              <Link
-                to="/dashboard"
-                className="px-6 py-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50"
-              >
-                Back to Dashboard
-              </Link>
+          <div className="bg-gradient-to-br from-amber-50 to-white rounded-2xl border border-amber-200 shadow-sm p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                <Clock className="w-6 h-6 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-bold text-amber-900">Application Under Review</h2>
+                <p className="text-amber-800 mt-2">Your seller request is being reviewed by our team. Once approved, you'll be able to create your store and start selling designs.</p>
+                <div className="mt-4 p-4 bg-white rounded-xl border border-amber-100">
+                  <div className="text-sm font-semibold text-gray-900 mb-2">What happens next?</div>
+                  <ul className="text-sm text-gray-700 space-y-1">
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-emerald-600" /> Review typically takes 24-48 hours</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-emerald-600" /> You'll receive an email notification</li>
+                    <li className="flex items-center gap-2"><CheckCircle className="w-4 h-4 text-emerald-600" /> Start uploading designs immediately after approval</li>
+                  </ul>
+                </div>
+                <div className="flex flex-wrap gap-3 mt-6">
+                  <Link
+                    to="/sell-your-design"
+                    className="inline-flex items-center gap-2 px-5 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Sell Your Design
+                  </Link>
+                  <Link
+                    to="/dashboard"
+                    className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                  >
+                    Back to Dashboard
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         ) : sellerStatus === 'rejected' ? (
-          <div className="bg-white rounded-2xl shadow p-6 border border-red-200">
-            <h2 className="text-xl font-semibold mb-2 text-red-700">Seller application rejected</h2>
-            <p className="text-gray-700 mb-4">You can apply again. Please ensure your profile details are correct.</p>
+          <div className="bg-gradient-to-br from-red-50 to-white rounded-2xl border border-red-200 shadow-sm p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                <XCircle className="w-6 h-6 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-xl font-bold text-red-700">Application Not Approved</h2>
+                <p className="text-gray-700 mt-2">Your seller application was not approved. You can apply again after updating your profile information.</p>
+                
+                <div className="mt-6 bg-white rounded-xl border border-gray-200 p-5">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">Phone Number (Optional)</label>
+                  <div className="relative">
+                    <Phone className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="01XXXXXXXXX"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">Providing a phone number helps us verify your account faster.</p>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone (optional)</label>
-                <input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="01XXXXXXXXX"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
+                <button
+                  onClick={onBecomeSeller}
+                  className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                  Apply Again
+                </button>
               </div>
             </div>
-
-            <button
-              onClick={onBecomeSeller}
-              className="mt-6 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700"
-            >
-              Apply Again
-            </button>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow p-6">
-            <h2 className="text-xl font-semibold mb-2">Become a Seller</h2>
-            <p className="text-gray-600 mb-6">Join as a seller to create your store and publish your T-shirt designs.</p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone (optional)</label>
-                <input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="01XXXXXXXXX"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
+          <div className="space-y-6">
+            {/* Benefits Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center mb-3">
+                  <StoreIcon className="w-6 h-6 text-emerald-600" />
+                </div>
+                <h3 className="font-bold text-gray-900">Create Your Store</h3>
+                <p className="text-sm text-gray-600 mt-1">Set up your own branded store and showcase your designs.</p>
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center mb-3">
+                  <Sparkles className="w-6 h-6 text-purple-600" />
+                </div>
+                <h3 className="font-bold text-gray-900">Sell Designs</h3>
+                <p className="text-sm text-gray-600 mt-1">Upload your T-shirt designs and earn on every sale.</p>
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mb-3">
+                  <ShoppingBag className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="font-bold text-gray-900">Manage Orders</h3>
+                <p className="text-sm text-gray-600 mt-1">Track orders and manage your business efficiently.</p>
               </div>
             </div>
 
-            <button
-              onClick={onBecomeSeller}
-              className="mt-6 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700"
-            >
-              Become Seller
-            </button>
+            {/* Application Form */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <h2 className="text-xl font-bold text-gray-900">Apply to Become a Seller</h2>
+              <p className="text-gray-600 mt-1 mb-6">Join our community of designers and start selling your T-shirt designs today.</p>
+
+              <div className="bg-gradient-to-br from-emerald-50 to-white rounded-xl border border-emerald-100 p-5 mb-6">
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Phone Number (Optional)</label>
+                <div className="relative">
+                  <Phone className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="01XXXXXXXXX"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                  />
+                </div>
+                <p className="text-xs text-gray-600 mt-2">Providing a phone number helps us verify your account and contact you if needed.</p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={onBecomeSeller}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Submit Application
+                </button>
+                <Link
+                  to="/dashboard"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Back to Dashboard
+                </Link>
+              </div>
+            </div>
           </div>
         )
       ) : !store ? (
-        <div className="bg-white rounded-2xl shadow p-6">
-          <h2 className="text-xl font-semibold mb-2">Create Your Store</h2>
-          <p className="text-gray-600 mb-6">Add store name and logo to start selling your designs.</p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Store Name</label>
-              <input
-                value={storeName}
-                onChange={(e) => setStoreName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="Your Brand Name"
-              />
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+              <StoreIcon className="w-6 h-6 text-emerald-600" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Logo</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setStoreLogo(e.target.files?.[0] || null)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white"
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-              <textarea
-                value={storeDescription}
-                onChange={(e) => setStoreDescription(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
-                rows={4}
-                placeholder="Tell customers about your store"
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Banner (optional)</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setStoreBanner(e.target.files?.[0] || null)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white"
-              />
+              <h2 className="text-xl font-bold text-gray-900">Create Your Store</h2>
+              <p className="text-gray-600 mt-1">Set up your store with a name, logo, and description to start selling your designs.</p>
             </div>
           </div>
 
-          <button
-            onClick={onCreateStore}
-            className="mt-6 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700"
-          >
-            Create Store
-          </button>
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">Store Name *</label>
+              <div className="relative">
+                <StoreIcon className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  value={storeName}
+                  onChange={(e) => setStoreName(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="Your Brand Name"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">Store Description</label>
+              <div className="relative">
+                <FileText className="w-5 h-5 text-gray-400 absolute left-3 top-3" />
+                <textarea
+                  value={storeDescription}
+                  onChange={(e) => setStoreDescription(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                  rows={4}
+                  placeholder="Tell customers about your store and what makes your designs unique"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Store Logo</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setStoreLogo(e.target.files?.[0] || null)}
+                  className="w-full text-sm border-2 border-dashed border-gray-200 rounded-xl p-4 bg-gray-50 hover:border-emerald-400 hover:bg-emerald-50 transition-all cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer"
+                />
+                <p className="text-xs text-gray-500 mt-2">Recommended: Square image, at least 200x200px</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">Store Banner (Optional)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setStoreBanner(e.target.files?.[0] || null)}
+                  className="w-full text-sm border-2 border-dashed border-gray-200 rounded-xl p-4 bg-gray-50 hover:border-emerald-400 hover:bg-emerald-50 transition-all cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer"
+                />
+                <p className="text-xs text-gray-500 mt-2">Recommended: Wide image, at least 1200x400px</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t border-gray-100">
+            <button
+              onClick={onCreateStore}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
+            >
+              <CheckCircle className="w-4 h-4" />
+              Create Store
+            </button>
+            <Link
+              to="/dashboard"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+            >
+              Back to Dashboard
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="space-y-8">
-          <div className="bg-white rounded-2xl shadow overflow-hidden">
-            {store.banner && (
-              <div className="h-48 bg-gray-100">
-                <img src={toUrl(store.banner)} alt={store.name} className="w-full h-full object-cover" />
-              </div>
-            )}
-            <div className="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-gray-100 overflow-hidden flex items-center justify-center">
-                  {store.logo ? (
-                    <img src={toUrl(store.logo)} alt="logo" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="text-gray-400">Logo</div>
-                  )}
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">{store.name}</h2>
-                  <p className="text-gray-600 text-sm">Store URL: /store/{store.slug}</p>
-                </div>
-              </div>
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="relative">
+              {store.banner ? (
+                <img src={toUrl(store.banner)} alt={store.name} className="w-full h-56 md:h-64 object-cover" />
+              ) : (
+                <div className="w-full h-56 md:h-64 bg-gradient-to-r from-emerald-600 to-emerald-400" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
-              <Link
-                to="/seller/designs/new"
-                className="inline-flex items-center justify-center px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700"
-              >
-                Create New Design
-              </Link>
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-2xl overflow-hidden bg-white/20 border border-white/30 flex items-center justify-center">
+                      {store.logo ? (
+                        <img src={toUrl(store.logo)} alt="logo" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-white/80 text-sm">Logo</div>
+                      )}
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">{store.name}</h2>
+                      {store.description && (
+                        <p className="text-white/90 mt-1 max-w-2xl line-clamp-2">{store.description}</p>
+                      )}
+                      <p className="text-white/80 mt-2 text-sm">{storePublicUrl}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      to={`/store/${store.slug}`}
+                      className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/90 hover:bg-white text-gray-900 font-semibold"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      View Store
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={onCopyStoreLink}
+                      className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30"
+                    >
+                      <Copy className="w-4 h-4" />
+                      {copied ? 'Copied' : 'Copy Link'}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {sellerOrders && (
-            <div className="bg-white rounded-2xl shadow p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold">Earnings Summary</h3>
-                <span className="text-sm text-gray-500">Store #{sellerOrders.store_id || '-'}</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <Link
+              to="/seller/orders-received"
+              className="flex items-center gap-4 p-6 bg-white rounded-2xl border-2 border-gray-200 hover:border-emerald-500 hover:shadow-lg transition-all group"
+            >
+              <div className="w-14 h-14 rounded-xl bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
+                <ShoppingBag className="w-7 h-7 text-emerald-600 group-hover:text-white transition-colors" />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="border border-gray-200 rounded-2xl p-4">
-                  <div className="text-sm text-gray-500">Orders</div>
-                  <div className="text-2xl font-bold text-gray-900 mt-1">{sellerOrders.stats.orders_count}</div>
-                </div>
-                <div className="border border-gray-200 rounded-2xl p-4">
-                  <div className="text-sm text-gray-500">Revenue</div>
-                  <div className="text-2xl font-bold text-gray-900 mt-1">৳{Number(sellerOrders.stats.seller_revenue || 0)}</div>
-                </div>
-                <div className="border border-gray-200 rounded-2xl p-4">
-                  <div className="text-sm text-gray-500">Profit</div>
-                  <div className="text-2xl font-bold text-green-700 mt-1">৳{Number(sellerOrders.stats.seller_profit || 0)}</div>
-                </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">Orders Received</h3>
+                <p className="text-sm text-gray-600">View and manage customer orders</p>
               </div>
+            </Link>
 
-              <div className="mt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-semibold text-gray-900">Recent Orders</h4>
-                  <span className="text-sm text-gray-500">{sellerOrders.orders.length} orders</span>
-                </div>
-
-                {sellerOrders.orders.length === 0 ? (
-                  <div className="text-gray-600">No orders yet.</div>
-                ) : (
-                  <div className="space-y-4">
-                    {sellerOrders.orders.slice(0, 6).map((o) => (
-                      <div key={o.id} className="border border-gray-200 rounded-2xl p-4">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                          <div>
-                            <div className="font-semibold text-gray-900">Order #{o.id}</div>
-                            <div className="text-sm text-gray-600 mt-1">Buyer: {o.buyer_email || '-'}</div>
-                            <div className="text-sm text-gray-600">Status: {o.status}</div>
-                          </div>
-                          <div className="text-sm">
-                            <div className="text-gray-600">Seller Total: <span className="font-semibold text-gray-900">৳{Number(o.seller_total || 0)}</span></div>
-                            <div className="text-gray-600">Profit: <span className="font-semibold text-green-700">৳{Number(o.seller_profit || 0)}</span></div>
-                          </div>
-                        </div>
-
-                        <div className="mt-4 border-t pt-4 space-y-2">
-                          {o.items.map((it) => (
-                            <div key={it.id} className="flex items-center justify-between text-sm">
-                              <div className="text-gray-700">
-                                {it.product_name} x {it.quantity}
-                              </div>
-                              <div className="text-gray-600">
-                                ৳{Number(it.line_total || 0)}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+            <Link
+              to="/sell-your-design"
+              className="flex items-center gap-4 p-6 bg-white rounded-2xl border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all group"
+            >
+              <div className="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center group-hover:bg-purple-500 transition-colors">
+                <Sparkles className="w-7 h-7 text-purple-600 group-hover:text-white transition-colors" />
               </div>
-            </div>
-          )}
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-600 transition-colors">My Designs</h3>
+                <p className="text-sm text-gray-600">Upload and manage your designs</p>
+              </div>
+            </Link>
+          </div>
 
           <div className="bg-white rounded-2xl shadow p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold">My Designs</h3>
+              <h3 className="text-lg font-semibold">Products</h3>
               <span className="text-sm text-gray-500">{designs.length} items</span>
             </div>
 
             {designs.length === 0 ? (
-              <div className="text-gray-600">No designs yet. Create your first design.</div>
+              <div className="text-gray-600">No products yet. Create your first product from Design Studio.</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {designs.map((p) => (
@@ -472,6 +573,7 @@ const SellerDashboard = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }

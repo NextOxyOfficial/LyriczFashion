@@ -243,6 +243,22 @@ class DesignCommission(models.Model):
         return f"DesignCommission({self.design_id} -> {self.owner_id}, {self.amount})"
 
 
+class WholesaleInquiry(models.Model):
+    name = models.CharField(max_length=150)
+    email = models.EmailField()
+    phone = models.CharField(max_length=30)
+    company = models.CharField(max_length=200, blank=True, default='')
+    website = models.URLField(max_length=300, blank=True, default='')
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"WholesaleInquiry({self.name} - {self.phone})"
+
+
 # Signal to automatically create UserProfile when User is created
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authAPI } from '../services/api'
-import SellerDashboard from './SellerDashboard'
 import AdminDashboard from './AdminDashboard'
 import UserDashboard from './UserDashboard'
 
@@ -56,10 +55,7 @@ const Dashboard = () => {
     return <AdminDashboard />
   }
 
-  if (user.is_seller) {
-    return <SellerDashboard />
-  }
-
+  // All users (both seller and non-seller) see the same UserDashboard
   return <UserDashboard />
 }
 

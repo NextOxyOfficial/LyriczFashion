@@ -101,7 +101,7 @@ const SellerDesignCreate = () => {
         design_data: designData,
       })
       
-      navigate('/my-store')
+      navigate('/seller')
     } catch (e: any) {
       alert(e.response?.data?.detail || e.message || 'Failed to publish product')
     } finally {

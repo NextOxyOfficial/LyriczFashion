@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ShoppingCart, Heart } from 'lucide-react'
+import { ShoppingCart, Heart, Sparkles } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useCartStore } from '../store/cartStore'
 
@@ -9,9 +9,10 @@ interface ProductCardProps {
   price: number
   discountPrice?: number
   imageUrl: string
+  designerName?: string
 }
 
-const ProductCard = ({ id, name, price, discountPrice, imageUrl }: ProductCardProps) => {
+const ProductCard = ({ id, name, price, discountPrice, imageUrl, designerName }: ProductCardProps) => {
   const addItem = useCartStore((s) => s.addItem)
   const unitPrice = discountPrice ?? price
   const [isFavorited, setIsFavorited] = useState(false)
@@ -76,6 +77,19 @@ const ProductCard = ({ id, name, price, discountPrice, imageUrl }: ProductCardPr
             {name}
           </h3>
         </Link>
+        {designerName && (
+          <div className="mt-2 mb-2">
+            <div className="inline-flex flex-col items-start gap-0.5 px-2.5 py-1.5 bg-gradient-to-r from-purple-50 via-pink-50 to-blue-50 border border-purple-100 rounded-lg group-hover:shadow-sm transition-all">
+              <div className="flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-purple-500" />
+                <span className="text-[10px] font-semibold text-purple-600 uppercase tracking-wide">Designed by</span>
+              </div>
+              <span className="text-xs font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent pl-4">
+                {designerName}
+              </span>
+            </div>
+          </div>
+        )}
         
         <div className="flex items-center justify-between mt-3">
           <div className="flex items-center space-x-2">

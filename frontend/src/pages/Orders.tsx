@@ -1,30 +1,34 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Package, Clock, CheckCircle, XCircle, Truck, Eye } from 'lucide-react'
+import { Package, Clock, CheckCircle, XCircle, Truck } from 'lucide-react'
+import { ordersAPI } from '../services/api'
 
 interface Order {
   id: number
-  order_number: string
   created_at: string
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
-  total_amount: number
+  status: string
+  total_amount: string | number
   items: Array<{
     id: number
+    product: number
     product_name: string
     quantity: number
-    price: number
-    image_url: string
+    price: string | number
+    buy_price: string | number
+    total_profit?: string | number
   }>
 }
 
 const Orders = () => {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'>('all')
   const navigate = useNavigate()
 
   useEffect(() => {
     const loadOrders = async () => {
+      setError('')
       const token = localStorage.getItem('token')
       if (!token) {
         navigate('/login')
@@ -32,71 +36,11 @@ const Orders = () => {
       }
 
       try {
-        // Fetch user's orders (you'll need to implement this API endpoint)
-        // const ordersData = await ordersAPI.getMyOrders(token)
-        
-        // Mock data for demonstration
-        const mockOrders: Order[] = [
-          {
-            id: 1,
-            order_number: 'ORD-2024-001',
-            created_at: '2024-01-10T10:30:00Z',
-            status: 'delivered',
-            total_amount: 2500,
-            items: [
-              {
-                id: 1,
-                product_name: 'Custom T-Shirt - Black',
-                quantity: 2,
-                price: 1200,
-                image_url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=400&fit=crop'
-              },
-              {
-                id: 2,
-                product_name: 'Hoodie - Navy Blue',
-                quantity: 1,
-                price: 1300,
-                image_url: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=300&h=400&fit=crop'
-              }
-            ]
-          },
-          {
-            id: 2,
-            order_number: 'ORD-2024-002',
-            created_at: '2024-01-12T14:20:00Z',
-            status: 'shipped',
-            total_amount: 1800,
-            items: [
-              {
-                id: 3,
-                product_name: 'Polo Shirt - White',
-                quantity: 3,
-                price: 1800,
-                image_url: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=300&h=400&fit=crop'
-              }
-            ]
-          },
-          {
-            id: 3,
-            order_number: 'ORD-2024-003',
-            created_at: '2024-01-14T09:15:00Z',
-            status: 'processing',
-            total_amount: 3200,
-            items: [
-              {
-                id: 4,
-                product_name: 'Long Sleeve Shirt - Gray',
-                quantity: 2,
-                price: 3200,
-                image_url: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=300&h=400&fit=crop'
-              }
-            ]
-          }
-        ]
-        
-        setOrders(mockOrders)
+        const ordersData = await ordersAPI.listMyOrders(token)
+        setOrders(Array.isArray(ordersData) ? ordersData : [])
       } catch (error) {
         console.error('Failed to load orders:', error)
+        setError('Failed to load orders. Please try again.')
       } finally {
         setLoading(false)
       }
@@ -150,6 +94,12 @@ const Orders = () => {
     })
   }
 
+  const formatMoney = (value: string | number) => {
+    const n = typeof value === 'number' ? value : Number(value)
+    if (Number.isFinite(n)) return n
+    return 0
+  }
+
   const filteredOrders = activeFilter === 'all' 
     ? orders 
     : orders.filter(order => order.status === activeFilter)
@@ -173,6 +123,12 @@ const Orders = () => {
           <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
           <p className="text-gray-500 mt-2">Track and manage your orders</p>
         </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 mb-6">
+            {error}
+          </div>
+        )}
 
         {/* Filter Tabs */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
@@ -227,6 +183,16 @@ const Orders = () => {
             >
               Delivered ({orders.filter(o => o.status === 'delivered').length})
             </button>
+            <button
+              onClick={() => setActiveFilter('cancelled')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                activeFilter === 'cancelled'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Cancelled ({orders.filter(o => o.status === 'cancelled').length})
+            </button>
           </div>
         </div>
 
@@ -253,7 +219,7 @@ const Orders = () => {
                     <div className="flex items-center gap-4">
                       <div>
                         <div className="text-sm text-gray-500">Order Number</div>
-                        <div className="font-semibold text-gray-900">{order.order_number}</div>
+                        <div className="font-semibold text-gray-900">#{order.id}</div>
                       </div>
                       <div className="h-8 w-px bg-gray-300"></div>
                       <div>
@@ -263,7 +229,7 @@ const Orders = () => {
                       <div className="h-8 w-px bg-gray-300"></div>
                       <div>
                         <div className="text-sm text-gray-500">Total Amount</div>
-                        <div className="font-semibold text-emerald-600">৳{order.total_amount}</div>
+                        <div className="font-semibold text-emerald-600">৳{formatMoney(order.total_amount)}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -280,36 +246,23 @@ const Orders = () => {
                   <div className="space-y-4">
                     {order.items.map((item) => (
                       <div key={item.id} className="flex items-center gap-4">
-                        <img
-                          src={item.image_url}
-                          alt={item.product_name}
-                          className="w-20 h-20 object-cover rounded-lg"
-                        />
+                        <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center">
+                          <Package className="w-8 h-8 text-gray-400" />
+                        </div>
                         <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{item.product_name}</h4>
+                          <Link
+                            to={`/products/${item.product}`}
+                            className="font-medium text-gray-900 hover:text-emerald-600 transition-colors"
+                          >
+                            {item.product_name}
+                          </Link>
                           <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold text-gray-900">৳{item.price}</div>
+                          <div className="font-semibold text-gray-900">৳{formatMoney(item.price)}</div>
                         </div>
                       </div>
                     ))}
-                  </div>
-
-                  {/* Order Actions */}
-                  <div className="mt-6 pt-6 border-t border-gray-200 flex justify-end gap-3">
-                    <Link
-                      to={`/orders/${order.id}`}
-                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <Eye className="w-4 h-4" />
-                      View Details
-                    </Link>
-                    {order.status === 'delivered' && (
-                      <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
-                        Buy Again
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>

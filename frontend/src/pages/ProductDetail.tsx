@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { ShoppingCart, Heart, Minus, Plus, Star, Truck, Shield, RefreshCw, Share2, ChevronLeft, ChevronRight, Check } from 'lucide-react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { ShoppingCart, Heart, Minus, Plus, Star, Truck, Shield, RefreshCw, Share2, ChevronLeft, ChevronRight, Check, Sparkles } from 'lucide-react'
 import { productsAPI } from '../services/api'
 import { useCartStore } from '../store/cartStore'
 import ProductCard from '../components/ProductCard'
@@ -15,6 +15,7 @@ const toUrl = (path?: string | null) => {
 
 const ProductDetail = () => {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState('M')
   const [selectedColor, setSelectedColor] = useState('Black')
@@ -24,7 +25,20 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0)
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [addedToCart, setAddedToCart] = useState(false)
+  const [shareSuccess, setShareSuccess] = useState(false)
   const addItem = useCartStore((s) => s.addItem)
+
+  const unitPrice = product?.discount_price ? Number(product.discount_price) : Number(product?.price ?? 0)
+  const availableStock = Number(product?.available_stock ?? product?.stock ?? 0)
+
+  useEffect(() => {
+    if (availableStock > 0 && quantity > availableStock) {
+      setQuantity(availableStock)
+    }
+    if (availableStock === 0) {
+      setQuantity(1)
+    }
+  }, [availableStock, quantity])
 
   useEffect(() => {
     const load = async () => {
@@ -39,12 +53,13 @@ const ProductDetail = () => {
         // Check if product is in favorites
         const favorites = JSON.parse(localStorage.getItem('favorites') || '[]')
         setIsWishlisted(favorites.includes(Number(id)))
-      } catch {
+      } catch (error: any) {
         setProduct(null)
       } finally {
         setIsLoading(false)
       }
     }
+
     load()
   }, [id])
 
@@ -86,7 +101,7 @@ const ProductDetail = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-500">Loading product...</p>
+          <p className="mt-4 text-gray-500">Loading product {id}...</p>
         </div>
       </div>
     )
@@ -97,6 +112,8 @@ const ProductDetail = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Product not found</h2>
+          <p className="text-gray-600 mb-4">Product ID: {id}</p>
+          <p className="text-gray-600 mb-4">Check browser console for error details</p>
           <Link to="/products" className="text-emerald-600 hover:underline">Browse all products</Link>
         </div>
       </div>
@@ -104,17 +121,6 @@ const ProductDetail = () => {
   }
 
   const imageUrl = productImages[selectedImage] || 'https://via.placeholder.com/600'
-  const unitPrice = product.discount_price ? Number(product.discount_price) : Number(product.price)
-  const availableStock = Number(product.available_stock ?? product.stock ?? 0)
-
-  useEffect(() => {
-    if (availableStock > 0 && quantity > availableStock) {
-      setQuantity(availableStock)
-    }
-    if (availableStock === 0) {
-      setQuantity(1)
-    }
-  }, [availableStock, quantity])
 
   const handleAddToCart = () => {
     addItem({
@@ -127,6 +133,37 @@ const ProductDetail = () => {
     })
     setAddedToCart(true)
     setTimeout(() => setAddedToCart(false), 2000)
+  }
+
+  const handleShare = async () => {
+    const shareData = {
+      title: product.name,
+      text: `Check out ${product.name} - ৳${unitPrice}`,
+      url: window.location.href,
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(window.location.href)
+        setShareSuccess(true)
+        setTimeout(() => setShareSuccess(false), 2000)
+      }
+    } catch (error) {
+      // User cancelled or error occurred
+      console.log('Share failed:', error)
+    }
+  }
+
+  const handleDesignerClick = () => {
+    console.log('Designer clicked! store_slug:', product?.store_slug)
+    if (product?.store_slug) {
+      navigate(`/store/${product.store_slug}`)
+    } else {
+      console.log('No store_slug found in product:', product)
+    }
   }
 
   return (
@@ -179,6 +216,30 @@ const ProductDetail = () => {
 
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">{product.name}</h1>
+              
+              {/* Designer/Seller Info */}
+              {(product.designer_name || product.store_name) && (
+                <div className="mb-4">
+                  <div className="flex flex-wrap items-center gap-1.5 text-sm">
+                    <Sparkles className="w-4 h-4 text-purple-500" />
+                    <span className="text-gray-600 font-medium">designed by:</span>
+                    {product.store_slug ? (
+                      <button
+                        type="button"
+                        onClick={handleDesignerClick}
+                        className="font-bold text-purple-600 hover:text-purple-800 transition-colors underline decoration-purple-400 hover:decoration-purple-600 underline-offset-2 cursor-pointer"
+                      >
+                        {product.designer_name || product.store_name}
+                      </button>
+                    ) : (
+                      <span className="font-bold text-gray-900">
+                        {product.designer_name || 'Unknown'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex">
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -276,8 +337,16 @@ const ProductDetail = () => {
                 >
                   <Heart className={`w-5 h-5 ${isWishlisted ? 'text-red-500 fill-red-500' : 'text-gray-500'}`} />
                 </button>
-                <button className="p-3 rounded-xl border-2 border-gray-200 hover:border-gray-300 transition-colors">
-                  <Share2 className="w-5 h-5 text-gray-500" />
+                <button 
+                  onClick={handleShare}
+                  className={`p-3 rounded-xl border-2 transition-all ${shareSuccess ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50'}`}
+                  title="Share this product"
+                >
+                  {shareSuccess ? (
+                    <Check className="w-5 h-5 text-emerald-600" />
+                  ) : (
+                    <Share2 className="w-5 h-5 text-gray-500" />
+                  )}
                 </button>
               </div>
 
@@ -321,6 +390,7 @@ const ProductDetail = () => {
                   price={Number(p.price)}
                   discountPrice={p.discount_price ? Number(p.discount_price) : undefined}
                   imageUrl={p.image_url || p.design_preview || p.image || 'https://via.placeholder.com/300'}
+                  designerName={p.designer_name}
                 />
               ))}
             </div>

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 from urllib.parse import quote
-from .models import Category, SellerProfile, Store, Product, Order, OrderItem, DesignLibraryItem, DesignCommission
+from .models import Category, SellerProfile, Store, Product, Order, OrderItem, DesignLibraryItem, DesignCommission, WholesaleInquiry
 from .mockup_models import MockupType, MockupVariant
 
 
@@ -31,6 +31,13 @@ class DesignCommissionAdmin(admin.ModelAdmin):
     list_display = ['id', 'design', 'owner', 'used_by', 'amount', 'quantity', 'status', 'created_at']
     list_filter = ['status', 'created_at']
     search_fields = ['owner__username', 'owner__email', 'used_by__username', 'used_by__email', 'design__name']
+
+
+@admin.register(WholesaleInquiry)
+class WholesaleInquiryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'email', 'phone', 'company', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['name', 'email', 'phone', 'company', 'website', 'message']
 
 
 @admin.register(Store)

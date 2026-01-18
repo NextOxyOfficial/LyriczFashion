@@ -319,6 +319,7 @@ const Home = () => {
                 price={Number(product.price)}
                 discountPrice={product.discount_price ? Number(product.discount_price) : undefined}
                 imageUrl={product.image_url || product.design_preview || product.image || 'https://via.placeholder.com/300x400'}
+                designerName={product.designer_name}
               />
             ))}
           </div>

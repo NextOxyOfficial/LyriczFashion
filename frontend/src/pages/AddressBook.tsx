@@ -4,7 +4,7 @@ import { authAPI } from '../services/api'
 
 type AddressItem = {
   id: string
-  label: string
+  name: string
   phone: string
   address: string
 }
@@ -17,7 +17,7 @@ const AddressBook = () => {
   const [isLoading, setIsLoading] = useState(true)
 
   const [items, setItems] = useState<AddressItem[]>([])
-  const [label, setLabel] = useState('Home')
+  const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
   const [error, setError] = useState('')
@@ -63,7 +63,7 @@ const AddressBook = () => {
 
   const onAdd = () => {
     setError('')
-    if (!label.trim() || !phone.trim() || !address.trim()) {
+    if (!name.trim() || !phone.trim() || !address.trim()) {
       setError('Please fill all fields.')
       return
     }
@@ -71,7 +71,7 @@ const AddressBook = () => {
     const next: AddressItem[] = [
       {
         id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
-        label: label.trim(),
+        name: name.trim(),
         phone: phone.trim(),
         address: address.trim(),
       },
@@ -79,7 +79,7 @@ const AddressBook = () => {
     ]
 
     persist(next)
-    setLabel('Home')
+    setName('')
     setPhone('')
     setAddress('')
   }
@@ -116,21 +116,21 @@ const AddressBook = () => {
             {error && <div className="mb-3 text-sm text-red-600 font-medium">{error}</div>}
             <div className="space-y-3">
               <input
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                placeholder="Label (Home/Office)"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Recipient Name"
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="Phone"
+                placeholder="Phone Number"
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               <textarea
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder="Full address"
+                placeholder="Full Delivery Address"
                 rows={4}
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
@@ -158,7 +158,7 @@ const AddressBook = () => {
                 <div key={x.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <div className="font-semibold text-gray-900">{x.label}</div>
+                      <div className="font-semibold text-gray-900">{x.name}</div>
                       <div className="text-sm text-gray-600 mt-1">{x.phone}</div>
                       <div className="text-sm text-gray-600 mt-2 whitespace-pre-line">{x.address}</div>
                     </div>
