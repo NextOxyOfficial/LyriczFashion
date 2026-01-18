@@ -24,9 +24,20 @@ class MockupType(models.Model):
 
 class MockupVariant(models.Model):
     """
-    Represents a specific color variant of a mockup type with front and back images
+    Represents a specific size and color variant of a mockup type with front and back images
     """
+    SIZE_CHOICES = [
+        ('XS', 'Extra Small'),
+        ('S', 'Small'),
+        ('M', 'Medium'),
+        ('L', 'Large'),
+        ('XL', 'Extra Large'),
+        ('XXL', 'Double XL'),
+        ('XXXL', 'Triple XL'),
+    ]
+    
     mockup_type = models.ForeignKey(MockupType, on_delete=models.CASCADE, related_name='variants')
+    size = models.CharField(max_length=10, choices=SIZE_CHOICES, default='M', help_text="Size of the product")
     color_name = models.CharField(max_length=50)  # e.g., "White", "Black", "Navy"
     color_hex = models.CharField(max_length=7, blank=True, null=True)  # e.g., "#FFFFFF"
     
@@ -41,21 +52,21 @@ class MockupVariant(models.Model):
         max_digits=10, 
         decimal_places=2, 
         default=0,
-        help_text="Additional price for this color variant"
+        help_text="Additional price for this size/color variant"
     )
 
-    stock = models.IntegerField(default=0)
+    stock = models.IntegerField(default=0, help_text="Available stock for this specific size and color")
     
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['mockup_type', 'color_name']
-        unique_together = ['mockup_type', 'color_name']
+        ordering = ['mockup_type', 'size', 'color_name']
+        unique_together = ['mockup_type', 'size', 'color_name']
 
     def __str__(self):
-        return f"{self.mockup_type.name} - {self.color_name}"
+        return f"{self.mockup_type.name} - {self.size} - {self.color_name}"
 
     @property
     def effective_price(self):

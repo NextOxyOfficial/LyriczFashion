@@ -34,6 +34,8 @@ type Product = {
   profit_per_unit?: string
   available_stock?: number
   admin_buy_price?: string
+  views?: number
+  sold?: number
 }
 
 type SellerOrderItem = {
@@ -493,7 +495,7 @@ const SellerDashboard = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <Link
               to="/seller/orders-received"
               className="flex items-center gap-4 p-6 bg-white rounded-2xl border-2 border-gray-200 hover:border-emerald-500 hover:shadow-lg transition-all group"
@@ -508,6 +510,19 @@ const SellerDashboard = () => {
             </Link>
 
             <Link
+              to="/design-studio"
+              className="flex items-center gap-4 p-6 bg-white rounded-2xl border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all group"
+            >
+              <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center group-hover:bg-blue-500 transition-colors">
+                <Sparkles className="w-7 h-7 text-blue-600 group-hover:text-white transition-colors" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">Create Design</h3>
+                <p className="text-sm text-gray-600">Design custom products</p>
+              </div>
+            </Link>
+
+            <Link
               to="/sell-your-design"
               className="flex items-center gap-4 p-6 bg-white rounded-2xl border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all group"
             >
@@ -515,7 +530,7 @@ const SellerDashboard = () => {
                 <Sparkles className="w-7 h-7 text-purple-600 group-hover:text-white transition-colors" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-600 transition-colors">My Designs</h3>
+                <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-600 transition-colors">My Logo Designs</h3>
                 <p className="text-sm text-gray-600">Upload and manage your designs</p>
               </div>
             </Link>
@@ -530,41 +545,62 @@ const SellerDashboard = () => {
             {designs.length === 0 ? (
               <div className="text-gray-600">No products yet. Create your first product from Design Studio.</div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="space-y-4">
                 {designs.map((p) => (
-                  <div key={p.id} className="border border-gray-200 rounded-2xl overflow-hidden">
-                    <div className="aspect-square bg-gray-100">
-                      <img
-                        src={toUrl(p.design_preview || p.image) || 'https://via.placeholder.com/600x600'}
-                        alt={p.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="font-semibold text-gray-900 line-clamp-1">{p.name}</div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            Buy: ৳{Number(p.admin_buy_price ?? p.buy_price)} | Sell: ৳{Number(p.price)}
+                  <div key={p.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                    <div className="flex gap-4">
+                      {/* Product Image */}
+                      <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                        <img
+                          src={toUrl(p.design_preview || p.image) || 'https://via.placeholder.com/600x600'}
+                          alt={p.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      
+                      {/* Product Info */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-semibold text-gray-900 truncate">{p.name}</h3>
+                        <div className="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-sm">
+                          <div>
+                            <span className="text-gray-500 block text-xs">Buy Price</span>
+                            <span className="font-semibold text-gray-900">৳{Number(p.admin_buy_price ?? p.buy_price)}</span>
                           </div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            Stock: {Number(p.available_stock ?? p.stock ?? 0)}
+                          <div>
+                            <span className="text-gray-500 block text-xs">Sell Price</span>
+                            <span className="font-semibold text-emerald-600">৳{Number(p.price)}</span>
                           </div>
-                          <div className="text-sm text-green-700 mt-1">
-                            Profit/unit: ৳{Number(p.profit_per_unit || 0)}
+                          <div>
+                            <span className="text-gray-500 block text-xs">Stock</span>
+                            <span className="font-semibold text-gray-900">{Number(p.available_stock ?? p.stock ?? 0)}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 block text-xs">Profit/unit</span>
+                            <span className="font-semibold text-green-600">৳{Number(p.profit_per_unit || 0)}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 block text-xs">Views</span>
+                            <span className="font-semibold text-blue-600">{Number(p.views || 0)}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 block text-xs">Sold</span>
+                            <span className="font-semibold text-purple-600">{Number(p.sold || 0)}</span>
                           </div>
                         </div>
-                        <span className={`text-xs px-2 py-1 rounded-full ${p.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                          {p.is_published ? 'Published' : 'Draft'}
-                        </span>
                       </div>
-
-                      <Link
-                        to={`/products/${p.id}`}
-                        className="mt-4 inline-flex w-full items-center justify-center px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50"
-                      >
-                        View
-                      </Link>
+                      
+                      {/* Status Badge & Action Button */}
+                      <div className="flex flex-col items-end gap-3">
+                        <span className={`inline-block text-xs px-3 py-1.5 rounded-full font-semibold ${p.is_published ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                          {p.is_published ? 'Published' : 'Pending'}
+                        </span>
+                        <Link
+                          to={`/products/${p.id}`}
+                          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm whitespace-nowrap"
+                        >
+                          View Details
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 ))}

@@ -900,17 +900,21 @@ const DesignStudio = () => {
   return (
     <div className="bg-gradient-to-br from-emerald-50 via-white to-emerald-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Header & Mockup Selector - Combined */}
+        {/* Header */}
+        <div className="text-left mb-6">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent mb-2">
+            Design Studio
+          </h1>
+          <p className="text-gray-500 text-sm">Create custom apparel with images or text</p>
+        </div>
+
+        {/* Mockup Selector - Centered */}
         <div className="bg-white rounded-xl shadow-sm border border-emerald-100 p-6 mb-8">
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent mb-2">
-              Design Studio
-            </h1>
-            <p className="text-gray-500 text-sm mb-4">Create custom apparel with images or text</p>
-            <div className="inline-flex items-center gap-2 text-emerald-700 font-bold text-lg">
+            <div className="flex items-center justify-center gap-2 text-emerald-700 font-bold text-lg mb-2">
               <Sparkles className="w-6 h-6" /> Select Product
             </div>
-            <p className="text-sm text-gray-500 mt-1">Choose your apparel type</p>
+            <p className="text-sm text-gray-500">Choose your apparel type</p>
           </div>
           {isLoadingMockups ? (
             <div className="py-10 text-center text-sm text-gray-500">Loading apparel types...</div>

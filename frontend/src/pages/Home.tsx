@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Truck, Shield, RefreshCw, Headphones, Wand2, Sparkles, Zap, Star } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
-import { productsAPI, categoriesAPI } from '../services/api'
+import { productsAPI, mockupAPI } from '../services/api'
 
 const Home = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -83,14 +83,15 @@ const Home = () => {
     }
   }, [])
 
-  // Load categories
+  // Load categories (MockupTypes)
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const data = await categoriesAPI.getActive()
-        setCategories(data)
+        const data = await mockupAPI.listMockupTypes()
+        setCategories(Array.isArray(data) ? data : [])
       } catch (error) {
         console.error('Failed to load categories:', error)
+        setCategories([]) // Set empty array on error to stop loading state
       }
     }
     loadCategories()
@@ -331,22 +332,23 @@ const Home = () => {
         <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-12">Shopping by Categories</h2>
           {categories.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+            <div className="flex justify-start items-center gap-8 overflow-x-auto pb-4" style={{ scrollbarWidth: 'thin' }}>
               {categories.map((category) => (
                 <Link 
                   key={category.id}
-                  to={`/products?category=${category.slug}`} 
-                  className="flex flex-col items-center group"
+                  to={`/products?category=${encodeURIComponent(category.name)}`} 
+                  className="flex flex-col items-center group flex-shrink-0"
+                  style={{ width: '160px' }}
                 >
                   <div className="w-40 h-40 rounded-full bg-gray-100 overflow-hidden mb-4 group-hover:shadow-lg transition-shadow">
                     <img
-                      src={category.image_url || category.image || 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop'}
+                      src={category.preview_image || 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop'}
                       alt={category.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
                   <h3 className="text-base font-semibold text-gray-900">
-                    {category.name} <sup className="text-xs text-gray-500">{category.product_count}</sup>
+                    {category.name} <sup className="text-xs text-gray-500">{category.variant_count || 0}</sup>
                   </h3>
                 </Link>
               ))}

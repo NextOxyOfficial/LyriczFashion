@@ -376,7 +376,7 @@ const Navbar = () => {
                       }`} />
                     </button>
 
-                    <div className={`absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50 transition-all duration-200 origin-top ${
+                    <div className={`absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 transition-all duration-200 origin-top-right ${
                       isUserMenuOpen 
                         ? 'opacity-100 scale-100 translate-y-0' 
                         : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
@@ -397,22 +397,22 @@ const Navbar = () => {
                       </div>
 
                       {isSeller && (
-                        <div className="p-3 grid grid-cols-2 gap-2">
+                        <div className="p-3 space-y-2">
                           <Link
                             to={createHref}
-                            className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             <Sparkles className="w-4 h-4" />
-                            Create
+                            Create Your Product
                           </Link>
                           <Link
                             to="/sell-your-design"
-                            className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white border border-emerald-200 text-emerald-700 text-sm font-semibold hover:bg-emerald-50 transition-colors"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-emerald-200 text-emerald-700 text-sm font-semibold hover:bg-emerald-50 transition-colors"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             <ImageIcon className="w-4 h-4" />
-                            Sell
+                            Sell Your Logo
                           </Link>
                         </div>
                       )}

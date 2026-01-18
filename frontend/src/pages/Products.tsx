@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ChevronRight, Search } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
 import { productsAPI } from '../services/api'
@@ -13,6 +13,9 @@ const toUrl = (path?: string | null) => {
 }
 
 const Products = () => {
+  const [searchParams] = useSearchParams()
+  const categoryParam = searchParams.get('category')
+  
   const [items, setItems] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -47,6 +50,18 @@ const Products = () => {
 
     let list = items
 
+    // Filter by category (mockup type) from URL parameter
+    if (categoryParam) {
+      const catLower = categoryParam.toLowerCase()
+      list = list.filter((p: any) => {
+        // Check both category_name and mockup_type for filtering
+        const category = String(p?.category_name ?? '').toLowerCase()
+        const mockupType = String(p?.mockup_type_name ?? '').toLowerCase()
+        return category === catLower || mockupType === catLower
+      })
+    }
+
+    // Filter by search query
     if (q) {
       list = list.filter((p: any) => {
         const name = String(p?.name ?? '').toLowerCase()
@@ -68,7 +83,7 @@ const Products = () => {
     }
 
     return list
-  }, [items, query, sort])
+  }, [items, query, sort, categoryParam])
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -81,7 +96,9 @@ const Products = () => {
 
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Products</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+              {categoryParam ? `${categoryParam} Products` : 'Products'}
+            </h1>
             <p className="text-gray-500 mt-1 text-sm">Showing {visibleItems.length} products</p>
           </div>
 

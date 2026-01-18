@@ -69,10 +69,27 @@ class StoreAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'store', 'category', 'kind', 'is_published', 'buy_price', 'price', 'discount_price', 'stock', 'is_active', 'created_at']
+    list_display = ['name', 'store', 'category', 'kind', 'approval_status', 'is_published', 'buy_price', 'price', 'discount_price', 'stock', 'is_active', 'created_at']
     list_filter = ['kind', 'is_published', 'category', 'store', 'is_active', 'created_at']
     search_fields = ['name', 'description']
     list_editable = ['is_published', 'buy_price', 'price', 'discount_price', 'stock', 'is_active']
+    actions = ['approve_products', 'reject_products']
+    
+    def approval_status(self, obj):
+        if obj.is_published:
+            return '✅ Published'
+        return '⏳ Pending'
+    approval_status.short_description = 'Status'
+    
+    def approve_products(self, request, queryset):
+        updated = queryset.update(is_published=True)
+        self.message_user(request, f'{updated} products approved and published.')
+    approve_products.short_description = 'Approve selected products'
+    
+    def reject_products(self, request, queryset):
+        updated = queryset.update(is_published=False)
+        self.message_user(request, f'{updated} products set to pending.')
+    reject_products.short_description = 'Set selected products to pending'
     
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -283,7 +300,8 @@ class OrderAdmin(admin.ModelAdmin):
 class MockupVariantInline(admin.TabularInline):
     model = MockupVariant
     extra = 1
-    fields = ['color_name', 'color_hex', 'front_image', 'back_image', 'thumbnail', 'price_modifier', 'stock', 'is_active']
+    fields = ['size', 'color_name', 'color_hex', 'front_image', 'back_image', 'thumbnail', 'price_modifier', 'stock', 'is_active']
+    list_select_related = ['mockup_type']
 
 
 @admin.register(MockupType)
@@ -309,21 +327,29 @@ class MockupTypeAdmin(admin.ModelAdmin):
 
 @admin.register(MockupVariant)
 class MockupVariantAdmin(admin.ModelAdmin):
-    list_display = ['mockup_type', 'color_name', 'color_hex', 'effective_price', 'stock', 'is_active', 'created_at']
-    list_filter = ['mockup_type', 'is_active', 'created_at']
-    search_fields = ['mockup_type__name', 'color_name']
+    list_display = ['mockup_type', 'size', 'color_name', 'color_hex_display', 'effective_price', 'stock', 'is_active', 'created_at']
+    list_filter = ['mockup_type', 'size', 'is_active', 'created_at']
+    search_fields = ['mockup_type__name', 'color_name', 'size']
     list_select_related = ['mockup_type']
+    list_editable = ['stock', 'is_active']
+    
+    def color_hex_display(self, obj):
+        if obj.color_hex:
+            return mark_safe(f'<span style="background-color:{obj.color_hex}; padding: 2px 10px; border: 1px solid #ccc; border-radius: 3px;">{obj.color_hex}</span>')
+        return '-'
+    color_hex_display.short_description = 'Color'
+    
     fieldsets = (
         ('Basic Information', {
-            'fields': ('mockup_type', 'color_name', 'color_hex')
+            'fields': ('mockup_type', 'size', 'color_name', 'color_hex')
         }),
         ('Mockup Images', {
             'fields': ('front_image', 'back_image', 'thumbnail'),
             'description': 'Upload front and back mockup images. Front image shows the front view, back image shows the back view.'
         }),
-        ('Pricing', {
+        ('Pricing & Stock', {
             'fields': ('price_modifier', 'stock'),
-            'description': 'Additional price for this color variant (added to base price)'
+            'description': 'Additional price for this size/color variant (added to base price) and available stock'
         }),
         ('Status', {
             'fields': ('is_active',)

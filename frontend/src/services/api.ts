@@ -154,6 +154,15 @@ export const storeAPI = {
     const response = await api.get(`/stores/${slug}/`)
     return response.data
   },
+
+  updateStore: async (slug: string, formData: FormData) => {
+    const response = await api.patch(`/stores/${slug}/`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
 };
 
 export const wholesaleAPI = {
@@ -317,14 +326,13 @@ export const designLibraryAPI = {
     return response.data
   },
 
-  create: async (payload: {
+  create: async (token: string, payload: {
     name: string
     image: File
     category?: string
     search_keywords?: string
     commission_per_use?: number
   }) => {
-    // Token is handled by interceptor
     const form = new FormData()
     form.append('name', payload.name)
     form.append('image', payload.image)
@@ -338,7 +346,12 @@ export const designLibraryAPI = {
       form.append('commission_per_use', String(payload.commission_per_use))
     }
 
-    const response = await api.post('/design-library/', form)
+    const response = await api.post('/design-library/', form, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return response.data
   },
 
@@ -397,6 +410,10 @@ export const productsAPI = {
 };
 
 export const categoriesAPI = {
+  list: async () => {
+    const response = await api.get('/categories/')
+    return response.data
+  },
   getActive: async () => {
     try {
       const response = await api.get('/categories/active');

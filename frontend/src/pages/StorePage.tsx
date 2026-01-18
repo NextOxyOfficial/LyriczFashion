@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Copy } from 'lucide-react'
-import ProductCard from '../components/ProductCard'
+import { Copy, Edit2, Save, X, Upload } from 'lucide-react'
 import { productsAPI, storeAPI } from '../services/api'
+import ProductCard from '../components/ProductCard'
 
 const API_BASE_URL = 'http://localhost:8000'
 
@@ -19,6 +19,7 @@ type Store = {
   logo?: string | null
   banner?: string | null
   description?: string | null
+  owner_id?: number
 }
 
 type Product = {
@@ -37,6 +38,11 @@ const StorePage = () => {
   const [store, setStore] = useState<Store | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [copied, setCopied] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [bannerFile, setBannerFile] = useState<File | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -49,6 +55,22 @@ const StorePage = () => {
         const list = await productsAPI.getByStoreSlug(slug)
         console.log('Products loaded:', list)
         setProducts(list)
+        
+        // Check if user is logged in and get their ID
+        const token = localStorage.getItem('token')
+        if (token) {
+          try {
+            const userResponse = await fetch('http://localhost:8000/api/auth/me/', {
+              headers: { Authorization: `Bearer ${token}` }
+            })
+            if (userResponse.ok) {
+              const userData = await userResponse.json()
+              setCurrentUserId(userData.id)
+            }
+          } catch (err) {
+            console.log('Not authenticated')
+          }
+        }
       } catch (error) {
         console.error('Error loading store/products:', error)
         setStore(null)
@@ -79,6 +101,36 @@ const StorePage = () => {
 
   const storePublicUrl = `${window.location.origin}/store/${store.slug}`
 
+  const handleSaveChanges = async () => {
+    if (!store) return
+    setIsSaving(true)
+    try {
+      const formData = new FormData()
+      if (logoFile) formData.append('logo', logoFile)
+      if (bannerFile) formData.append('banner', bannerFile)
+      
+      await storeAPI.updateStore(store.slug, formData)
+      
+      // Reload store data
+      const updatedStore = await storeAPI.getStoreBySlug(store.slug)
+      setStore(updatedStore)
+      setIsEditMode(false)
+      setLogoFile(null)
+      setBannerFile(null)
+    } catch (error) {
+      console.error('Failed to update store:', error)
+      alert('Failed to update store. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false)
+    setLogoFile(null)
+    setBannerFile(null)
+  }
+
   const onCopyStoreLink = async () => {
     try {
       await navigator.clipboard.writeText(storePublicUrl)
@@ -98,20 +150,85 @@ const StorePage = () => {
     <div className="min-h-screen bg-gray-50">
       <section className="bg-white">
         <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          {/* Edit Mode Toggle - Only show to store owner */}
+          {currentUserId && store.owner_id === currentUserId && (
+            <div className="flex justify-end mb-4">
+              {!isEditMode ? (
+                <button
+                  onClick={() => setIsEditMode(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit Store
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCancelEdit}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                  >
+                    <X className="w-4 h-4" />
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveChanges}
+                    disabled={isSaving}
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="rounded-3xl overflow-hidden bg-gradient-to-r from-primary-600 to-pink-500">
             <div className="relative">
-              {store.banner ? (
+              {isEditMode ? (
+                <div className="w-full h-64 bg-black/40 flex items-center justify-center">
+                  <label className="cursor-pointer flex flex-col items-center gap-2 text-white">
+                    <Upload className="w-8 h-8" />
+                    <span className="text-sm font-medium">Upload Banner Image</span>
+                    <span className="text-xs opacity-80">Recommended: 1480x256px</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setBannerFile(e.target.files?.[0] || null)}
+                      className="hidden"
+                    />
+                  </label>
+                  {bannerFile && (
+                    <div className="absolute top-4 right-4 bg-emerald-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                      New banner selected
+                    </div>
+                  )}
+                </div>
+              ) : store.banner ? (
                 <img src={toUrl(store.banner)} alt={store.name} className="w-full h-64 object-cover opacity-40" />
               ) : (
                 <div className="w-full h-64 opacity-40 bg-black" />
               )}
               <div className="absolute inset-0 p-8 flex items-end">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-white/20 border border-white/30">
-                    {store.logo ? (
+                  <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-white/20 border border-white/30">
+                    {isEditMode ? (
+                      <label className="cursor-pointer w-full h-full flex items-center justify-center text-white/80 hover:bg-white/30 transition-colors">
+                        <Upload className="w-6 h-6" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+                          className="hidden"
+                        />
+                      </label>
+                    ) : store.logo ? (
                       <img src={toUrl(store.logo)} alt="logo" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-white/80">Logo</div>
+                    )}
+                    {logoFile && isEditMode && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-600 rounded-full border-2 border-white" />
                     )}
                   </div>
                   <div>
@@ -136,29 +253,39 @@ const StorePage = () => {
         </div>
       </section>
 
-      <section className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 pb-14">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold">Products</h2>
-          <div className="text-sm text-gray-500">{products.length} items</div>
-        </div>
-
-        {products.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow p-6 text-gray-600">No products published yet.</div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {products.map((p) => (
-              <ProductCard
-                key={p.id}
-                id={p.id}
-                name={p.name}
-                price={Number(p.price)}
-                discountPrice={p.discount_price ? Number(p.discount_price) : undefined}
-                imageUrl={toUrl(p.design_preview || p.image) || 'https://via.placeholder.com/600x600'}
-                designerName={p.designer_name || undefined}
-              />
-            ))}
+      <section className="bg-gray-50 py-12">
+        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">Products</h2>
+              <p className="text-gray-600 mt-1">{products.length} {products.length === 1 ? 'item' : 'items'} available</p>
+            </div>
           </div>
-        )}
+
+          {products.length === 0 ? (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+              <div className="text-lg font-semibold text-gray-900">No products published yet</div>
+              <p className="text-gray-500 mt-2">Check back later for new products from this store.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {products.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  id={p.id}
+                  name={p.name}
+                  price={Number(p.price)}
+                  discountPrice={p.discount_price ? Number(p.discount_price) : undefined}
+                  imageUrl={
+                    toUrl(p.design_preview || p.image) ||
+                    'https://via.placeholder.com/600x600'
+                  }
+                  designerName={p.designer_name || undefined}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </section>
     </div>
   )

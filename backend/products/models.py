@@ -28,11 +28,6 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
-    
-    @property
-    def product_count(self):
-        """Get count of published products in this category"""
-        return self.products.filter(is_published=True).count()
 
 
 class UserProfile(models.Model):

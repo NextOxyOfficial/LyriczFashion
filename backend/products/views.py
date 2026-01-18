@@ -162,6 +162,12 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [AllowAny]
+    
+    def get_queryset(self):
+        from django.db.models import Count, Q
+        return Category.objects.annotate(
+            product_count=Count('products', filter=Q(products__is_published=True, products__is_active=True))
+        ).filter(is_active=True)
 
 
 class ProductViewSet(viewsets.ModelViewSet):

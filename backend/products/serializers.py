@@ -50,6 +50,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.name', read_only=True)
+    mockup_type_name = serializers.CharField(source='mockup_variant.mockup_type.name', read_only=True)
     effective_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     discount_percentage = serializers.IntegerField(read_only=True)
     profit_per_unit = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
