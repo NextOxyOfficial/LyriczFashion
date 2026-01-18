@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Truck, Shield, RefreshCw, Headphones, Wand2 } from 'lucide-react'
+import { ArrowRight, Truck, Shield, RefreshCw, Headphones, Wand2, Sparkles, Zap, Star } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
 import { productsAPI } from '../services/api'
 
@@ -9,6 +9,78 @@ const Home = () => {
   const imageRef = useRef<HTMLDivElement>(null)
   const [allProducts, setAllProducts] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<'new' | 'bestseller' | 'sale'>('new')
+  const [typedText1, setTypedText1] = useState('')
+  const [typedText2, setTypedText2] = useState('')
+  const [typedDesc, setTypedDesc] = useState('')
+  const [showCursor1, setShowCursor1] = useState(true)
+  const [showCursor2, setShowCursor2] = useState(false)
+  const [showDescCursor, setShowDescCursor] = useState(false)
+
+  const text1 = 'Create Your'
+  const text2 = 'Dream T-Shirt'
+  const description = 'Design custom T-shirts with our easy-to-use studio. Perfect for yourself or your business.'
+
+  // Typing effect for hero text
+  useEffect(() => {
+    let timeout1: number
+    let timeout2: number
+    let timeout3: number
+    let cursorInterval: number
+
+    // Type first line
+    let i = 0
+    const typeText1 = () => {
+      if (i < text1.length) {
+        setTypedText1(text1.substring(0, i + 1))
+        i++
+        timeout1 = setTimeout(typeText1, 100)
+      } else {
+        setShowCursor1(false)
+        setShowCursor2(true)
+        // Start typing second line after first is complete
+        let j = 0
+        const typeText2 = () => {
+          if (j < text2.length) {
+            setTypedText2(text2.substring(0, j + 1))
+            j++
+            timeout2 = setTimeout(typeText2, 100)
+          } else {
+            setShowCursor2(false)
+            setShowDescCursor(true)
+            // Start typing description
+            let k = 0
+            const typeDesc = () => {
+              if (k < description.length) {
+                setTypedDesc(description.substring(0, k + 1))
+                k++
+                timeout3 = setTimeout(typeDesc, 30)
+              } else {
+                setShowDescCursor(false)
+              }
+            }
+            typeDesc()
+          }
+        }
+        typeText2()
+      }
+    }
+
+    // Start typing animation after a short delay
+    const startTimeout = setTimeout(typeText1, 500)
+
+    // Cursor blink effect
+    cursorInterval = setInterval(() => {
+      // Cursor blink is handled by CSS animation
+    }, 500)
+
+    return () => {
+      clearTimeout(startTimeout)
+      clearTimeout(timeout1)
+      clearTimeout(timeout2)
+      clearTimeout(timeout3)
+      clearInterval(cursorInterval)
+    }
+  }, [])
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -57,73 +129,187 @@ const Home = () => {
 
   return (
     <div>
-      {/* Hero Section - TeeSpace Style */}
-      <section className="py-4 bg-white">
+      {/* Hero Section - Enhanced with Cool Effects */}
+      <section className="relative py-4 bg-white overflow-hidden">
         <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div 
-            className="relative overflow-hidden rounded-3xl"
-            style={{ backgroundColor: '#86efac' }}
-          >
-            {/* Decorative dots pattern - top left */}
-            <div className="absolute top-16 left-16 w-20 h-20 opacity-30 hidden lg:block">
-              <div className="grid grid-cols-5 gap-2">
-                {[...Array(25)].map((_, i) => (
-                  <div key={i} className="w-1.5 h-1.5 bg-emerald-600 rounded-full"></div>
-                ))}
-              </div>
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-400 via-emerald-300 to-teal-400">
+            {/* Animated Background Gradient Orbs */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute top-0 -left-4 w-72 h-72 bg-emerald-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+              <div className="absolute top-0 -right-4 w-72 h-72 bg-teal-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+              <div className="absolute -bottom-8 left-20 w-72 h-72 bg-emerald-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
             </div>
 
-            {/* Decorative dots pattern - bottom left */}
-            <div className="absolute bottom-24 left-24 w-16 h-16 opacity-25 hidden lg:block">
-              <div className="grid grid-cols-4 gap-2">
-                {[...Array(16)].map((_, i) => (
-                  <div key={i} className="w-1.5 h-1.5 bg-emerald-600 rounded-full"></div>
-                ))}
-              </div>
+            {/* Floating Icons */}
+            <div className="absolute top-20 left-10 animate-float hidden lg:block">
+              <Sparkles className="w-8 h-8 text-white/40" />
+            </div>
+            <div className="absolute top-40 right-20 animate-float animation-delay-2000 hidden lg:block">
+              <Zap className="w-6 h-6 text-white/30" />
+            </div>
+            <div className="absolute bottom-32 left-32 animate-float animation-delay-4000 hidden lg:block">
+              <Star className="w-7 h-7 text-white/35" />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center min-h-[460px] py-12 lg:py-16">
+            {/* Decorative Grid Pattern */}
+            <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+
+            <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 items-center min-h-[500px] py-12 lg:py-16">
               {/* Left Content */}
               <div className="relative z-10 pl-8 lg:pl-16">
-                <h1 className="text-[40px] md:text-[48px] lg:text-[52px] font-bold text-gray-900 mb-4 leading-[1.15] tracking-tight">
-                  T-shirt printing<br />
-                  made easy.
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-6 border border-white/30">
+                  <Sparkles className="w-4 h-4 text-white" />
+                  <span className="text-sm font-semibold text-white">Design Studio Available</span>
+                </div>
+
+                {/* Main Heading with Gradient Text and Typing Effect */}
+                <h1 className="text-[42px] md:text-[56px] lg:text-[64px] font-black mb-6 leading-[1.1] tracking-tight min-h-[140px] md:min-h-[180px]">
+                  <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent drop-shadow-sm">
+                    {typedText1}
+                    {showCursor1 && <span className="typing-cursor">|</span>}
+                  </span>
+                  <br />
+                  <span className="bg-gradient-to-r from-white via-gray-50 to-white bg-clip-text text-transparent drop-shadow-lg">
+                    {typedText2}
+                    {showCursor2 && <span className="typing-cursor text-white">|</span>}
+                  </span>
                 </h1>
-                <p className="text-[15px] text-gray-700 mb-6 font-normal">
-                  Print shirts for yourself or your online business
+
+                <p className="text-lg text-gray-800 mb-8 font-medium max-w-md leading-relaxed min-h-[80px]">
+                  {typedDesc}
+                  {showDescCursor && <span className="typing-cursor text-gray-800">|</span>}
                 </p>
-                <Link
-                  to="/products"
-                  className="inline-flex items-center px-6 py-3 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
-                >
-                  Shop now
-                </Link>
+
+                {/* CTA Buttons */}
+                <div className="flex flex-wrap gap-4">
+                  <Link
+                    to="/design-studio"
+                    className="group relative inline-flex items-center gap-2 px-8 py-4 bg-gray-900 text-white text-base font-bold rounded-full hover:bg-gray-800 transition-all shadow-2xl hover:shadow-3xl hover:scale-105 overflow-hidden"
+                  >
+                    <span className="absolute inset-0 bg-gradient-to-r from-emerald-400/0 via-emerald-400/30 to-emerald-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                    <Wand2 className="w-5 h-5 relative z-10" />
+                    <span className="relative z-10">Start Designing</span>
+                    <ArrowRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                  <Link
+                    to="/products"
+                    className="inline-flex items-center gap-2 px-8 py-4 bg-white/90 backdrop-blur-sm text-gray-900 text-base font-bold rounded-full hover:bg-white transition-all shadow-xl hover:shadow-2xl hover:scale-105 border-2 border-white/50"
+                  >
+                    Browse Designs
+                  </Link>
+                </div>
+
+                {/* Stats */}
+                <div className="flex items-center gap-8 mt-10">
+                  <div>
+                    <div className="text-3xl font-bold text-gray-900">500+</div>
+                    <div className="text-sm text-gray-700">Designs</div>
+                  </div>
+                  <div className="w-px h-12 bg-gray-800/20"></div>
+                  <div>
+                    <div className="text-3xl font-bold text-gray-900">1000+</div>
+                    <div className="text-sm text-gray-700">Happy Customers</div>
+                  </div>
+                  <div className="w-px h-12 bg-gray-800/20"></div>
+                  <div>
+                    <div className="text-3xl font-bold text-gray-900">24/7</div>
+                    <div className="text-sm text-gray-700">Support</div>
+                  </div>
+                </div>
               </div>
 
-              {/* Right Content - Hero Image */}
+              {/* Right Content - Hero Image with Parallax */}
               <div 
-                className="relative h-[450px] lg:h-[500px] flex items-center justify-center lg:justify-end pr-8"
+                className="relative h-[450px] lg:h-[550px] flex items-center justify-center lg:justify-end pr-8"
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
               >
+                {/* Glow Effect Behind Image */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-96 h-96 bg-white/30 rounded-full filter blur-3xl"></div>
+                </div>
+
+                {/* Main Image with Parallax */}
                 <div 
                   ref={imageRef}
-                  className="relative"
+                  className="relative z-10"
                   style={{
-                    transform: `translate(${mousePosition.x}px, ${mousePosition.y}px)`,
-                    transition: 'transform 0.2s ease-out'
+                    transform: `translate(${mousePosition.x}px, ${mousePosition.y}px) scale(1.05)`,
+                    transition: 'transform 0.3s ease-out'
                   }}
                 >
-                  <img
-                    src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=600&fit=crop"
-                    alt="TeeSpace Custom T-Shirts"
-                    className="w-full max-w-[500px] h-auto object-contain"
-                  />
+                  <div className="relative">
+                    {/* Image Shadow/Glow */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/20 to-teal-600/20 rounded-3xl blur-2xl scale-110"></div>
+                    
+                    <img
+                      src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=600&fit=crop"
+                      alt="Custom T-Shirts"
+                      className="relative w-full max-w-[500px] h-auto object-contain drop-shadow-2xl"
+                    />
+                    
+                    {/* Floating Badge */}
+                    <div className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-2xl p-4 animate-bounce-slow hidden lg:block">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <span className="text-sm font-bold text-gray-900">Live Now</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Custom CSS for animations */}
+        <style>{`
+          @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+          }
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+          }
+          @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+          }
+          @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+          }
+          .animate-blob {
+            animation: blob 7s infinite;
+          }
+          .animate-float {
+            animation: float 3s ease-in-out infinite;
+          }
+          .animate-bounce-slow {
+            animation: bounce-slow 2s ease-in-out infinite;
+          }
+          .animation-delay-2000 {
+            animation-delay: 2s;
+          }
+          .animation-delay-4000 {
+            animation-delay: 4s;
+          }
+          .bg-grid-pattern {
+            background-image: linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+          }
+          .typing-cursor {
+            display: inline-block;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+            font-weight: 300;
+          }
+        `}</style>
       </section>
 
       {/* Shopping by Categories */}

@@ -396,6 +396,36 @@ export const productsAPI = {
   },
 };
 
+export const settingsAPI = {
+  getPromotionalBanners: async () => {
+    try {
+      const response = await api.get('/settings/promotional-banners');
+      return response.data;
+    } catch (error) {
+      // Return default banners if API fails
+      return [
+        { id: 1, text: '🔥 Extra Sale 30% off - Limited Time Offer!', link: '/products', active: true },
+        { id: 2, text: '✨ Free Shipping on Orders Over ৳2000', link: '/products', active: true },
+        { id: 3, text: '🎨 Custom T-Shirt Design - Upload Your Logo Today', link: '/design-studio', active: true },
+      ];
+    }
+  },
+
+  getContactInfo: async () => {
+    try {
+      const response = await api.get('/settings/contact-info');
+      return response.data;
+    } catch (error) {
+      // Return default contact info if API fails
+      return {
+        hotline: '19008188',
+        email: 'support@lyriczfashion.com',
+        address: 'Dhaka, Bangladesh',
+      };
+    }
+  },
+};
+
 export const ordersAPI = {
   createOrder: async (
     token: string,

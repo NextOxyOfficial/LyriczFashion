@@ -157,15 +157,6 @@ const ProductDetail = () => {
     }
   }
 
-  const handleDesignerClick = () => {
-    console.log('Designer clicked! store_slug:', product?.store_slug)
-    if (product?.store_slug) {
-      navigate(`/store/${product.store_slug}`)
-    } else {
-      console.log('No store_slug found in product:', product)
-    }
-  }
-
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -224,13 +215,12 @@ const ProductDetail = () => {
                     <Sparkles className="w-4 h-4 text-purple-500" />
                     <span className="text-gray-600 font-medium">designed by:</span>
                     {product.store_slug ? (
-                      <button
-                        type="button"
-                        onClick={handleDesignerClick}
+                      <Link
+                        to={`/store/${product.store_slug}`}
                         className="font-bold text-purple-600 hover:text-purple-800 transition-colors underline decoration-purple-400 hover:decoration-purple-600 underline-offset-2 cursor-pointer"
                       >
                         {product.designer_name || product.store_name}
-                      </button>
+                      </Link>
                     ) : (
                       <span className="font-bold text-gray-900">
                         {product.designer_name || 'Unknown'}

@@ -23,6 +23,7 @@ import SellYourDesign from './pages/SellYourDesign'
 import Designers from './pages/Designers'
 import Help from './pages/Help'
 import Wholesale from './pages/Wholesale'
+import Wishlist from './pages/Wishlist'
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/address-book" element={<AddressBook />} />
+            <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/sell-your-design" element={<SellYourDesign />} />
             <Route path="/designers" element={<Designers />} />
             <Route path="/help" element={<Help />} />
