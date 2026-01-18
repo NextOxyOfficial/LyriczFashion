@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ShoppingCart, Heart, Sparkles } from 'lucide-react'
+import { ShoppingCart, Heart, Sparkles, Check } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useCartStore } from '../store/cartStore'
 
@@ -16,6 +16,8 @@ const ProductCard = ({ id, name, price, discountPrice, imageUrl, designerName }:
   const addItem = useCartStore((s) => s.addItem)
   const unitPrice = discountPrice ?? price
   const [isFavorited, setIsFavorited] = useState(false)
+  const [showAddedToast, setShowAddedToast] = useState(false)
+  const [isAddedToCart, setIsAddedToCart] = useState(false)
 
   useEffect(() => {
     // Check if product is in favorites on mount
@@ -79,12 +81,10 @@ const ProductCard = ({ id, name, price, discountPrice, imageUrl, designerName }:
         </Link>
         {designerName && (
           <div className="mt-2 mb-2">
-            <div className="inline-flex flex-col items-start gap-0.5 px-2.5 py-1.5 bg-gradient-to-r from-purple-50 via-pink-50 to-blue-50 border border-purple-100 rounded-lg group-hover:shadow-sm transition-all">
-              <div className="flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-purple-500" />
-                <span className="text-[10px] font-semibold text-purple-600 uppercase tracking-wide">Designed by</span>
-              </div>
-              <span className="text-xs font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent pl-4">
+            <div className="inline-flex flex-wrap items-center gap-x-1 gap-y-0.5 px-2.5 py-1.5 bg-gradient-to-r from-purple-50 via-pink-50 to-blue-50 border border-purple-100 rounded-lg group-hover:shadow-sm transition-all">
+              <Sparkles className="w-3 h-3 text-purple-500 flex-shrink-0" />
+              <span className="text-[10px] font-semibold text-purple-600 uppercase tracking-wide whitespace-nowrap">Designed by</span>
+              <span className="text-xs font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
                 {designerName}
               </span>
             </div>
@@ -105,7 +105,7 @@ const ProductCard = ({ id, name, price, discountPrice, imageUrl, designerName }:
           
           <button
             type="button"
-            onClick={() =>
+            onClick={() => {
               addItem({
                 productId: id,
                 name,
@@ -113,13 +113,43 @@ const ProductCard = ({ id, name, price, discountPrice, imageUrl, designerName }:
                 imageUrl,
                 quantity: 1,
               })
-            }
-            className="p-2 bg-emerald-500 text-white rounded-full hover:bg-emerald-600 transition-colors"
+              // Show toast notification and change icon
+              setShowAddedToast(true)
+              setIsAddedToCart(true)
+              setTimeout(() => {
+                setShowAddedToast(false)
+                setIsAddedToCart(false)
+              }, 2000)
+            }}
+            className={`p-2 rounded-full transition-all duration-300 ${
+              isAddedToCart 
+                ? 'bg-green-500 hover:bg-green-600 scale-110' 
+                : 'bg-emerald-500 hover:bg-emerald-600'
+            } text-white`}
           >
-            <ShoppingCart className="w-5 h-5" />
+            {isAddedToCart ? (
+              <Check className="w-5 h-5" />
+            ) : (
+              <ShoppingCart className="w-5 h-5" />
+            )}
           </button>
         </div>
       </div>
+      
+      {/* Added to Cart Toast */}
+      {showAddedToast && (
+        <div className="fixed top-24 right-4 z-50 animate-slide-in-right">
+          <div className="bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
+            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+              <Check className="w-5 h-5 text-emerald-500" />
+            </div>
+            <div>
+              <p className="font-semibold">Added to Cart!</p>
+              <p className="text-sm text-emerald-100">{name}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

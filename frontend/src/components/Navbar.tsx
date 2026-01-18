@@ -22,12 +22,21 @@ const Navbar = () => {
   const [headerHeight, setHeaderHeight] = useState(180)
   const [favoritesCount, setFavoritesCount] = useState(0)
   const cartCount = useCartStore((s) => s.items.reduce((sum, x) => sum + x.quantity, 0))
+  const [cartBounce, setCartBounce] = useState(false)
 
   // Update favorites count from localStorage
   const updateFavoritesCount = () => {
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]')
     setFavoritesCount(favorites.length)
   }
+
+  // Trigger cart bounce animation when cart count changes
+  useEffect(() => {
+    if (cartCount > 0) {
+      setCartBounce(true)
+      setTimeout(() => setCartBounce(false), 500)
+    }
+  }, [cartCount])
 
   // Fetch promotional banners, contact info, and site settings
   useEffect(() => {
@@ -379,13 +388,25 @@ const Navbar = () => {
                   )}
                 </Link>
 
-                <Link to="/cart" className="relative p-2 text-gray-600 hover:text-emerald-600 transition-colors">
-                  <ShoppingCart className="w-6 h-6" />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {cartCount}
-                    </span>
-                  )}
+                <Link to="/cart" className="relative p-2 group">
+                  <div className={`relative ${cartBounce ? 'animate-bounce-scale' : ''}`}>
+                    {cartCount > 0 ? (
+                      <div className="relative">
+                        {/* Filled cart with gradient background */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg blur-sm opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                        <div className="relative bg-gradient-to-br from-emerald-500 to-emerald-600 p-1.5 rounded-lg">
+                          <ShoppingCart className="w-5 h-5 text-white fill-white" />
+                        </div>
+                      </div>
+                    ) : (
+                      <ShoppingCart className="w-6 h-6 text-gray-600 group-hover:text-emerald-600 transition-colors" />
+                    )}
+                    {cartCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg animate-pulse-scale">
+                        {cartCount}
+                      </span>
+                    )}
+                  </div>
                 </Link>
 
                 {user ? (
