@@ -12,6 +12,9 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteSettings
         fields = [
+            'site_name',
+            'logo',
+            'favicon',
             'hotline',
             'email',
             'address',

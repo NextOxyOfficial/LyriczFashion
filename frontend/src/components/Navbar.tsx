@@ -15,6 +15,7 @@ const Navbar = () => {
   const [promotionalBanners, setPromotionalBanners] = useState<any[]>([])
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0)
   const [contactInfo, setContactInfo] = useState({ hotline: '19008188', email: 'support@lyriczfashion.com', address: 'Dhaka, Bangladesh' })
+  const [siteSettings, setSiteSettings] = useState<any>({ site_name: 'LyriczFashion', logo: null, favicon: null })
   const userMenuRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLElement>(null)
@@ -28,7 +29,7 @@ const Navbar = () => {
     setFavoritesCount(favorites.length)
   }
 
-  // Fetch promotional banners and contact info
+  // Fetch promotional banners, contact info, and site settings
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -37,7 +38,22 @@ const Navbar = () => {
           settingsAPI.getContactInfo(),
         ])
         setPromotionalBanners(banners.filter((b: any) => b.active))
+        setSiteSettings(contact) // Contact info includes site settings now
         setContactInfo(contact)
+        
+        // Update favicon dynamically
+        if (contact.favicon) {
+          const link = document.querySelector("link[rel*='icon']") as HTMLLinkElement || document.createElement('link')
+          link.type = 'image/x-icon'
+          link.rel = 'shortcut icon'
+          link.href = contact.favicon.startsWith('http') ? contact.favicon : `http://localhost:8000${contact.favicon}`
+          document.getElementsByTagName('head')[0].appendChild(link)
+        }
+        
+        // Update page title
+        if (contact.site_name) {
+          document.title = contact.site_name
+        }
       } catch (error) {
         console.error('Failed to fetch settings:', error)
       }
@@ -232,10 +248,20 @@ const Navbar = () => {
           <div className="flex justify-between items-center">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">L</span>
-              </div>
-              <span className="text-xl font-bold text-gray-900">LyriczFashion</span>
+              {siteSettings.logo ? (
+                <img 
+                  src={siteSettings.logo.startsWith('http') ? siteSettings.logo : `http://localhost:8000${siteSettings.logo}`} 
+                  alt={siteSettings.site_name || 'Logo'} 
+                  className="h-10 w-auto object-contain"
+                />
+              ) : (
+                <>
+                  <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-lg">{siteSettings.site_name?.[0] || 'L'}</span>
+                  </div>
+                  <span className="text-xl font-bold text-gray-900">{siteSettings.site_name || 'LyriczFashion'}</span>
+                </>
+              )}
             </Link>
 
             {/* Search Bar - Dynamic & Functional with Suggestions */}

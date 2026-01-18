@@ -27,6 +27,25 @@ class PromotionalBanner(models.Model):
 
 class SiteSettings(models.Model):
     """Singleton model for site-wide settings"""
+    # Branding
+    site_name = models.CharField(
+        max_length=100,
+        default="LyriczFashion",
+        help_text="Site name displayed in header and title"
+    )
+    logo = models.ImageField(
+        upload_to='site/',
+        blank=True,
+        null=True,
+        help_text="Site logo (recommended: 200x50px PNG with transparent background)"
+    )
+    favicon = models.ImageField(
+        upload_to='site/',
+        blank=True,
+        null=True,
+        help_text="Site favicon (recommended: 32x32px or 64x64px PNG/ICO)"
+    )
+    
     # Contact Information
     hotline = models.CharField(
         max_length=50, 
