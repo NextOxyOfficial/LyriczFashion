@@ -3,7 +3,7 @@ import { ShoppingCart, User, Menu, X, Search, Phone, Heart, ChevronDown, Sparkle
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useCartStore } from '../store/cartStore'
 import { productsAPI, settingsAPI } from '../services/api'
-
+ 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
