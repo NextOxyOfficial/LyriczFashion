@@ -103,7 +103,7 @@ const AddressBook = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-10">
-      <div className="max-w-5xl mx-auto px-4">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
           <div className="text-sm font-medium text-emerald-700">Address Book</div>
           <h1 className="text-2xl font-bold text-gray-900 mt-1">Saved Addresses</h1>

@@ -766,7 +766,7 @@ const Home = () => {
 
       {/* Features */}
       <section className="py-8 bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="flex flex-col items-center text-center">
               <div className="p-4 bg-emerald-100 rounded-full mb-4">

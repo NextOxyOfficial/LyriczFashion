@@ -23,7 +23,7 @@ const Navbar = () => {
   const [favoritesCount, setFavoritesCount] = useState(0)
   const cartCount = useCartStore((s) => s.items.reduce((sum, x) => sum + x.quantity, 0))
   const [cartBounce, setCartBounce] = useState(false)
-  const [showSearchBar, setShowSearchBar] = useState(false)
+  const [showSearchBar, setShowSearchBar] = useState(true)
 
   // Update favorites count from localStorage
   const updateFavoritesCount = () => {

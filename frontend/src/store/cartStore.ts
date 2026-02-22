@@ -15,6 +15,7 @@ export type CartItem = {
   imageUrl: string
   quantity: number
   options?: CartItemOptions
+  isCustom?: boolean
 }
 
 type AddToCartPayload = {
@@ -24,6 +25,7 @@ type AddToCartPayload = {
   imageUrl: string
   quantity?: number
   options?: CartItemOptions
+  isCustom?: boolean
 }
 
 type CartState = {
@@ -77,6 +79,7 @@ export const useCartStore = create<CartState>()(
                 imageUrl: payload.imageUrl,
                 quantity: qty,
                 options: payload.options,
+                isCustom: payload.isCustom,
               },
             ],
           }

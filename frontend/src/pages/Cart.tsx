@@ -56,7 +56,7 @@ const Cart = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-8">
           <Link to="/" className="hover:text-emerald-600">Home</Link>
@@ -128,20 +128,35 @@ const Cart = () => {
                     <div className="grid grid-cols-12 gap-4 items-center">
                       {/* Product Info */}
                       <div className="col-span-6 flex gap-4">
-                        <Link to={`/products/${item.productId}`}>
+                        {item.isCustom ? (
                           <img
                             src={item.imageUrl}
                             alt={item.name}
                             className="w-24 h-24 object-cover rounded-xl border border-gray-100"
                           />
-                        </Link>
-                        <div className="flex flex-col justify-center">
-                          <Link 
-                            to={`/products/${item.productId}`}
-                            className="font-semibold text-gray-900 hover:text-emerald-600 transition-colors"
-                          >
-                            {item.name}
+                        ) : (
+                          <Link to={`/products/${item.productId}`}>
+                            <img
+                              src={item.imageUrl}
+                              alt={item.name}
+                              className="w-24 h-24 object-cover rounded-xl border border-gray-100"
+                            />
                           </Link>
+                        )}
+                        <div className="flex flex-col justify-center">
+                          {item.isCustom ? (
+                            <span className="font-semibold text-gray-900">
+                              {item.name}
+                              <span className="ml-2 text-xs font-medium text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">Custom Design</span>
+                            </span>
+                          ) : (
+                            <Link 
+                              to={`/products/${item.productId}`}
+                              className="font-semibold text-gray-900 hover:text-emerald-600 transition-colors"
+                            >
+                              {item.name}
+                            </Link>
+                          )}
                           <div className="flex gap-3 mt-2 text-sm text-gray-500">
                             {item.options?.size && (
                               <span className="px-2 py-0.5 bg-gray-100 rounded">

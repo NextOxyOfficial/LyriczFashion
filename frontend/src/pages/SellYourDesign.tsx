@@ -191,7 +191,7 @@ const SellYourDesign = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-10">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>

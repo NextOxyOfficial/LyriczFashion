@@ -781,6 +781,7 @@ const DesignStudio = () => {
         imageUrl: toUrl(created.design_preview) || logoUrl,
         quantity: 1,
         options: { size: selectedSize, color: selectedColor, custom: created.design_data },
+        isCustom: true,
       })
       navigate('/cart')
     } catch (e: any) {
@@ -891,7 +892,7 @@ const DesignStudio = () => {
 
   return (
     <div className="bg-gradient-to-br from-emerald-50 via-white to-emerald-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="text-left mb-6">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent mb-2">

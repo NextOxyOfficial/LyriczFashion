@@ -58,7 +58,7 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
+        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <button
             onClick={handleLogout}
@@ -70,7 +70,7 @@ const AdminDashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Card */}
         <div className="bg-white rounded-xl shadow-md p-6 mb-8">
           <h2 className="text-2xl font-bold mb-2">Welcome, {user.full_name}!</h2>
