@@ -201,6 +201,7 @@ const Products = () => {
                     'https://via.placeholder.com/600x600'
                   }
                   designerName={p.designer_name}
+                  storeSlug={p.creator_store_slug || p.store_slug}
                 />
               ))}
             </div>

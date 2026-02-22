@@ -24,6 +24,8 @@ type Product = {
   design_preview?: string | null
   image?: string | null
   designer_name?: string | null
+  store_slug?: string | null
+  creator_store_slug?: string | null
 }
 
 const StorePage = () => {
@@ -270,6 +272,7 @@ const StorePage = () => {
                     'https://via.placeholder.com/600x600'
                   }
                   designerName={p.designer_name || undefined}
+                  storeSlug={p.creator_store_slug ?? p.store_slug ?? undefined}
                 />
               ))}
             </div>

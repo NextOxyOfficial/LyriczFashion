@@ -57,6 +57,7 @@ class ProductSerializer(serializers.ModelSerializer):
     store_name = serializers.CharField(source='store.name', read_only=True)
     store_slug = serializers.CharField(source='store.slug', read_only=True)
     designer_name = serializers.SerializerMethodField()
+    creator_store_slug = serializers.SerializerMethodField()
     available_stock = serializers.SerializerMethodField()
     admin_buy_price = serializers.SerializerMethodField()
      
@@ -80,9 +81,20 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_designer_name(self, obj: Product):
         if obj.created_by:
-            # Return full name if available, otherwise username
             full_name = f"{obj.created_by.first_name} {obj.created_by.last_name}".strip()
             return full_name if full_name else obj.created_by.username
+        return None
+
+    def get_creator_store_slug(self, obj: Product):
+        if obj.store and obj.store.slug:
+            return obj.store.slug
+        if obj.created_by:
+            try:
+                store = obj.created_by.stores.filter(is_active=True).first()
+                if store:
+                    return store.slug
+            except Exception:
+                pass
         return None
 
     def get_admin_buy_price(self, obj: Product):

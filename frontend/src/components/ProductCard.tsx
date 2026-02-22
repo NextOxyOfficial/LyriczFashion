@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, Heart, Sparkles, Check } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useCartStore } from '../store/cartStore'
@@ -10,9 +10,11 @@ interface ProductCardProps {
   discountPrice?: number
   imageUrl: string
   designerName?: string
+  storeSlug?: string
 }
 
-const ProductCard = ({ id, name, price, discountPrice, imageUrl, designerName }: ProductCardProps) => {
+const ProductCard = ({ id, name, price, discountPrice, imageUrl, designerName, storeSlug }: ProductCardProps) => {
+  const navigate = useNavigate()
   const addItem = useCartStore((s) => s.addItem)
   const unitPrice = discountPrice ?? price
   const [isFavorited, setIsFavorited] = useState(false)
@@ -81,10 +83,17 @@ const ProductCard = ({ id, name, price, discountPrice, imageUrl, designerName }:
         </Link>
         {designerName && (
           <div className="mt-2 mb-2">
-            <div className="inline-flex flex-wrap items-center gap-x-1 gap-y-0.5 px-2.5 py-1.5 bg-gradient-to-r from-purple-50 via-pink-50 to-blue-50 border border-purple-100 rounded-lg group-hover:shadow-sm transition-all">
+            <div
+              className="inline-flex flex-wrap items-center gap-x-1 gap-y-0.5 px-2.5 py-1.5 bg-gradient-to-r from-purple-50 via-pink-50 to-blue-50 border border-purple-100 rounded-lg group-hover:shadow-sm transition-all cursor-pointer hover:border-purple-300"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                if (storeSlug) navigate(`/store/${storeSlug}`)
+              }}
+            >
               <Sparkles className="w-3 h-3 text-purple-500 flex-shrink-0" />
               <span className="text-[10px] font-semibold text-purple-600 uppercase tracking-wide whitespace-nowrap">Designed by</span>
-              <span className="text-xs font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
+              <span className="text-xs font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent hover:underline">
                 {designerName}
               </span>
             </div>

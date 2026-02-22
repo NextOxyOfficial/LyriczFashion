@@ -208,9 +208,9 @@ const ProductDetail = () => {
                   <div className="flex flex-wrap items-center gap-1.5 text-sm">
                     <Sparkles className="w-4 h-4 text-purple-500" />
                     <span className="text-gray-600 font-medium">designed by:</span>
-                    {product.store_slug ? (
+                    {(product.creator_store_slug || product.store_slug) ? (
                       <Link
-                        to={`/store/${product.store_slug}`}
+                        to={`/store/${product.creator_store_slug || product.store_slug}`}
                         className="font-bold text-purple-600 hover:text-purple-800 transition-colors underline decoration-purple-400 hover:decoration-purple-600 underline-offset-2 cursor-pointer"
                       >
                         {product.designer_name || product.store_name}
@@ -375,6 +375,7 @@ const ProductDetail = () => {
                   discountPrice={p.discount_price ? Number(p.discount_price) : undefined}
                   imageUrl={p.image_url || p.design_preview || p.image || 'https://via.placeholder.com/300'}
                   designerName={p.designer_name}
+                  storeSlug={p.creator_store_slug || p.store_slug}
                 />
               ))}
             </div>

@@ -502,6 +502,7 @@ const Home = () => {
                 discountPrice={product.discount_price ? Number(product.discount_price) : undefined}
                 imageUrl={product.image_url || product.design_preview || product.image || 'https://via.placeholder.com/300x400'}
                 designerName={product.designer_name}
+                storeSlug={product.creator_store_slug || product.store_slug}
               />
             ))}
           </div>
