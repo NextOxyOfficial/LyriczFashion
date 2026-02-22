@@ -140,7 +140,7 @@ const StorePage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <section className="bg-white">
-        <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8 py-10">
+        <div className="max-w-[1480px] mx-auto px-1 sm:px-6 lg:px-8 mt-4 sm:py-8">
           {/* Edit Mode Toggle - Only show to store owner */}
           {currentUserId && store.owner_id === currentUserId && (
             <div className="flex justify-end mb-4">
@@ -174,10 +174,10 @@ const StorePage = () => {
             </div>
           )}
 
-          <div className="rounded-3xl overflow-hidden bg-gradient-to-r from-primary-600 to-pink-500">
+          <div className="rounded-2xl overflow-hidden bg-gradient-to-r from-primary-600 to-pink-500">
             <div className="relative">
               {isEditMode ? (
-                <div className="w-full h-64 bg-black/40 flex items-center justify-center">
+                <div className="w-full h-32 sm:h-56 bg-black/40 flex items-center justify-center">
                   <label className="cursor-pointer flex flex-col items-center gap-2 text-white">
                     <Upload className="w-8 h-8" />
                     <span className="text-sm font-medium">Upload Banner Image</span>
@@ -196,13 +196,13 @@ const StorePage = () => {
                   )}
                 </div>
               ) : store.banner ? (
-                <img src={toUrl(store.banner)} alt={store.name} className="w-full h-64 object-cover opacity-40" />
+                <img src={toUrl(store.banner)} alt={store.name} className="w-full h-32 sm:h-56 object-cover opacity-40" />
               ) : (
-                <div className="w-full h-64 opacity-40 bg-black" />
+                <div className="w-full h-32 sm:h-56 opacity-40 bg-black" />
               )}
-              <div className="absolute inset-0 p-8 flex items-end">
-                <div className="flex items-center gap-4">
-                  <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-white/20 border border-white/30">
+              <div className="absolute inset-0 p-4 sm:p-8 flex items-end">
+                <div className="flex items-center gap-3">
+                  <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-xl overflow-hidden bg-white/20 border border-white/30 flex-shrink-0">
                     {isEditMode ? (
                       <label className="cursor-pointer w-full h-full flex items-center justify-center text-white/80 hover:bg-white/30 transition-colors">
                         <Upload className="w-6 h-6" />
@@ -222,18 +222,17 @@ const StorePage = () => {
                       <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-600 rounded-full border-2 border-white" />
                     )}
                   </div>
-                  <div>
-                    <h1 className="text-3xl font-bold text-white">{store.name}</h1>
-                    {store.description && <p className="text-white/90 mt-1 max-w-2xl line-clamp-2">{store.description}</p>}
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <p className="text-white/80 text-sm break-all">{storePublicUrl}</p>
+                  <div className="min-w-0">
+                    <h1 className="text-lg sm:text-3xl font-bold text-white truncate">{store.name}</h1>
+                    {store.description && <p className="text-white/90 text-xs sm:text-base mt-0.5 line-clamp-1 sm:line-clamp-2">{store.description}</p>}
+                    <div className="mt-1 flex items-center gap-2">
+                      <p className="text-white/80 text-xs truncate">{storePublicUrl}</p>
                       <button
                         type="button"
                         onClick={onCopyStoreLink}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/20"
                       >
                         <Copy className="w-3.5 h-3.5" />
-                        {copied ? 'Copied' : 'Copy'}
                       </button>
                     </div>
                   </div>
@@ -244,12 +243,12 @@ const StorePage = () => {
         </div>
       </section>
 
-      <section className="bg-gray-50 py-12">
+      <section className="bg-gray-50 py-4 sm:py-8">
         <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900">Products</h2>
-              <p className="text-gray-600 mt-1">{products.length} {products.length === 1 ? 'item' : 'items'} available</p>
+              <h2 className="text-xl sm:text-3xl font-bold text-gray-900">Products</h2>
+              <p className="text-gray-500 text-xs sm:text-base mt-0.5">{products.length} {products.length === 1 ? 'item' : 'items'} available</p>
             </div>
           </div>
 
@@ -259,7 +258,7 @@ const StorePage = () => {
               <p className="text-gray-500 mt-2">Check back later for new products from this store.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
               {products.map((p) => (
                 <ProductCard
                   key={p.id}

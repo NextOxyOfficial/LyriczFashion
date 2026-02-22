@@ -158,6 +158,28 @@ const Footer = () => {
             </ul>
           </div>
 
+          {/* Legal */}
+          <div className="px-2 sm:px-0 text-center lg:hidden">
+            <h4 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 text-white">Legal</h4>
+            <ul className="space-y-2 sm:space-y-3">
+              <li>
+                <Link to="/terms" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/help" className="text-gray-400 hover:text-emerald-400 transition-colors">
+                  Help Center
+                </Link>
+              </li>
+            </ul>
+          </div>
+
           {/* Support */}
           <div className="px-2 sm:px-0 text-center">
             <h4 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 text-white">Support</h4>

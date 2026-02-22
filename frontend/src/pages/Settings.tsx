@@ -167,62 +167,47 @@ const Settings = () => {
   if (!me) return null
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4">
-      <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-          <div className="text-sm font-medium text-emerald-700">Account Settings</div>
-          <h1 className="text-2xl font-bold text-gray-900 mt-1">My Profile</h1>
-          <p className="text-gray-600 mt-1">Manage your account information and preferences for {displayName}.</p>
+    <div className="min-h-screen bg-gray-50 py-3 sm:py-6">
+      <div className="max-w-2xl lg:max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-4">
+          <div className="text-xs font-medium text-emerald-700">Account Settings</div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mt-0.5">My Profile</h1>
+          <p className="text-gray-500 text-xs sm:text-sm mt-0.5">Manage your account information and preferences for {displayName}.</p>
         </div>
 
         {message && (
-          <div className={`mb-6 p-4 rounded-xl border ${
-            message.type === 'success' 
-              ? 'bg-green-50 border-green-200 text-green-800' 
+          <div className={`mb-4 p-3 rounded-xl border text-sm ${
+            message.type === 'success'
+              ? 'bg-green-50 border-green-200 text-green-800'
               : 'bg-red-50 border-red-200 text-red-800'
           }`}>
             {message.text}
           </div>
         )}
 
-        <div className="flex gap-4 mb-6 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all ${
-              activeTab === 'profile'
-                ? 'bg-emerald-600 text-white shadow-md'
-                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            <User className="w-4 h-4" />
-            Profile Info
-          </button>
-          <button
-            onClick={() => setActiveTab('password')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all ${
-              activeTab === 'password'
-                ? 'bg-emerald-600 text-white shadow-md'
-                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            <Lock className="w-4 h-4" />
-            Password
-          </button>
-          <button
-            onClick={() => setActiveTab('payout')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all ${
-              activeTab === 'payout'
-                ? 'bg-emerald-600 text-white shadow-md'
-                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-            }`}
-          >
-            <CreditCard className="w-4 h-4" />
-            Payout Info
-          </button>
+        <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-hide">
+          {([
+            { key: 'profile', label: 'Profile Info', icon: <User className="w-4 h-4" /> },
+            { key: 'password', label: 'Password', icon: <Lock className="w-4 h-4" /> },
+            { key: 'payout', label: 'Payout Info', icon: <CreditCard className="w-4 h-4" /> },
+          ] as const).map(({ key, label, icon }) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                activeTab === key
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+              }`}
+            >
+              {icon}
+              {label}
+            </button>
+          ))}
         </div>
 
         {activeTab === 'profile' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm py-6 px-3">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Personal Information</h2>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

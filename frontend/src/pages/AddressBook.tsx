@@ -102,17 +102,17 @@ const AddressBook = () => {
   if (!me) return null
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4">
-      <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-          <div className="text-sm font-medium text-emerald-700">Address Book</div>
-          <h1 className="text-2xl font-bold text-gray-900 mt-1">Saved Addresses</h1>
-          <p className="text-gray-600 mt-1">Manage delivery addresses for {displayName}.</p>
+    <div className="min-h-screen bg-gray-50 py-3 sm:py-6">
+      <div className="max-w-2xl lg:max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-2 sm:p-6 mb-4">
+          <div className="text-xs font-medium text-emerald-700">Address Book</div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mt-0.5">Saved Addresses</h1>
+          <p className="text-gray-500 text-xs sm:text-sm mt-0.5">Manage delivery addresses for {displayName}.</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <div className="font-semibold text-gray-900 mb-4">Add New Address</div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+            <div className="text-sm font-semibold text-gray-900 mb-3">Add New Address</div>
             {error && <div className="mb-3 text-sm text-red-600 font-medium">{error}</div>}
             <div className="space-y-3">
               <input
@@ -131,8 +131,8 @@ const AddressBook = () => {
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="Full Delivery Address"
-                rows={4}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                rows={3}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
               />
               <button
                 onClick={onAdd}
@@ -144,27 +144,27 @@ const AddressBook = () => {
           </div>
 
           <div className="space-y-3">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <div className="font-semibold text-gray-900">Your Addresses</div>
-              <div className="text-sm text-gray-600 mt-1">Stored locally for now.</div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+              <div className="text-sm font-semibold text-gray-900">Your Addresses</div>
+              <div className="text-xs text-gray-500 mt-0.5">Stored locally for now.</div>
             </div>
 
             {items.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-sm text-gray-600">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-sm text-gray-500">
                 No saved addresses yet.
               </div>
             ) : (
               items.map((x) => (
-                <div key={x.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="font-semibold text-gray-900">{x.name}</div>
-                      <div className="text-sm text-gray-600 mt-1">{x.phone}</div>
-                      <div className="text-sm text-gray-600 mt-2 whitespace-pre-line">{x.address}</div>
+                <div key={x.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-gray-900">{x.name}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">{x.phone}</div>
+                      <div className="text-xs text-gray-600 mt-1 whitespace-pre-line">{x.address}</div>
                     </div>
                     <button
                       onClick={() => onRemove(x.id)}
-                      className="px-3 py-2 rounded-xl border border-red-200 text-red-700 font-semibold hover:bg-red-50 transition-colors"
+                      className="flex-shrink-0 px-3 py-1.5 rounded-xl border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-50 transition-colors"
                     >
                       Remove
                     </button>

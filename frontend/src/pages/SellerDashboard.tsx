@@ -199,24 +199,32 @@ const SellerDashboard = () => {
   const sellerStatus = me.seller_status
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4">
-      <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-3 sm:py-6">
+      <div className="max-w-2xl lg:max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8">
         {/* Header Section */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <div className="text-sm font-medium text-emerald-700">{store ? 'My Store' : 'Seller Dashboard'}</div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mt-1">{store ? store.name : 'Become a Seller'}</h1>
-              <p className="text-gray-600 mt-1">{store ? 'Manage your store and products' : 'Start selling your designs and earn commissions'}</p>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-medium text-emerald-700">{store ? 'My Store' : 'Seller Dashboard'}</div>
+              <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{store ? store.name : 'Become a Seller'}</h1>
+              {store ? (
+                <div className="flex items-center gap-2 mt-1">
+                  <a href={storePublicUrl} target="_blank" rel="noreferrer" className="text-xs text-emerald-600 hover:underline truncate flex-1 min-w-0">{storePublicUrl}</a>
+                  <Link to={`/store/${store.slug}`} className="flex-shrink-0 p-1 rounded-md hover:bg-gray-100 text-gray-500 hover:text-emerald-600 transition-colors"><ExternalLink className="w-3.5 h-3.5" /></Link>
+                  <button type="button" onClick={onCopyStoreLink} className="flex-shrink-0 p-1 rounded-md hover:bg-gray-100 text-gray-500 hover:text-emerald-600 transition-colors"><Copy className="w-3.5 h-3.5" /></button>
+                </div>
+              ) : (
+                <p className="text-gray-500 text-xs sm:text-sm mt-0.5">Start selling your designs and earn commissions</p>
+              )}
             </div>
-
             {store && (
               <Link
                 to="/seller/designs/new"
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors"
+                className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 sm:px-5 sm:py-3 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors"
               >
                 <Sparkles className="w-4 h-4" />
-                Create New Product
+                <span className="hidden sm:inline">Create New Product</span>
+                <span className="sm:hidden">Create</span>
               </Link>
             )}
           </div>
@@ -438,163 +446,86 @@ const SellerDashboard = () => {
           </div>
         </div>
       ) : (
-        <div className="space-y-8">
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="relative">
-              {store.banner ? (
-                <img src={toUrl(store.banner)} alt={store.name} className="w-full h-56 md:h-64 object-cover" />
-              ) : (
-                <div className="w-full h-56 md:h-64 bg-gradient-to-r from-emerald-600 to-emerald-400" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+        <div className="space-y-4">
 
-              <div className="absolute bottom-0 left-0 right-0 p-6">
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl overflow-hidden bg-white/20 border border-white/30 flex items-center justify-center">
-                      {store.logo ? (
-                        <img src={toUrl(store.logo)} alt="logo" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="text-white/80 text-sm">Logo</div>
-                      )}
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-white">{store.name}</h2>
-                      {store.description && (
-                        <p className="text-white/90 mt-1 max-w-2xl line-clamp-2">{store.description}</p>
-                      )}
-                      <p className="text-white/80 mt-2 text-sm">{storePublicUrl}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <Link
-                      to={`/store/${store.slug}`}
-                      className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/90 hover:bg-white text-gray-900 font-semibold"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      View Store
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={onCopyStoreLink}
-                      className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/30"
-                    >
-                      <Copy className="w-4 h-4" />
-                      {copied ? 'Copied' : 'Copy Link'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
             <Link
               to="/seller/orders-received"
-              className="flex items-center gap-4 p-6 bg-white rounded-2xl border-2 border-gray-200 hover:border-emerald-500 hover:shadow-lg transition-all group"
+              className="flex items-center gap-3 p-3 sm:p-5 bg-white rounded-2xl border-2 border-gray-100 hover:border-emerald-400 hover:shadow-md transition-all group"
             >
-              <div className="w-14 h-14 rounded-xl bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
-                <ShoppingBag className="w-7 h-7 text-emerald-600 group-hover:text-white transition-colors" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-500 transition-colors flex-shrink-0">
+                <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 group-hover:text-white transition-colors" />
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">Orders Received</h3>
-                <p className="text-sm text-gray-600">View and manage customer orders</p>
+              <div className="min-w-0">
+                <h3 className="text-sm font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">Orders</h3>
+                <p className="text-xs text-gray-500 hidden sm:block">View customer orders</p>
               </div>
             </Link>
 
             <Link
               to="/design-studio"
-              className="flex items-center gap-4 p-6 bg-white rounded-2xl border-2 border-gray-200 hover:border-blue-500 hover:shadow-lg transition-all group"
+              className="flex items-center gap-3 p-3 sm:p-5 bg-white rounded-2xl border-2 border-gray-100 hover:border-blue-400 hover:shadow-md transition-all group"
             >
-              <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-                <Sparkles className="w-7 h-7 text-blue-600 group-hover:text-white transition-colors" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-100 flex items-center justify-center group-hover:bg-blue-500 transition-colors flex-shrink-0">
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 group-hover:text-white transition-colors" />
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">Create Design</h3>
-                <p className="text-sm text-gray-600">Design custom products</p>
+              <div className="min-w-0">
+                <h3 className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">Create</h3>
+                <p className="text-xs text-gray-500 hidden sm:block">Design custom products</p>
               </div>
             </Link>
 
             <Link
               to="/sell-your-design"
-              className="flex items-center gap-4 p-6 bg-white rounded-2xl border-2 border-gray-200 hover:border-purple-500 hover:shadow-lg transition-all group"
+              className="flex items-center gap-3 p-3 sm:p-5 bg-white rounded-2xl border-2 border-gray-100 hover:border-purple-400 hover:shadow-md transition-all group col-span-2 sm:col-span-1"
             >
-              <div className="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center group-hover:bg-purple-500 transition-colors">
-                <Sparkles className="w-7 h-7 text-purple-600 group-hover:text-white transition-colors" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-100 flex items-center justify-center group-hover:bg-purple-500 transition-colors flex-shrink-0">
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 group-hover:text-white transition-colors" />
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-600 transition-colors">My Logo Designs</h3>
-                <p className="text-sm text-gray-600">Upload and manage your designs</p>
+              <div className="min-w-0">
+                <h3 className="text-sm font-bold text-gray-900 group-hover:text-purple-600 transition-colors">My Designs</h3>
+                <p className="text-xs text-gray-500 hidden sm:block">Upload & manage designs</p>
               </div>
             </Link>
           </div>
 
-          <div className="bg-white rounded-2xl shadow p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold">Products</h3>
-              <span className="text-sm text-gray-500">{designs.length} items</span>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold text-gray-900">Products</h3>
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{designs.length} items</span>
             </div>
 
             {designs.length === 0 ? (
-              <div className="text-gray-600">No products yet. Create your first product from Design Studio.</div>
+              <div className="text-sm text-gray-500 text-center py-6">No products yet. Create your first product from Design Studio.</div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {designs.map((p) => (
-                  <div key={p.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
-                    <div className="flex gap-4">
-                      {/* Product Image */}
-                      <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-                        <img
-                          src={toUrl(p.design_preview || p.image) || 'https://via.placeholder.com/600x600'}
-                          alt={p.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      
-                      {/* Product Info */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900 truncate">{p.name}</h3>
-                        <div className="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 text-sm">
-                          <div>
-                            <span className="text-gray-500 block text-xs">Buy Price</span>
-                            <span className="font-semibold text-gray-900">৳{Number(p.admin_buy_price ?? p.buy_price)}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-500 block text-xs">Sell Price</span>
-                            <span className="font-semibold text-emerald-600">৳{Number(p.price)}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-500 block text-xs">Stock</span>
-                            <span className="font-semibold text-gray-900">{Number(p.available_stock ?? p.stock ?? 0)}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-500 block text-xs">Profit/unit</span>
-                            <span className="font-semibold text-green-600">৳{Number(p.profit_per_unit || 0)}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-500 block text-xs">Views</span>
-                            <span className="font-semibold text-blue-600">{Number(p.views || 0)}</span>
-                          </div>
-                          <div>
-                            <span className="text-gray-500 block text-xs">Sold</span>
-                            <span className="font-semibold text-purple-600">{Number(p.sold || 0)}</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Status Badge & Action Button */}
-                      <div className="flex flex-col items-end gap-3">
-                        <span className={`inline-block text-xs px-3 py-1.5 rounded-full font-semibold ${p.is_published ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                          {p.is_published ? 'Published' : 'Pending'}
+                  <div key={p.id} className="flex gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-emerald-200 transition-all">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                      <img
+                        src={toUrl(p.design_preview || p.image) || 'https://via.placeholder.com/600x600'}
+                        alt={p.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-sm font-semibold text-gray-900 truncate">{p.name}</h3>
+                        <span className={`flex-shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold ${p.is_published ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                          {p.is_published ? 'Live' : 'Pending'}
                         </span>
-                        <Link
-                          to={`/products/${p.id}`}
-                          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm whitespace-nowrap"
-                        >
-                          View Details
-                        </Link>
                       </div>
+                      <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-sm">
+                        <span className="text-gray-500">Buy <span className="font-semibold text-gray-800">৳{Number(p.admin_buy_price ?? p.buy_price)}</span></span>
+                        <span className="text-gray-500">Sell <span className="font-semibold text-emerald-600">৳{Number(p.price)}</span></span>
+                        <span className="text-gray-500">Profit <span className="font-semibold text-green-600">৳{Number(p.profit_per_unit || 0)}</span></span>
+                      </div>
+                      <Link
+                        to={`/products/${p.id}`}
+                        className="mt-2 inline-flex items-center gap-1 px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700 transition-colors"
+                      >
+                        View Details
+                      </Link>
                     </div>
                   </div>
                 ))}

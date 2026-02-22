@@ -54,7 +54,7 @@ const ProductCard = ({ id, name, price, discountPrice, imageUrl, designerName, s
           <img
             src={imageUrl || 'https://via.placeholder.com/300x400'}
             alt={name}
-            className="w-full h-84 object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-44 sm:h-64 object-cover group-hover:scale-105 transition-transform duration-300"
           />
         </Link>
         {discountPrice && (
@@ -64,7 +64,7 @@ const ProductCard = ({ id, name, price, discountPrice, imageUrl, designerName, s
         )}
         <button 
           onClick={toggleFavorite}
-          className={`absolute top-3 right-3 p-2 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 ${
+          className={`absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 ${
             isFavorited ? 'hover:bg-red-50' : 'hover:bg-red-50'
           }`}
           title={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
@@ -75,14 +75,14 @@ const ProductCard = ({ id, name, price, discountPrice, imageUrl, designerName, s
         </button>
       </div>
       
-      <div className="p-4">
+      <div className="p-2.5 sm:p-4">
         <Link to={`/products/${id}`}>
-          <h3 className="text-base font-semibold text-gray-800 hover:text-emerald-600 transition-colors line-clamp-1">
+          <h3 className="text-xs sm:text-base font-semibold text-gray-800 hover:text-emerald-600 transition-colors line-clamp-1">
             {name}
           </h3>
         </Link>
         {designerName && (
-          <div className="mt-2 mb-2">
+          <div className="mt-1.5 mb-1.5">
             <div
               className="inline-flex flex-wrap items-center gap-x-1 gap-y-0.5 px-2.5 py-1.5 bg-gradient-to-r from-purple-50 via-pink-50 to-blue-50 border border-purple-100 rounded-lg group-hover:shadow-sm transition-all cursor-pointer hover:border-purple-300"
               onClick={(e) => {
@@ -100,15 +100,15 @@ const ProductCard = ({ id, name, price, discountPrice, imageUrl, designerName, s
           </div>
         )}
         
-        <div className="flex items-center justify-between mt-3">
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center space-x-1.5">
             {discountPrice ? (
               <>
-                <span className="text-lg font-bold text-emerald-600">৳{discountPrice}</span>
-                <span className="text-sm text-gray-400 line-through">৳{price}</span>
+                <span className="text-sm sm:text-lg font-bold text-emerald-600">৳{discountPrice}</span>
+                <span className="text-xs text-gray-400 line-through">৳{price}</span>
               </>
             ) : (
-              <span className="text-lg font-bold text-gray-900">৳{price}</span>
+              <span className="text-sm sm:text-lg font-bold text-gray-900">৳{price}</span>
             )}
           </div>
           
@@ -122,7 +122,6 @@ const ProductCard = ({ id, name, price, discountPrice, imageUrl, designerName, s
                 imageUrl,
                 quantity: 1,
               })
-              // Show toast notification and change icon
               setShowAddedToast(true)
               setIsAddedToCart(true)
               setTimeout(() => {
@@ -130,16 +129,16 @@ const ProductCard = ({ id, name, price, discountPrice, imageUrl, designerName, s
                 setIsAddedToCart(false)
               }, 2000)
             }}
-            className={`p-2 rounded-full transition-all duration-300 ${
+            className={`p-1.5 sm:p-2 rounded-full transition-all duration-300 ${
               isAddedToCart 
                 ? 'bg-green-500 hover:bg-green-600 scale-110' 
                 : 'bg-emerald-500 hover:bg-emerald-600'
             } text-white`}
           >
             {isAddedToCart ? (
-              <Check className="w-5 h-5" />
+              <Check className="w-4 h-4 sm:w-5 sm:h-5" />
             ) : (
-              <ShoppingCart className="w-5 h-5" />
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
             )}
           </button>
         </div>

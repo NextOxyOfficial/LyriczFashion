@@ -1480,13 +1480,7 @@ const DesignStudio = () => {
                   </div>
                 )}
 
-                {!hasDesign && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center text-gray-300">
-                      <ImageIcon className="w-10 h-10 mx-auto opacity-30" />
-                    </div>
-                  </div>
-                )}
+              
               </div>
 
               {/* Front/Back Toggle Tabs */}

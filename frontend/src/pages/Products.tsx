@@ -120,45 +120,42 @@ const Products = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8 py-4">
-        <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+      <div className="max-w-[1480px] mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-5">
+        <nav className="flex items-center space-x-1.5 text-xs sm:text-sm text-gray-500 mb-3">
           <Link to="/" className="hover:text-emerald-600">Home</Link>
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="w-3.5 h-3.5" />
           <span className="text-gray-900">Products</span>
         </nav>
 
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-              {categoryParam ? `${categoryParam} Products` : 'Products'}
-            </h1>
-            <p className="text-gray-500 mt-1 text-sm">
-              Showing {startIndex + 1}-{Math.min(endIndex, visibleItems.length)} of {visibleItems.length} products
-            </p>
-          </div>
+        <div className="mb-3">
+          <h1 className="text-xl sm:text-3xl font-bold text-gray-900">
+            {categoryParam ? `${categoryParam} Products` : 'Products'}
+          </h1>
+          <p className="text-gray-500 text-xs sm:text-sm mt-0.5">
+            Showing {startIndex + 1}-{Math.min(endIndex, visibleItems.length)} of {visibleItems.length} products
+          </p>
+        </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-            <div className="relative">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                value={query}
-                onChange={(e) => handleQueryChange(e.target.value)}
-                placeholder="Search products..."
-                className="w-full sm:w-72 pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500"
-              />
-            </div>
-
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as any)}
-              className="px-3 py-2.5 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500"
-            >
-              <option value="featured">Sort: Featured</option>
-              <option value="newest">Sort: Newest</option>
-              <option value="price_low">Sort: Price low → high</option>
-              <option value="price_high">Sort: Price high → low</option>
-            </select>
+        <div className="flex gap-2 mb-4">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              value={query}
+              onChange={(e) => handleQueryChange(e.target.value)}
+              placeholder="Search products..."
+              className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 text-sm"
+            />
           </div>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as any)}
+            className="flex-shrink-0 px-2 py-2 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 text-xs sm:text-sm"
+          >
+            <option value="featured">Featured</option>
+            <option value="newest">Newest</option>
+            <option value="price_low">Price ↑</option>
+            <option value="price_high">Price ↓</option>
+          </select>
         </div>
 
         {error && (
@@ -168,13 +165,13 @@ const Products = () => {
         )}
 
         {!error && isLoading && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-                <div className="h-72 bg-gray-100 animate-pulse" />
-                <div className="p-4">
-                  <div className="h-4 bg-gray-100 rounded animate-pulse" />
-                  <div className="h-4 bg-gray-100 rounded animate-pulse mt-3 w-1/2" />
+                <div className="h-44 sm:h-64 bg-gray-100 animate-pulse" />
+                <div className="p-2.5 sm:p-4">
+                  <div className="h-3 bg-gray-100 rounded animate-pulse" />
+                  <div className="h-3 bg-gray-100 rounded animate-pulse mt-2 w-1/2" />
                 </div>
               </div>
             ))}
@@ -190,7 +187,7 @@ const Products = () => {
 
         {!error && !isLoading && visibleItems.length > 0 && (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
               {paginatedItems.map((p) => (
                 <ProductCard
                   key={p.id}

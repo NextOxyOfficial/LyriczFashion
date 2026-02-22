@@ -190,37 +190,27 @@ const SellYourDesign = () => {
   if (!me) return null
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4">
-      <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <div className="text-sm font-medium text-emerald-700">Sell Your Design</div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mt-1">Upload your logo to the library</h1>
-              <p className="text-gray-600 mt-1">Hi {displayName}, earn ৳49 commission every time someone uses your logo in a custom order.</p>
+    <div className="min-h-screen bg-gray-50 py-3 sm:py-6">
+      <div className="max-w-2xl lg:max-w-[1480px] mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-xs font-medium text-emerald-700">Sell Your Design</div>
+              <h1 className="text-lg sm:text-2xl font-bold text-gray-900 mt-0.5 leading-tight">Upload your logo to the library</h1>
+              <p className="text-gray-500 text-xs sm:text-sm mt-0.5">Hi {displayName}, earn ৳49 commission every time someone uses your logo.</p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Link
-                to="/design-studio"
-                className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700"
-              >
-                Open Design Studio
-              </Link>
-              <Link
-                to="/dashboard"
-                className="px-4 py-2 rounded-xl bg-white border border-gray-200 text-gray-800 font-semibold hover:bg-gray-50"
-              >
-                My Dashboard
-              </Link>
+            <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+              <Link to="/design-studio" className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-emerald-600 text-white text-xs sm:text-sm font-semibold hover:bg-emerald-700 text-center">Design Studio</Link>
+              <Link to="/dashboard" className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-white border border-gray-200 text-gray-800 text-xs sm:text-sm font-semibold hover:bg-gray-50 text-center">Dashboard</Link>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-1 space-y-4">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <div className="font-semibold text-gray-900">Publish your logo</div>
-              <div className="text-sm text-gray-600 mt-1">Commission per use: <span className="font-semibold">৳49</span></div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+              <div className="text-sm font-semibold text-gray-900">Publish your logo</div>
+              <div className="text-xs text-gray-500 mt-0.5">Commission per use: <span className="font-semibold text-emerald-600">৳49</span></div>
 
               {error && <div className="mt-3 text-sm text-red-600 font-medium">{error}</div>}
               {success && <div className="mt-3 text-sm text-emerald-700 font-medium">{success}</div>}
@@ -287,18 +277,19 @@ const SellYourDesign = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <div className="font-semibold text-gray-900">Commission</div>
-              <div className="text-sm text-gray-600 mt-1">Total earnings: <span className="font-semibold text-emerald-600">৳{totalEarnings}</span></div>
-              <div className="text-sm text-gray-600 mt-1">Pending total: <span className="font-semibold text-gray-900">৳{totalPending}</span></div>
-              <div className="text-xs text-gray-500 mt-2">Commission records are created when someone places an order using your logo.</div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+              <div className="text-sm font-semibold text-gray-900">Commission</div>
+              <div className="flex gap-4 mt-2">
+                <div><div className="text-xs text-gray-400">Earned</div><div className="text-base font-bold text-emerald-600">৳{totalEarnings}</div></div>
+                <div><div className="text-xs text-gray-400">Pending</div><div className="text-base font-bold text-gray-800">৳{totalPending}</div></div>
+              </div>
             </div>
           </div>
 
           <div className="lg:col-span-2 space-y-4">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <div className="font-semibold text-gray-900">My published logos</div>
-              <div className="text-sm text-gray-600 mt-1">After you publish, your logos will appear here and also in Design Studio library.</div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+              <div className="text-sm font-semibold text-gray-900">My published logos</div>
+              <div className="text-xs text-gray-500 mt-0.5">After you publish, your logos will appear here and in Design Studio library.</div>
             </div>
 
             {myItems.length === 0 ? (
@@ -342,36 +333,26 @@ const SellYourDesign = () => {
               </div>
             )}
 
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <div className="font-semibold text-gray-900">My commission history</div>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+              <div className="text-sm font-semibold text-gray-900 mb-2">Commission history</div>
               {commissions.length === 0 ? (
-                <div className="text-sm text-gray-600 mt-2">No commission records yet.</div>
+                <div className="text-xs text-gray-500">No commission records yet.</div>
               ) : (
-                <div className="mt-3 overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-gray-500">
-                        <th className="py-2 pr-4">Design</th>
-                        <th className="py-2 pr-4">Amount</th>
-                        <th className="py-2 pr-4">Status</th>
-                        <th className="py-2">Order</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-gray-800">
-                      {commissions.slice(0, 20).map((c) => (
-                        <tr key={c.id} className="border-t border-gray-100">
-                          <td className="py-3 pr-4 font-medium">{c.design?.name || 'Design'}</td>
-                          <td className="py-3 pr-4">৳{c.amount}</td>
-                          <td className="py-3 pr-4">
-                            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${c.status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'}`}>
-                              {c.status === 'completed' ? 'Completed' : 'Pending'}
-                            </span>
-                          </td>
-                          <td className="py-3">#{c.order}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="space-y-2">
+                  {commissions.slice(0, 20).map((c) => (
+                    <div key={c.id} className="flex items-center justify-between gap-2 py-2 border-t border-gray-100 first:border-0">
+                      <div className="min-w-0">
+                        <div className="text-xs font-medium text-gray-900 truncate">{c.design?.name || 'Design'}</div>
+                        <div className="text-[10px] text-gray-400">Order #{c.order}</div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-sm font-bold text-gray-800">৳{c.amount}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${c.status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'}`}>
+                          {c.status === 'completed' ? 'Done' : 'Pending'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
