@@ -76,7 +76,7 @@ const StorePage = () => {
 
   if (isLoading) {
     return (
-      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8 py-12">
         <div className="text-lg">Loading...</div>
       </div>
     )
@@ -84,7 +84,7 @@ const StorePage = () => {
 
   if (!store) {
     return (
-      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8 py-12">
         <div className="text-lg">Store not found</div>
       </div>
     )
@@ -140,7 +140,7 @@ const StorePage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <section className="bg-white">
-        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8 py-10">
           {/* Edit Mode Toggle - Only show to store owner */}
           {currentUserId && store.owner_id === currentUserId && (
             <div className="flex justify-end mb-4">
@@ -245,7 +245,7 @@ const StorePage = () => {
       </section>
 
       <section className="bg-gray-50 py-12">
-        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-3xl font-bold text-gray-900">Products</h2>

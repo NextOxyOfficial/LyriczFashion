@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { customProductsAPI, designLibraryAPI, designCategoryAPI, mockupAPI, categoriesAPI, toApiUrl } from '../services/api'
 import { useCartStore } from '../store/cartStore'
-import { RotateCw, RotateCcw, ZoomIn, ZoomOut, Type, Layers, Sparkles, ShoppingCart, ImageIcon } from 'lucide-react'
+import { RotateCw, RotateCcw, ZoomIn, ZoomOut, Type, Layers, Sparkles, ShoppingCart, ImageIcon, Search, X } from 'lucide-react'
 
 const toUrl = toApiUrl
 
@@ -217,6 +217,7 @@ const DesignStudio = () => {
   const [loadingDesigns, setLoadingDesigns] = useState(false)
   const [libraryCategory, setLibraryCategory] = useState('')
   const [librarySearch, setLibrarySearch] = useState('')
+  const [librarySearchOpen, setLibrarySearchOpen] = useState(false)
   const [libraryPage, setLibraryPage] = useState(1)
   const [libraryHasMore, setLibraryHasMore] = useState(true)
   const [libraryLoadingMore, setLibraryLoadingMore] = useState(false)
@@ -471,6 +472,16 @@ const DesignStudio = () => {
     imageDragOffset.current = { dx: e.clientX - rect.left - imagePos.x, dy: e.clientY - rect.top - imagePos.y }
   }
 
+  const onTouchStartImage = (e: React.TouchEvent) => {
+    if (!containerRef.current) return
+    e.stopPropagation()
+    const touch = e.touches[0]
+    const rect = containerRef.current.getBoundingClientRect()
+    setDraggingImage(true)
+    setActiveElement('image')
+    imageDragOffset.current = { dx: touch.clientX - rect.left - imagePos.x, dy: touch.clientY - rect.top - imagePos.y }
+  }
+
   const onMouseDownText = (e: React.MouseEvent) => {
     if (!containerRef.current) return
     e.stopPropagation()
@@ -478,6 +489,16 @@ const DesignStudio = () => {
     setDraggingText(true)
     setActiveElement('text')
     textDragOffset.current = { dx: e.clientX - rect.left - textPos.x, dy: e.clientY - rect.top - textPos.y }
+  }
+
+  const onTouchStartText = (e: React.TouchEvent) => {
+    if (!containerRef.current) return
+    e.stopPropagation()
+    const touch = e.touches[0]
+    const rect = containerRef.current.getBoundingClientRect()
+    setDraggingText(true)
+    setActiveElement('text')
+    textDragOffset.current = { dx: touch.clientX - rect.left - textPos.x, dy: touch.clientY - rect.top - textPos.y }
   }
 
   const onMouseMove = (e: React.MouseEvent) => {
@@ -495,6 +516,27 @@ const DesignStudio = () => {
       setTextPos({
         x: clamp(e.clientX - rect.left - textDragOffset.current.dx, 0, rect.width),
         y: clamp(e.clientY - rect.top - textDragOffset.current.dy, 0, rect.height),
+      })
+    }
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!containerRef.current) return
+    e.preventDefault()
+    const touch = e.touches[0]
+    const rect = containerRef.current.getBoundingClientRect()
+
+    if (draggingImage) {
+      setImagePos({
+        x: clamp(touch.clientX - rect.left - imageDragOffset.current.dx, 0, rect.width),
+        y: clamp(touch.clientY - rect.top - imageDragOffset.current.dy, 0, rect.height),
+      })
+    }
+
+    if (draggingText) {
+      setTextPos({
+        x: clamp(touch.clientX - rect.left - textDragOffset.current.dx, 0, rect.width),
+        y: clamp(touch.clientY - rect.top - textDragOffset.current.dy, 0, rect.height),
       })
     }
   }
@@ -884,30 +926,34 @@ const DesignStudio = () => {
       setLibraryDesignId(Number.isFinite(id) ? id : null)
       const imageUrl = toUrl(design.image || design.design_logo || design.design_preview)
       if (!imageUrl) return
-      const response = await fetch(imageUrl)
-      const blob = await response.blob()
-      setLogoFile(new File([blob], `${design?.name || 'design'}.png`, { type: blob.type }))
+      if (activeSide === 'front') {
+        setFrontLogoUrl(imageUrl)
+        setFrontLogoFile(null)
+      } else {
+        setBackLogoUrl(imageUrl)
+        setBackLogoFile(null)
+      }
     } catch (e) { console.error('Failed to load design:', e) }
   }
 
   return (
     <div className="bg-gradient-to-br from-emerald-50 via-white to-emerald-50 min-h-screen">
-      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-[1480px] mx-auto px-1 sm:px-6 lg:px-8 py-3 sm:py-6">
         {/* Header */}
-        <div className="text-left mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent mb-2">
+        <div className="text-left mb-4 sm:mb-6 px-1">
+          <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-800 bg-clip-text text-transparent mb-1">
             Design Studio
           </h1>
-          <p className="text-gray-500 text-sm">Create custom apparel with images or text</p>
+          <p className="text-gray-500 text-xs sm:text-sm">Create custom apparel with images or text</p>
         </div>
 
         {/* Mockup Selector - Centered */}
-        <div className="bg-white rounded-xl shadow-sm border border-emerald-100 p-6 mb-8">
-          <div className="text-center mb-6">
-            <div className="flex items-center justify-center gap-2 text-emerald-700 font-bold text-lg mb-2">
-              <Sparkles className="w-6 h-6" /> Select Product
+        <div className="bg-white rounded-xl shadow-sm border border-emerald-100 p-3 sm:p-6 mb-4 sm:mb-8">
+          <div className="text-center mb-3 sm:mb-6">
+            <div className="flex items-center justify-center gap-2 text-emerald-700 font-bold text-base sm:text-lg mb-1">
+              <Sparkles className="w-5 h-5" /> Select Product
             </div>
-            <p className="text-sm text-gray-500">Choose your apparel type</p>
+            <p className="text-xs sm:text-sm text-gray-500">Choose your apparel type</p>
           </div>
           {isLoadingMockups ? (
             <div className="py-10 text-center text-sm text-gray-500">Loading apparel types...</div>
@@ -925,30 +971,30 @@ const DesignStudio = () => {
           ) : mockupTypes.length === 0 ? (
             <div className="py-10 text-center text-sm text-gray-500">No apparel types found. Add mockups from Django Admin.</div>
           ) : (
-            <div className="flex justify-center gap-4 mb-6 flex-wrap">
+            <div className="p-1 flex gap-2 sm:gap-4 overflow-x-auto pb-1 scrollbar-hide">
               {mockupTypes.map((m) => (
                 <button
                   key={m.id}
                   onClick={() => setSelectedMockupType(m)}
-                  className={`w-36 p-4 rounded-xl border-2 transition-all ${
+                  className={`flex-shrink-0 w-24 sm:w-32 p-2 sm:p-3 rounded-xl border-2 transition-all ${
                     selectedMockupType?.id === m.id
                       ? 'border-emerald-500 bg-emerald-50 shadow-sm scale-105'
-                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50 hover:shadow-sm'
+                      : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
                   }`}
                 >
                   {m.preview_image ? (
                     <img
                       src={m.preview_image}
                       alt={m.name}
-                      className="w-full h-20 object-contain"
+                      className="w-full h-14 object-contain"
                     />
                   ) : (
-                    <div className="w-full h-20 rounded-lg bg-gray-100 flex items-center justify-center">
-                      <ImageIcon className="w-8 h-8 text-gray-300" />
+                    <div className="w-full h-14 rounded-lg bg-gray-100 flex items-center justify-center">
+                      <ImageIcon className="w-6 h-6 text-gray-300" />
                     </div>
                   )}
-                  <div className="text-base font-bold text-center mt-3 truncate">{m.name}</div>
-                  <div className={`text-base text-center font-semibold mt-1 ${selectedMockupType?.id === m.id ? 'text-emerald-600' : 'text-gray-600'}`}>
+                  <div className="text-xs font-bold text-center mt-1 truncate">{m.name}</div>
+                  <div className={`text-xs text-center font-semibold mt-0.5 ${selectedMockupType?.id === m.id ? 'text-emerald-600' : 'text-gray-500'}`}>
                     ৳{Number(m.base_price)}
                   </div>
                 </button>
@@ -961,7 +1007,7 @@ const DesignStudio = () => {
           {/* Left Panel - Controls */}
           <div className="lg:col-span-1 space-y-3">
             {/* Design Mode */}
-            <div className="bg-white rounded-xl shadow-sm border border-emerald-100 p-4 space-y-4">
+            <div className="bg-white rounded-xl shadow-sm border border-emerald-100 px-2 py-4 space-y-4">
               {/* Upload Image Section */}
               <div className="space-y-3">
                 <div>
@@ -1135,24 +1181,74 @@ const DesignStudio = () => {
               </h3>
               
               {/* Filters */}
-              <div className="mb-3 space-y-2">
-                <select
-                  value={libraryCategory}
-                  onChange={(e) => setLibraryCategory(e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                >
-                  <option value="">All Categories</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.name}>{cat.name}</option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  value={librarySearch}
-                  onChange={(e) => setLibrarySearch(e.target.value)}
-                  placeholder="Search designs..."
-                  className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                />
+              <div className="mb-3">
+                <div className="flex items-center gap-2 overflow-hidden">
+                  {/* Category select - slides out when search opens */}
+                  <div
+                    className="flex-1 min-w-0 transition-all duration-300 ease-in-out"
+                    style={{
+                      maxWidth: librarySearchOpen ? '0px' : '100%',
+                      opacity: librarySearchOpen ? 0 : 1,
+                      pointerEvents: librarySearchOpen ? 'none' : 'auto',
+                      overflow: 'hidden',
+                      flexShrink: librarySearchOpen ? 1 : 0,
+                    }}
+                  >
+                    <select
+                      value={libraryCategory}
+                      onChange={(e) => setLibraryCategory(e.target.value)}
+                      className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    >
+                      <option value="">All Categories</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.name}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Search input - slides in when search opens */}
+                  <div
+                    className="min-w-0 transition-all duration-300 ease-in-out"
+                    style={{
+                      flex: librarySearchOpen ? '1 1 0%' : '0 0 0%',
+                      maxWidth: librarySearchOpen ? '100%' : '0px',
+                      opacity: librarySearchOpen ? 1 : 0,
+                      pointerEvents: librarySearchOpen ? 'auto' : 'none',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div className="flex items-center gap-1 border border-emerald-400 rounded-lg px-2 py-2.5 bg-white ring-1 ring-emerald-100">
+                      <Search className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                      <input
+                        type="text"
+                        value={librarySearch}
+                        onChange={(e) => setLibrarySearch(e.target.value)}
+                        placeholder="Search designs..."
+                        ref={(el) => { if (librarySearchOpen && el) setTimeout(() => el.focus(), 320) }}
+                        className="flex-1 text-xs bg-transparent focus:outline-none min-w-0"
+                      />
+                      {librarySearch && (
+                        <button onClick={() => setLibrarySearch('')} className="flex-shrink-0">
+                          <X className="w-3 h-3 text-gray-400 hover:text-gray-600" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Toggle button */}
+                  <button
+                    onClick={() => { setLibrarySearchOpen(!librarySearchOpen); if (librarySearchOpen) setLibrarySearch('') }}
+                    className={`p-2 rounded-lg border transition-all duration-200 flex-shrink-0 ${
+                      librarySearchOpen
+                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
+                        : 'border-gray-200 text-gray-500 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50'
+                    }`}
+                  >
+                    <div className="transition-transform duration-200" style={{ transform: librarySearchOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+                      {librarySearchOpen ? <X className="w-3.5 h-3.5" /> : <Search className="w-3.5 h-3.5" />}
+                    </div>
+                  </button>
+                </div>
               </div>
 
               {loadingDesigns ? (
@@ -1161,7 +1257,7 @@ const DesignStudio = () => {
                 </div>
               ) : designLibrary.length > 0 ? (
                 <div 
-                  className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto"
+                  className="grid grid-cols-4 gap-1.5 max-h-48 overflow-y-auto"
                   onScroll={(e) => {
                     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
                     if (scrollHeight - scrollTop <= clientHeight + 10 && libraryHasMore && !libraryLoadingMore) {
@@ -1193,7 +1289,7 @@ const DesignStudio = () => {
 
           {/* Right Panel - Mockup Editor (Larger) */}
           <div className="lg:col-span-2">
-            <div className="bg-gradient-to-br from-white to-emerald-50 rounded-xl shadow-md border-2 border-emerald-200 p-6">
+            <div className="bg-gradient-to-br from-white to-emerald-50 rounded-xl shadow-md border-2 border-emerald-200 px-3 py-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="p-2 bg-emerald-100 rounded-lg">
@@ -1213,7 +1309,7 @@ const DesignStudio = () => {
               </div>
 
               {/* Product Specifications */}
-              <div className="mb-4 bg-white rounded-xl shadow-sm border border-emerald-100 p-4">
+              <div className="mb-4 bg-white rounded-xl shadow-sm border border-emerald-100 p-2">
                 <div className="flex items-center gap-2 mb-3">
                   <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -1262,6 +1358,8 @@ const DesignStudio = () => {
                 onMouseMove={onMouseMove}
                 onMouseUp={onMouseUp}
                 onMouseLeave={onMouseUp}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onMouseUp}
               >
                 {selectedVariant && !mockupImageFailed ? (
                   <img
@@ -1294,7 +1392,8 @@ const DesignStudio = () => {
                       src={activeSide === 'front' ? frontLogoUrl : backLogoUrl}
                       alt="design"
                       onMouseDown={onMouseDownImage}
-                      className="cursor-move drop-shadow-sm"
+                      onTouchStart={onTouchStartImage}
+                      className="cursor-move drop-shadow-sm touch-none"
                       style={{
                         width: `${260 * imageScale}px`,
                         transform: `rotate(${imageRotation}deg)`,
@@ -1335,7 +1434,8 @@ const DesignStudio = () => {
                   >
                     <div
                       onMouseDown={onMouseDownText}
-                      className="cursor-move select-none relative"
+                      onTouchStart={onTouchStartText}
+                      className="cursor-move select-none relative touch-none"
                       style={{
                         transform: `rotate(${textRotation}deg) scale(${textScale})`,
                         transition: draggingText ? 'none' : 'transform 0.1s',
@@ -1382,9 +1482,8 @@ const DesignStudio = () => {
 
                 {!hasDesign && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center text-gray-400">
-                      <ImageIcon className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">Upload image or add text</p>
+                    <div className="text-center text-gray-300">
+                      <ImageIcon className="w-10 h-10 mx-auto opacity-30" />
                     </div>
                   </div>
                 )}
@@ -1427,7 +1526,7 @@ const DesignStudio = () => {
                       </button>
                     </div>
                     <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                      <button onClick={() => activeElement === 'image' ? setImageScale(Math.max(0.2, imageScale - 0.1)) : setTextScale(Math.max(0.2, textScale - 0.1))} className="p-1.5 hover:bg-white rounded">
+                      <button onClick={() => activeElement === 'image' ? setImageScale(Math.max(0.05, imageScale - 0.05)) : setTextScale(Math.max(0.05, textScale - 0.05))} className="p-1.5 hover:bg-white rounded">
                         <ZoomOut className="w-4 h-4 text-gray-600" />
                       </button>
                       <button onClick={() => activeElement === 'image' ? setImageScale(Math.min(1.5, imageScale + 0.1)) : setTextScale(Math.min(1.5, textScale + 0.1))} className="p-1.5 hover:bg-white rounded">
@@ -1487,14 +1586,14 @@ const DesignStudio = () => {
                     </div>
                     <div className="flex items-center gap-1">
                       <button 
-                        onClick={() => activeElement === 'image' ? setImageScale(Math.max(0.2, imageScale - 0.1)) : setTextScale(Math.max(0.2, textScale - 0.1))} 
+                        onClick={() => activeElement === 'image' ? setImageScale(Math.max(0.05, imageScale - 0.05)) : setTextScale(Math.max(0.05, textScale - 0.05))} 
                         className="p-1.5 bg-gray-100 rounded hover:bg-gray-200"
                       >
                         <ZoomOut className="w-3 h-3 text-gray-600" />
                       </button>
                       <input 
                         type="range" 
-                        min={0.2} 
+                        min={0.05} 
                         max={1.5} 
                         step={0.05} 
                         value={activeElement === 'image' ? imageScale : textScale} 
@@ -1547,34 +1646,33 @@ const DesignStudio = () => {
 
               {/* Price & Add to Cart */}
               <div className="mt-4 max-w-md mx-auto">
-                <div className="p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl shadow-sm border border-emerald-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <div className="text-sm font-semibold text-gray-800">{selectedMockupType?.name || 'Select Product'}</div>
-                      <div className="text-xs text-gray-600 mt-0.5">{selectedSize} • {selectedColor}</div>
-                    </div>
-                    <div className="text-2xl font-bold text-emerald-600">৳{Number(selectedVariant?.effective_price || selectedMockupType?.base_price || 0)}</div>
+                <div className="flex items-center gap-2 p-2 bg-white rounded-2xl shadow-md border border-emerald-100">
+                  {/* Product info + price */}
+                  <div className="flex flex-col justify-center pl-2 min-w-0 flex-1">
+                    <div className="text-xs font-semibold text-gray-800 truncate">{selectedMockupType?.name || 'Select Product'}</div>
+                    <div className="text-[12px] text-gray-500">{selectedSize} • {selectedColor}</div>
+                    <div className="text-lg font-black text-emerald-600 leading-tight">৳{Number(selectedVariant?.effective_price || selectedMockupType?.base_price || 0)}</div>
                   </div>
-                  <div className="space-y-2">
+                  {/* Add to Cart button */}
+                  <button
+                    disabled={isLoading || !hasDesign || !selectedVariant}
+                    onClick={onSubmit}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-4 py-3 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    {isLoading ? 'Adding...' : 'Add to Cart'}
+                  </button>
+                  {/* Sell button for sellers */}
+                  {user?.is_seller && (
                     <button
                       disabled={isLoading || !hasDesign || !selectedVariant}
-                      onClick={onSubmit}
-                      className="w-full py-3 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                      onClick={handleContinueToSell}
+                      className="flex-shrink-0 flex items-center gap-1.5 px-3 py-3 bg-purple-600 text-white text-sm font-bold rounded-xl hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
                     >
-                      <ShoppingCart className="w-5 h-5" />
-                      {isLoading ? 'Creating...' : 'Add to Cart'}
+                      <Sparkles className="w-4 h-4" />
+                      Sell
                     </button>
-                    {user?.is_seller && (
-                      <button
-                        disabled={isLoading || !hasDesign || !selectedVariant}
-                        onClick={handleContinueToSell}
-                        className="w-full py-3 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-                      >
-                        <Sparkles className="w-5 h-5" />
-                        Continue to Sell
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
               </>

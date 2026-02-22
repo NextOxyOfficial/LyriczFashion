@@ -19,11 +19,12 @@ const Navbar = () => {
   const userMenuRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLDivElement>(null)
   const headerRef = useRef<HTMLElement>(null)
+  const mobileSearchRef = useRef<HTMLDivElement>(null)
   const [headerHeight, setHeaderHeight] = useState(72)
   const [favoritesCount, setFavoritesCount] = useState(0)
   const cartCount = useCartStore((s) => s.items.reduce((sum, x) => sum + x.quantity, 0))
   const [cartBounce, setCartBounce] = useState(false)
-  const [showSearchBar, setShowSearchBar] = useState(true)
+  const [showSearchBar, setShowSearchBar] = useState(false)
 
   // Update favorites count from localStorage
   const updateFavoritesCount = () => {
@@ -80,6 +81,29 @@ const Navbar = () => {
 
     return () => clearInterval(interval)
   }, [promotionalBanners.length])
+
+  // Close mobile search on outside tap
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+      if (
+        mobileSearchRef.current &&
+        !mobileSearchRef.current.contains(e.target as Node) &&
+        !(e.target as Element).closest('[data-mobile-search-btn]')
+      ) {
+        setShowSearchBar(false)
+        setShowSuggestions(false)
+        setSearchQuery('')
+      }
+    }
+    if (showSearchBar) {
+      document.addEventListener('mousedown', handleOutsideClick)
+      document.addEventListener('touchstart', handleOutsideClick)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      document.removeEventListener('touchstart', handleOutsideClick)
+    }
+  }, [showSearchBar])
 
   // Search suggestions with debounce
   useEffect(() => {
@@ -235,7 +259,7 @@ const Navbar = () => {
     <>
     <div style={{ height: headerHeight }} />
     <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur shadow-sm border-b border-gray-100">
-      <div className="max-w-[1480px] mx-auto px-3 sm:px-4 lg:px-8 h-16 flex items-center justify-between gap-3">
+      <div className="max-w-[1480px] mx-auto px-1 sm:px-4 lg:px-8 h-16 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 md:gap-4 lg:gap-6 min-w-0">
           <button
             className="md:hidden p-2 text-gray-700 rounded-lg hover:bg-gray-100"
@@ -359,6 +383,7 @@ const Navbar = () => {
           </div>
 
           <button
+            data-mobile-search-btn
             className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
             onClick={() => setShowSearchBar(!showSearchBar)}
             aria-label="Search"
@@ -538,51 +563,281 @@ const Navbar = () => {
         </div>
       </div>
 
+    </header>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Slide-in Drawer */}
       {isMenuOpen && (
-        <div className="md:hidden bg-white border-t">
-          <div className="px-4 py-4 space-y-4">
-            <div className="flex items-center justify-between rounded-xl bg-emerald-50 px-3 py-2">
-              <div className="text-xs font-semibold text-emerald-700 truncate">{activePromoText}</div>
-              <Link to="/help" onClick={() => setIsMenuOpen(false)} className="text-xs font-semibold text-emerald-700">Help</Link>
-            </div>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                if (searchQuery.trim()) {
-                  setIsMenuOpen(false)
-                  navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
-                }
-              }}
-              className="flex items-center"
-            >
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for T-shirts, designs..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-emerald-300"
-              />
-              <button type="submit" className="px-4 py-2 bg-emerald-500 text-white rounded-r-lg hover:bg-emerald-600 transition-colors">
-                <Search className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex md:hidden">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsMenuOpen(false)}
+          />
+          {/* Drawer */}
+          <div className="relative mr-auto w-[80%] max-w-xs h-full bg-white flex flex-col shadow-2xl">
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-emerald-600 to-emerald-500">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-white font-bold text-lg">LyriczFashion</span>
+              </div>
+              <button
+                onClick={() => setIsMenuOpen(false)}
+                className="p-1.5 rounded-lg bg-white/20 text-white hover:bg-white/30 transition-colors"
+              >
+                <X className="w-5 h-5" />
               </button>
-            </form>
-            <Link to="/design-studio" onClick={() => setIsMenuOpen(false)} className="block py-3 px-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold rounded-xl shadow-md">✨ Create Design</Link>
-            <Link to="/" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Home</Link>
-            <Link to="/designers" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Designers</Link>
-            <Link to="/wholesale" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Wholesale/Dropshipping</Link>
-            <Link to="/help" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Help</Link>
-            <Link to="/cart" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Cart ({cartCount})</Link>
+            </div>
+
+            {/* User Info or Login */}
             {user ? (
-              <button onClick={handleLogout} className="block py-2 text-red-600 font-medium">Logout</button>
+              <div className="px-5 py-4 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <User className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">{user.first_name || user.username || 'User'}</p>
+                  <p className="text-xs text-gray-500">{user.email}</p>
+                </div>
+              </div>
             ) : (
-              <Link to="/login" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Login</Link>
+              <div className="px-5 py-4 bg-gray-50 border-b border-gray-100 flex gap-3">
+                <Link
+                  to="/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex-1 text-center py-2 bg-emerald-600 text-white text-sm font-semibold rounded-xl hover:bg-emerald-700 transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex-1 text-center py-2 border border-emerald-600 text-emerald-600 text-sm font-semibold rounded-xl hover:bg-emerald-50 transition-colors"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
+
+            {/* Scrollable Menu Items */}
+            <div className="flex-1 overflow-y-auto py-3">
+              {/* Create Design CTA */}
+              <div className="px-4 mb-3">
+                <Link
+                  to="/design-studio"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold rounded-2xl shadow-md"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  <span>Create Your Design</span>
+                </Link>
+              </div>
+
+              {/* Nav Links */}
+              <div className="px-2">
+                <p className="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Browse</p>
+                {[
+                  { to: '/', icon: <Package className="w-5 h-5" />, label: 'Home' },
+                  { to: '/products', icon: <ShoppingCart className="w-5 h-5" />, label: 'All Products' },
+                  { to: '/designers', icon: <Store className="w-5 h-5" />, label: 'Designers' },
+                  { to: '/design-studio', icon: <ImageIcon className="w-5 h-5" />, label: 'Design Studio' },
+                  { to: '/wholesale', icon: <TrendingUp className="w-5 h-5" />, label: 'Wholesale' },
+                ].map((item) => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                  >
+                    <span className="text-gray-400">{item.icon}</span>
+                    <span className="font-medium text-sm">{item.label}</span>
+                  </Link>
+                ))}
+
+                {user && (
+                  <>
+                    <p className="px-3 py-1.5 mt-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Account</p>
+                    {[
+                      { to: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Dashboard' },
+                      { to: '/orders', icon: <Package className="w-5 h-5" />, label: 'My Orders' },
+                      { to: '/wishlist', icon: <Heart className="w-5 h-5" />, label: 'Wishlist' },
+                      { to: '/address-book', icon: <MapPin className="w-5 h-5" />, label: 'Address Book' },
+                    ].map((item) => (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                      >
+                        <span className="text-gray-400">{item.icon}</span>
+                        <span className="font-medium text-sm">{item.label}</span>
+                      </Link>
+                    ))}
+                  </>
+                )}
+
+                <p className="px-3 py-1.5 mt-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Support</p>
+                <Link
+                  to="/help"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                >
+                  <span className="text-gray-400"><HelpCircle className="w-5 h-5" /></span>
+                  <span className="font-medium text-sm">Help Center</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Drawer Footer */}
+            {user && (
+              <div className="px-4 py-4 border-t border-gray-100">
+                <button
+                  onClick={() => { handleLogout(); setIsMenuOpen(false) }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                  Logout
+                </button>
+              </div>
             )}
           </div>
         </div>
       )}
-    </header>
+
+      {/* Mobile Search Dropdown - outside header to avoid stacking context issues */}
+      {showSearchBar && (
+        <div ref={mobileSearchRef} className="md:hidden fixed left-0 right-0 z-40 bg-white border-t border-gray-100 shadow-lg px-3 py-3" style={{ top: headerHeight }}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (searchQuery.trim()) {
+                setShowSuggestions(false)
+                setShowSearchBar(false)
+                setSearchQuery('')
+                navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
+              }
+            }}
+            className="relative"
+          >
+            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-4 py-2.5 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
+              <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="Search products, designers..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  if (e.target.value.trim()) {
+                    setShowSuggestions(true)
+                  } else {
+                    setShowSuggestions(false)
+                  }
+                }}
+                className="flex-1 bg-transparent text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
+                autoFocus
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => { setSearchQuery(''); setShowSuggestions(false) }}
+                  className="p-0.5 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </form>
+
+          {/* Mobile Search Suggestions */}
+          {showSuggestions && searchSuggestions.length > 0 && (
+            <div className="mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+              {searchSuggestions.slice(0, 5).map((product: any) => (
+                <Link
+                  key={product.id}
+                  to={`/products/${product.id}`}
+                  onClick={() => { setShowSuggestions(false); setSearchQuery(''); setShowSearchBar(false) }}
+                  className="flex items-center gap-3 p-3 hover:bg-emerald-50 transition-colors group border-b border-gray-100 last:border-b-0"
+                >
+                  <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    <img
+                      src={product.image_url || product.design_preview || product.image || 'https://via.placeholder.com/40x40'}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 truncate group-hover:text-emerald-600">
+                      {product.name}
+                    </p>
+                    <p className="text-sm text-gray-500 truncate">
+                      ৳{product.price}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      {/* Mobile Sticky Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+        <div className="flex items-center justify-around px-2 py-1.5 pb-safe">
+          <Link
+            to="/"
+            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-gray-500 hover:text-emerald-600 transition-colors group"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            <span className="text-[10px] font-medium">Home</span>
+          </Link>
+
+          <Link
+            to="/products"
+            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-gray-500 hover:text-emerald-600 transition-colors"
+          >
+            <ShoppingCart className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Shop</span>
+          </Link>
+
+          {/* Center Create Button */}
+          <Link
+            to="/design-studio"
+            className="flex flex-col items-center gap-0.5 -mt-5"
+          >
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200 border-4 border-white">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-[10px] font-semibold text-emerald-600">Create</span>
+          </Link>
+
+          <Link
+            to="/wishlist"
+            className="relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-gray-500 hover:text-emerald-600 transition-colors"
+          >
+            <Heart className="w-5 h-5" />
+            {favoritesCount > 0 && (
+              <span className="absolute top-1 right-2 bg-emerald-500 text-white text-[9px] rounded-full min-w-[14px] h-3.5 px-0.5 flex items-center justify-center font-bold">
+                {favoritesCount}
+              </span>
+            )}
+            <span className="text-[10px] font-medium">Wishlist</span>
+          </Link>
+
+          <Link
+            to={user ? '/dashboard' : '/login'}
+            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-gray-500 hover:text-emerald-600 transition-colors"
+          >
+            <User className="w-5 h-5" />
+            <span className="text-[10px] font-medium">{user ? 'Account' : 'Login'}</span>
+          </Link>
+        </div>
+      </nav>
+
+      {/* Spacer for sticky bottom nav on mobile */}
+      <div className="md:hidden" />
     </>
   )
 }

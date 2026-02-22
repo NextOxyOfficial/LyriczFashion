@@ -111,7 +111,7 @@ const SellerDesignCreate = () => {
 
   if (isLoading) {
     return (
-      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8 py-12">
         <div className="text-lg">Loading...</div>
       </div>
     )
@@ -119,7 +119,7 @@ const SellerDesignCreate = () => {
 
   if (!store || !designData) {
     return (
-      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8 py-12">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <div className="text-lg font-semibold text-gray-900">Design data not found</div>
           <div className="text-sm text-gray-600 mt-2">
@@ -138,7 +138,7 @@ const SellerDesignCreate = () => {
   }
 
   return (
-    <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8 py-4">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">

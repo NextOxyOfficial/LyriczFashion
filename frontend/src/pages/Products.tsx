@@ -57,10 +57,12 @@ const Products = () => {
     if (categoryParam) {
       const catLower = categoryParam.toLowerCase()
       list = list.filter((p: any) => {
-        // Check both category_name and mockup_type for filtering
         const category = String(p?.category_name ?? '').toLowerCase()
         const mockupType = String(p?.mockup_type_name ?? '').toLowerCase()
+        // Use includes matching so "Polo Shirt" matches "Polo Shirts", etc.
         return category === catLower || mockupType === catLower
+          || category.includes(catLower) || catLower.includes(category)
+          || mockupType.includes(catLower) || catLower.includes(mockupType)
       })
     }
 
@@ -118,7 +120,7 @@ const Products = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8 py-4">
         <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
           <Link to="/" className="hover:text-emerald-600">Home</Link>
           <ChevronRight className="w-4 h-4" />

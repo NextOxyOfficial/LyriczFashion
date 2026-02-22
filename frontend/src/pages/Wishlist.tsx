@@ -81,16 +81,16 @@ const Wishlist = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8 py-4">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <Heart className="w-8 h-8 text-red-500 fill-red-500" />
+              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <Heart className="w-7 h-7 text-red-500 fill-red-500" />
                 My Wishlist
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-600 mt-2 pl-10">
                 {products.length} {products.length === 1 ? 'item' : 'items'} saved
               </p>
             </div>
