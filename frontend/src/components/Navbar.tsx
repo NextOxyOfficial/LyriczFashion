@@ -284,7 +284,7 @@ const Navbar = () => {
                     navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
                   }
                 }}
-                className="flex w-full shadow-md rounded-full overflow-hidden relative z-10"
+                className="flex w-full shadow-sm rounded-full overflow-hidden relative z-10"
               >
                 <input
                   type="text"

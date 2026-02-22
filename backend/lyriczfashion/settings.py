@@ -96,17 +96,14 @@ JAZZMIN_SETTINGS = {
     'related_modal_active': True,
     
     # UI Tweaks
-    'custom_css': None,
-    'custom_js': None,
+    'custom_css': 'admin/custom_admin.css',
+    'custom_js': 'admin/custom_admin.js',
     'use_google_fonts_cdn': True,
     'show_ui_builder': False,
     
     # Change view
     'changeform_format': 'horizontal_tabs',
-    'changeform_format_overrides': {
-        'auth.user': 'collapsible',
-        'auth.group': 'vertical_tabs',
-    },
+    'changeform_format_overrides': {},
 }
 
 JAZZMIN_UI_TWEAKS = {
@@ -224,6 +221,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
