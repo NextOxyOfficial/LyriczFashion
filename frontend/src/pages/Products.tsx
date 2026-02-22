@@ -21,6 +21,8 @@ const Products = () => {
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<'featured' | 'newest' | 'price_low' | 'price_high'>('featured')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(12)
 
   useEffect(() => {
     const load = async () => {
@@ -85,6 +87,17 @@ const Products = () => {
     return list
   }, [items, query, sort, categoryParam])
 
+  // Pagination calculations
+  const totalPages = Math.ceil(visibleItems.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedItems = visibleItems.slice(startIndex, endIndex)
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [query, sort, categoryParam])
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -99,7 +112,9 @@ const Products = () => {
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
               {categoryParam ? `${categoryParam} Products` : 'Products'}
             </h1>
-            <p className="text-gray-500 mt-1 text-sm">Showing {visibleItems.length} products</p>
+            <p className="text-gray-500 mt-1 text-sm">
+              Showing {startIndex + 1}-{Math.min(endIndex, visibleItems.length)} of {visibleItems.length} products
+            </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
@@ -154,22 +169,81 @@ const Products = () => {
         )}
 
         {!error && !isLoading && visibleItems.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {visibleItems.map((p) => (
-              <ProductCard
-                key={p.id}
-                id={p.id}
-                name={p.name}
-                price={Number(p.price)}
-                discountPrice={p.discount_price ? Number(p.discount_price) : undefined}
-                imageUrl={
-                  toUrl(p.design_preview_front || p.design_preview || p.image || p.image_url) ||
-                  'https://via.placeholder.com/600x600'
-                }
-                designerName={p.designer_name}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {paginatedItems.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  id={p.id}
+                  name={p.name}
+                  price={Number(p.price)}
+                  discountPrice={p.discount_price ? Number(p.discount_price) : undefined}
+                  imageUrl={
+                    toUrl(p.design_preview_front || p.design_preview || p.image || p.image_url) ||
+                    'https://via.placeholder.com/600x600'
+                  }
+                  designerName={p.designer_name}
+                />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-sm text-gray-600">
+                  Page {currentPage} of {totalPages}
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Previous
+                  </button>
+                  
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                      const showPage = 
+                        page === 1 || 
+                        page === totalPages || 
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      
+                      if (!showPage) {
+                        if (page === currentPage - 2 || page === currentPage + 2) {
+                          return <span key={page} className="px-2 text-gray-400">...</span>
+                        }
+                        return null
+                      }
+                      
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-10 h-10 rounded-lg transition-colors ${
+                            currentPage === page
+                              ? 'bg-emerald-500 text-white font-semibold'
+                              : 'border border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  
+                  <button
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

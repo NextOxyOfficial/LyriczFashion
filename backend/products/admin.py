@@ -27,7 +27,7 @@ class CategoryAdmin(admin.ModelAdmin):
     )
     
     def get_product_count(self, obj):
-        return obj.product_count
+        return obj.products.count()
     get_product_count.short_description = 'Products'
 
 

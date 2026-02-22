@@ -28,28 +28,44 @@ class PromotionalBannerAdmin(admin.ModelAdmin):
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(admin.ModelAdmin):
     fieldsets = (
-        ('Contact Information', {
-            'fields': ('hotline', 'email', 'address'),
-            'description': 'Customer contact details displayed on the site'
+        ('🏷️ Branding & Logo', {
+            'fields': ('site_name', 'logo', 'favicon'),
+            'description': '📌 Upload your site logo and favicon. Logo: 200x50px PNG. Favicon: 32x32px ICO/PNG.',
         }),
-        ('Social Media', {
-            'fields': ('facebook_url', 'instagram_url', 'twitter_url'),
+        ('📞 Contact Information', {
+            'fields': ('hotline', 'email', 'address', 'business_hours'),
+            'description': '📌 Customer contact details displayed on the site.',
             'classes': ('collapse',),
         }),
-        ('Business Information', {
-            'fields': ('business_hours',),
+        ('🔍 SEO Meta Tags (Google Search)', {
+            'fields': ('meta_title', 'meta_description', 'meta_keywords'),
+            'description': '📌 Controls how your site appears in Google search results. Title: max 70 chars | Description: max 160 chars.',
             'classes': ('collapse',),
         }),
-        ('Shipping Settings', {
+        ('📣 Open Graph (Facebook/WhatsApp/LinkedIn Preview)', {
+            'fields': ('og_title', 'og_description', 'og_image', 'og_image_url'),
+            'description': '📌 When someone shares your link on social media, this controls the preview card. Image: 1200×630px recommended.',
+            'classes': ('collapse',),
+        }),
+        ('🐦 Twitter/X Card', {
+            'fields': ('twitter_card_type', 'twitter_site_handle'),
+            'description': '📌 Controls Twitter/X link preview.',
+            'classes': ('collapse',),
+        }),
+        ('📱 Social Media Links', {
+            'fields': ('facebook_url', 'instagram_url', 'twitter_url', 'youtube_url', 'tiktok_url'),
+            'description': '📌 Add your social media profile URLs.',
+            'classes': ('collapse',),
+        }),
+        ('🚚 Shipping Settings', {
             'fields': ('free_shipping_threshold', 'shipping_fee'),
-            'description': 'Configure shipping costs and free shipping threshold'
+            'description': '📌 Configure shipping costs (in BDT).',
+            'classes': ('collapse',),
         }),
     )
-    
+
     def has_add_permission(self, request):
-        # Only allow one instance
         return not SiteSettings.objects.exists()
-    
+
     def has_delete_permission(self, request, obj=None):
-        # Prevent deletion
         return False

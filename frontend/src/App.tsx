@@ -25,10 +25,12 @@ import Designers from './pages/Designers'
 import Help from './pages/Help'
 import Wholesale from './pages/Wholesale'
 import Wishlist from './pages/Wishlist'
+import MetaTags from './components/MetaTags'
 
 function App() {
   return (
     <Router>
+      <MetaTags />
       <ScrollToTop />
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Navbar />
