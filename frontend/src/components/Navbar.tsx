@@ -259,6 +259,12 @@ const Navbar = () => {
     <>
     <div style={{ height: headerHeight }} />
     <header ref={headerRef} className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur shadow-sm border-b border-gray-100">
+      {/* Announcement Bar */}
+      <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 text-white text-xs sm:text-sm font-medium py-1.5 text-center overflow-hidden">
+        <div className="animate-marquee inline-block whitespace-nowrap">
+          {activePromoText}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{activePromoText}&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;{activePromoText}
+        </div>
+      </div>
       <div className="max-w-[1480px] mx-auto px-1 sm:px-4 lg:px-8 h-16 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 md:gap-4 lg:gap-6 min-w-0">
           <button

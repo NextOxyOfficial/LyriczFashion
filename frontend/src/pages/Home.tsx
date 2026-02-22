@@ -349,9 +349,9 @@ const Home = () => {
       {/* Shopping by Categories - Dynamic */}
       <section className="py-4 sm:py-6 bg-white">
         <div className="max-w-[1480px] mx-auto px-0.5 sm:px-4 lg:px-8">
-          <h2 className="text-xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-12 px-2 sm:px-0">Shopping by Categories</h2>
+          <h2 className="text-xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-12 px-2 sm:px-0 text-center">Shopping by Categories</h2>
           {categories.length > 0 ? (
-            <div className="flex justify-start items-center gap-4 sm:gap-8 overflow-x-auto pb-4 px-2 sm:px-0 scrollbar-hide">
+            <div className="flex justify-center items-center gap-4 sm:gap-8 overflow-x-auto pb-4 px-2 sm:px-0 scrollbar-hide">
               {categories.map((category) => (
                 <Link 
                   key={category.id}
@@ -384,7 +384,7 @@ const Home = () => {
       <section className="py-6 sm:py-12 bg-white">
         <div className="max-w-[1480px] mx-auto px-0.5 sm:px-4 lg:px-8">
           <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl sm:rounded-3xl p-2 sm:p-8 lg:p-16">
-            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-center text-gray-900 mb-6 sm:mb-12">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-center text-gray-900 my-4 sm:mb-12">
               How to design and order custom T-shirts
             </h2>
             

@@ -172,11 +172,6 @@ const Footer = () => {
                   Privacy Policy
                 </Link>
               </li>
-              <li>
-                <Link to="/help" className="text-gray-400 hover:text-emerald-400 transition-colors">
-                  Help Center
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -199,20 +194,20 @@ const Footer = () => {
                   Sell Your Design
                 </Link>
               </li>
-              <li>
-                <a href={`tel:${contactInfo.hotline}`} className="text-gray-400 hover:text-emerald-400 transition-colors inline-flex items-center gap-2">
-                  <Phone className="w-4 h-4" />
-                  {contactInfo.hotline}
-                </a>
-              </li>
-              <li>
-                <a href={`mailto:${contactInfo.email}`} className="text-gray-400 hover:text-emerald-400 transition-colors inline-flex items-center gap-2">
-                  <Mail className="w-4 h-4" />
-                  {contactInfo.email}
-                </a>
-              </li>
             </ul>
           </div>
+        </div>
+
+        {/* Contact Info - centered below grid */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-10 py-5 border-t border-gray-800 mt-6">
+          <a href={`tel:${contactInfo.hotline}`} className="text-gray-400 hover:text-emerald-400 transition-colors inline-flex items-center gap-2 text-sm">
+            <Phone className="w-4 h-4 text-emerald-500" />
+            {contactInfo.hotline}
+          </a>
+          <a href={`mailto:${contactInfo.email}`} className="text-gray-400 hover:text-emerald-400 transition-colors inline-flex items-center gap-2 text-sm">
+            <Mail className="w-4 h-4 text-emerald-500" />
+            {contactInfo.email}
+          </a>
         </div>
 
         {/* Payment Methods & Info */}
@@ -243,7 +238,7 @@ const Footer = () => {
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-gray-800 pt-6 sm:pt-8 mt-6 sm:mt-8">
+        <div className="border-t border-gray-800 pt-6 sm:pt-8 mt-6 sm:mt-8 pb-24 md:pb-0">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs sm:text-sm text-gray-500 px-2 sm:px-0">
             <p>&copy; 2026 LyriczFashion. All rights reserved.</p>
             <div className="flex gap-4 sm:gap-6">

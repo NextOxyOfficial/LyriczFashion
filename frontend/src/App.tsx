@@ -36,7 +36,7 @@ function App() {
       <ScrollToTop />
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Navbar />
-        <main className="flex-1">
+        <main className="flex-1 pb-20 md:pb-0">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
