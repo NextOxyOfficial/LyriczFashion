@@ -1518,18 +1518,18 @@ const DesignStudio = () => {
                 {hasDesign && (
                   <div className="mt-3 flex items-center justify-center gap-3">
                     <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                      <button onClick={() => activeElement === 'image' ? setImageRotation(imageRotation - 45) : setTextRotation(textRotation - 45)} className="p-1.5 hover:bg-white rounded" title="Rotate -45°">
+                      <button onClick={() => activeElement === 'image' ? setImageRotation(imageRotation - 1) : setTextRotation(textRotation - 1)} className="p-1.5 hover:bg-white rounded" title="Rotate -1°">
                         <RotateCcw className="w-4 h-4 text-gray-600" />
                       </button>
-                      <button onClick={() => activeElement === 'image' ? setImageRotation(imageRotation + 45) : setTextRotation(textRotation + 45)} className="p-1.5 hover:bg-white rounded" title="Rotate +45°">
+                      <button onClick={() => activeElement === 'image' ? setImageRotation(imageRotation + 1) : setTextRotation(textRotation + 1)} className="p-1.5 hover:bg-white rounded" title="Rotate +1°">
                         <RotateCw className="w-4 h-4 text-gray-600" />
                       </button>
                     </div>
                     <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                      <button onClick={() => activeElement === 'image' ? setImageScale(Math.max(0.05, imageScale - 0.05)) : setTextScale(Math.max(0.05, textScale - 0.05))} className="p-1.5 hover:bg-white rounded">
+                      <button onClick={() => activeElement === 'image' ? setImageScale(Math.max(0.05, imageScale - 0.01)) : setTextScale(Math.max(0.05, textScale - 0.01))} className="p-1.5 hover:bg-white rounded">
                         <ZoomOut className="w-4 h-4 text-gray-600" />
                       </button>
-                      <button onClick={() => activeElement === 'image' ? setImageScale(Math.min(1.5, imageScale + 0.1)) : setTextScale(Math.min(1.5, textScale + 0.1))} className="p-1.5 hover:bg-white rounded">
+                      <button onClick={() => activeElement === 'image' ? setImageScale(Math.min(1.5, imageScale + 0.01)) : setTextScale(Math.min(1.5, textScale + 0.01))} className="p-1.5 hover:bg-white rounded">
                         <ZoomIn className="w-4 h-4 text-gray-600" />
                       </button>
                     </div>

@@ -25,6 +25,8 @@ import Designers from './pages/Designers'
 import Help from './pages/Help'
 import Wholesale from './pages/Wholesale'
 import Wishlist from './pages/Wishlist'
+import Terms from './pages/Terms'
+import Privacy from './pages/Privacy'
 import MetaTags from './components/MetaTags'
 
 function App() {
@@ -59,6 +61,8 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
           </Routes>
         </main>
         <Footer />

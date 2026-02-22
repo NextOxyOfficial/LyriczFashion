@@ -46,7 +46,7 @@ const Register = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-gray-50 flex items-center justify-center px-2 py-4">
       <div className="w-full max-w-md">
         {/* Logo/Brand Section */}
         <div className="text-center mb-8">
@@ -57,7 +57,7 @@ const Register = () => {
           <p className="text-gray-600 mt-1">Design your style, wear your story</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
             <p className="text-gray-600 mt-1">Join our community of designers and shoppers</p>
