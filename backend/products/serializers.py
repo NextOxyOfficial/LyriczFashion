@@ -131,7 +131,7 @@ class DesignLibraryItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = DesignLibraryItem
         fields = '__all__'
-        read_only_fields = ['owner', 'created_at', 'updated_at']
+        read_only_fields = ['owner', 'is_featured', 'created_at', 'updated_at']
 
 
 class DesignCategorySerializer(serializers.ModelSerializer):

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Truck, Shield, RefreshCw, Headphones, Wand2, Sparkles, Zap, Star } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
-import { productsAPI, mockupAPI } from '../services/api'
+import { productsAPI, mockupAPI, designLibraryAPI } from '../services/api'
 
 const Home = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -10,6 +10,7 @@ const Home = () => {
   const [allProducts, setAllProducts] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<'new' | 'bestseller' | 'sale'>('new')
+  const [featuredLogos, setFeaturedLogos] = useState<any[]>([])
   const [typedText1, setTypedText1] = useState('')
   const [typedText2, setTypedText2] = useState('')
   const [typedDesc, setTypedDesc] = useState('')
@@ -126,6 +127,20 @@ const Home = () => {
     }
     loadProducts()
   }, [activeTab])
+
+  // Load featured logos
+  useEffect(() => {
+    const loadFeaturedLogos = async () => {
+      try {
+        const data = await designLibraryAPI.getFeatured()
+        setFeaturedLogos(Array.isArray(data) ? data : [])
+      } catch (error) {
+        console.error('Failed to load featured logos:', error)
+        setFeaturedLogos([])
+      }
+    }
+    loadFeaturedLogos()
+  }, [])
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!imageRef.current) return
@@ -579,21 +594,70 @@ const Home = () => {
       </section>
       
 
-      {/* Free design templates */}
-      <section className="py-8 bg-white">
-        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-10">
-            <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Free design templates</h2>
-            <Link
-              to="/products"
-              className="inline-flex items-center px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-full hover:bg-gray-50 transition-colors"
-            >
-              View All
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </Link>
+      {/* Featured Design Logos */}
+      {featuredLogos.length > 0 && (
+        <section className="py-8 bg-white">
+          <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center mb-10">
+              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Free design templates</h2>
+              <Link
+                to="/design-studio"
+                className="inline-flex items-center px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-full hover:bg-gray-50 transition-colors"
+              >
+                View All
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {featuredLogos.map((logo) => (
+                <Link key={logo.id} to="/design-studio" className="group">
+                  <div className="mb-4 min-h-[280px] bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 flex items-center justify-center overflow-hidden">
+                    <img 
+                      src={logo.image} 
+                      alt={logo.name}
+                      className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
+                    />
+                  </div>
+                  <h3 className="font-bold text-gray-900 group-hover:text-emerald-600 truncate">{logo.name}</h3>
+                  <p className="text-sm text-gray-500">{logo.category || 'Design'}</p>
+                </Link>
+              ))}
+              
+              {featuredLogos.length < 8 && (
+                <Link to="/design-studio" className="group">
+                  <div className="flex gap-1 mb-4 min-h-[280px]">
+                    <div className="w-full aspect-[3/4] bg-gray-800 flex flex-col items-center justify-center text-white rounded-2xl">
+                      <Sparkles className="w-12 h-12 mb-2" />
+                      <span className="text-2xl font-bold">+More</span>
+                      <span className="text-xs">Templates</span>
+                    </div>
+                  </div>
+                  <h3 className="font-bold text-gray-900 group-hover:text-emerald-600">More Collections</h3>
+                  <p className="text-sm text-gray-500">View all</p>
+                </Link>
+              )}
+            </div>
           </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        </section>
+      )}
+
+      {/* Free design templates - fallback if no featured */}
+      {featuredLogos.length === 0 && (
+        <section className="py-8 bg-white">
+          <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center mb-10">
+              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Free design templates</h2>
+              <Link
+                to="/design-studio"
+                className="inline-flex items-center px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-full hover:bg-gray-50 transition-colors"
+              >
+                View All
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {/* Astronauts */}
             <Link to="/products?category=astronauts" className="group">
               <div className="flex gap-1 mb-4 min-h-[280px]">
@@ -651,6 +715,7 @@ const Home = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* We integrate with */}
       <section className="py-8 bg-white border-t border-gray-100">

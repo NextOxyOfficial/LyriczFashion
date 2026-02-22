@@ -4,7 +4,7 @@ import { ChevronRight, Search } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
 import { productsAPI } from '../services/api'
 
-const API_BASE_URL = 'http://localhost:8000'
+const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'https://lyriczfashion.com'
 
 const toUrl = (path?: string | null) => {
   if (!path) return ''
@@ -13,13 +13,14 @@ const toUrl = (path?: string | null) => {
 }
 
 const Products = () => {
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const categoryParam = searchParams.get('category')
-  
+  const searchParam = searchParams.get('search') || ''
+
   const [items, setItems] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(searchParam)
   const [sort, setSort] = useState<'featured' | 'newest' | 'price_low' | 'price_high'>('featured')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(12)
@@ -93,6 +94,23 @@ const Products = () => {
   const endIndex = startIndex + itemsPerPage
   const paginatedItems = visibleItems.slice(startIndex, endIndex)
 
+  // Sync query state with URL search param when it changes externally
+  useEffect(() => {
+    setQuery(searchParam)
+  }, [searchParam])
+
+  // Update URL when user types in the search box
+  const handleQueryChange = (val: string) => {
+    setQuery(val)
+    const next = new URLSearchParams(searchParams)
+    if (val.trim()) {
+      next.set('search', val.trim())
+    } else {
+      next.delete('search')
+    }
+    setSearchParams(next, { replace: true })
+  }
+
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
@@ -122,7 +140,7 @@ const Products = () => {
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => handleQueryChange(e.target.value)}
                 placeholder="Search products..."
                 className="w-full sm:w-72 pl-9 pr-3 py-2.5 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500"
               />

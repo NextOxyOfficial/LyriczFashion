@@ -219,7 +219,8 @@ class DesignLibraryItem(models.Model):
     category = models.CharField(max_length=100, blank=True, default='')
     search_keywords = models.TextField(blank=True, default='')
     commission_per_use = models.DecimalField(max_digits=10, decimal_places=2, default=49.00)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, help_text="Approved and visible in Design Library")
+    is_featured = models.BooleanField(default=False, help_text="Show in homepage featured section")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

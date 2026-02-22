@@ -363,7 +363,12 @@ export const designLibraryAPI = {
     })
     return response.data
   },
-}
+
+  getFeatured: async () => {
+    const response = await api.get('/design-library/featured/')
+    return response.data
+  },
+};
 
 export const designCategoryAPI = {
   list: async () => {

@@ -1,10 +1,11 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, User, Menu, X, Search, Phone, Heart, ChevronDown, Sparkles, ImageIcon, Store, MapPin, Package, LayoutDashboard, Home as HomeIcon, Users, Truck, HelpCircle, TrendingUp } from 'lucide-react'
 import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useCartStore } from '../store/cartStore'
 import { productsAPI, settingsAPI } from '../services/api'
  
 const Navbar = () => {
+  const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
@@ -280,7 +281,7 @@ const Navbar = () => {
                   e.preventDefault()
                   if (searchQuery.trim()) {
                     setShowSuggestions(false)
-                    window.location.href = `/products?search=${encodeURIComponent(searchQuery.trim())}`
+                    navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
                   }
                 }}
                 className="flex w-full shadow-md rounded-full overflow-hidden relative z-10"
@@ -344,7 +345,7 @@ const Navbar = () => {
                     <button
                       onClick={() => {
                         setShowSuggestions(false)
-                        window.location.href = `/products?search=${encodeURIComponent(searchQuery.trim())}`
+                        navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
                       }}
                       className="w-full text-center text-sm text-emerald-600 hover:text-emerald-700 font-semibold flex items-center justify-center gap-2"
                     >
@@ -616,16 +617,27 @@ const Navbar = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t">
           <div className="px-4 py-4 space-y-4">
-            <div className="flex items-center">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (searchQuery.trim()) {
+                  setIsMenuOpen(false)
+                  navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
+                }
+              }}
+              className="flex items-center"
+            >
               <input
                 type="text"
-                placeholder="Search..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for T-shirts, designs..."
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-emerald-300"
               />
-              <button className="px-4 py-2 bg-emerald-500 text-white rounded-r-lg">
+              <button type="submit" className="px-4 py-2 bg-emerald-500 text-white rounded-r-lg hover:bg-emerald-600 transition-colors">
                 <Search className="w-5 h-5" />
               </button>
-            </div>
+            </form>
             <Link to="/design-studio" onClick={() => setIsMenuOpen(false)} className="block py-3 px-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold rounded-xl shadow-md">✨ Create Design</Link>
             <Link to="/" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Home</Link>
             <Link to="/designers" onClick={() => setIsMenuOpen(false)} className="block py-2 text-gray-700 font-medium">Designers</Link>

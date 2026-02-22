@@ -438,8 +438,8 @@ class DesignLibraryItemViewSet(viewsets.ModelViewSet):
         print(f"Creating design library item for user: {self.request.user.username}")
         print(f"Data received: {self.request.data}")
         try:
-            instance = serializer.save(owner=self.request.user)
-            print(f"Successfully created design library item: ID {instance.id}, Name: {instance.name}")
+            instance = serializer.save(owner=self.request.user, is_active=True)
+            print(f"Successfully created design library item: ID {instance.id}, Name: {instance.name}, Active: {instance.is_active}")
         except Exception as e:
             print(f"Error creating design library item: {e}")
             raise
@@ -447,6 +447,12 @@ class DesignLibraryItemViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my(self, request):
         qs = DesignLibraryItem.objects.filter(owner=request.user).select_related('owner')
+        return Response(DesignLibraryItemSerializer(qs, many=True, context={'request': request}).data)
+    
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def featured(self, request):
+        """Get featured logos for homepage"""
+        qs = DesignLibraryItem.objects.filter(is_active=True, is_featured=True).select_related('owner')[:8]
         return Response(DesignLibraryItemSerializer(qs, many=True, context={'request': request}).data)
 
 

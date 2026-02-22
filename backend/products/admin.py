@@ -41,9 +41,31 @@ class SellerProfileAdmin(admin.ModelAdmin):
 
 @admin.register(DesignLibraryItem)
 class DesignLibraryItemAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'owner', 'commission_per_use', 'is_active', 'created_at']
-    list_filter = ['is_active', 'created_at']
-    search_fields = ['name', 'owner__username', 'owner__email']
+    list_display = ['id', 'name', 'owner', 'category', 'commission_per_use', 'is_active', 'is_featured', 'created_at']
+    list_filter = ['is_active', 'is_featured', 'category', 'created_at']
+    search_fields = ['name', 'owner__username', 'owner__email', 'category']
+    list_editable = ['is_active', 'is_featured']
+    actions = ['approve_logos', 'reject_logos', 'mark_as_featured', 'unmark_as_featured']
+    
+    def approve_logos(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f'{updated} logo(s) approved successfully.')
+    approve_logos.short_description = "✓ Approve selected logos"
+    
+    def reject_logos(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f'{updated} logo(s) rejected.')
+    reject_logos.short_description = "✗ Reject selected logos"
+    
+    def mark_as_featured(self, request, queryset):
+        updated = queryset.filter(is_active=True).update(is_featured=True)
+        self.message_user(request, f'{updated} logo(s) marked as featured.')
+    mark_as_featured.short_description = "⭐ Mark as Featured"
+    
+    def unmark_as_featured(self, request, queryset):
+        updated = queryset.update(is_featured=False)
+        self.message_user(request, f'{updated} logo(s) unmarked as featured.')
+    unmark_as_featured.short_description = "Remove from Featured"
 
 
 @admin.register(DesignCommission)
