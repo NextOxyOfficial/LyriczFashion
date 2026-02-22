@@ -267,24 +267,100 @@ const Navbar = () => {
             <Link to="/" className="text-gray-700 hover:text-emerald-600 transition-colors">Home</Link>
             <Link to="/designers" className="text-gray-700 hover:text-emerald-600 transition-colors">Designers</Link>
             <Link to="/wholesale" className="text-gray-700 hover:text-emerald-600 transition-colors">Wholesale</Link>
+            <Link to="/help" className="text-gray-700 hover:text-emerald-600 transition-colors">Help Center</Link>
           </nav>
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-          <Link
-            to="/help"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
-          >
-            <HelpCircle className="w-4 h-4" />
-            <span className="hidden xl:inline">Help</span>
-          </Link>
+          <div ref={searchRef} className="hidden md:flex items-center relative">
+            <div className={`flex items-center transition-all duration-300 ease-in-out overflow-hidden ${
+              showSearchBar ? 'w-56 lg:w-72' : 'w-9'
+            }`}>
+              {showSearchBar ? (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    if (searchQuery.trim()) {
+                      setShowSuggestions(false)
+                      setShowSearchBar(false)
+                      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
+                    }
+                  }}
+                  className="flex items-center w-full border border-gray-200 rounded-xl bg-white shadow-sm"
+                >
+                  <Search className="w-4 h-4 text-gray-400 ml-3 flex-shrink-0" />
+                  <input
+                    autoFocus
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => searchQuery.trim().length >= 2 && searchSuggestions.length > 0 && setShowSuggestions(true)}
+                    placeholder="Search..."
+                    className="flex-1 px-2 py-2 text-sm bg-transparent focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { setShowSearchBar(false); setShowSuggestions(false); setSearchQuery('') }}
+                    className="p-2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </form>
+              ) : (
+                <button
+                  onClick={() => setShowSearchBar(true)}
+                  className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
+                  aria-label="Search"
+                >
+                  <Search className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+            {showSuggestions && searchSuggestions.length > 0 && (
+              <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden max-h-96 overflow-y-auto z-50">
+                <div className="p-2">
+                  {searchSuggestions.map((product: any) => (
+                    <Link
+                      key={product.id}
+                      to={`/products/${product.id}`}
+                      onClick={() => { setShowSuggestions(false); setSearchQuery(''); setShowSearchBar(false) }}
+                      className="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-xl transition-colors group"
+                    >
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                        <img
+                          src={toApiUrl(product.image_url || product.design_preview || product.image) || 'https://via.placeholder.com/100'}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm text-gray-900 group-hover:text-emerald-600 truncate">{product.name}</div>
+                        {product.designer_name && (
+                          <div className="text-xs text-gray-500 flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" />{product.designer_name}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-sm font-bold text-emerald-600">৳{product.discount_price || product.price}</div>
+                    </Link>
+                  ))}
+                </div>
+                <div className="border-t border-gray-100 p-3 bg-gray-50">
+                  <button
+                    onClick={() => { setShowSuggestions(false); navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`) }}
+                    className="w-full text-center text-sm text-emerald-600 hover:text-emerald-700 font-semibold flex items-center justify-center gap-2"
+                  >
+                    <TrendingUp className="w-4 h-4" />
+                    View all results for "{searchQuery}"
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           <button
-            onClick={() => {
-              if (showSearchBar) setShowSuggestions(false)
-              setShowSearchBar(!showSearchBar)
-            }}
-            className={`p-2 rounded-lg transition-colors ${showSearchBar ? 'bg-emerald-50 text-emerald-600' : 'text-gray-600 hover:bg-gray-100 hover:text-emerald-600'}`}
+            className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
+            onClick={() => setShowSearchBar(!showSearchBar)}
             aria-label="Search"
           >
             <Search className="w-5 h-5" />
@@ -462,113 +538,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {showSearchBar && (
-        <div className="border-t border-gray-100 bg-white">
-          <div className="max-w-[1480px] mx-auto px-3 sm:px-4 lg:px-8 py-3" ref={searchRef}>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault()
-                if (searchQuery.trim()) {
-                  setShowSuggestions(false)
-                  navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
-                }
-              }}
-              className="flex items-center gap-2"
-            >
-              <div className="relative flex-1">
-                <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => searchQuery.trim().length >= 2 && searchSuggestions.length > 0 && setShowSuggestions(true)}
-                  placeholder="Search for T-shirts, designs, designers..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-                />
-              </div>
-              <button
-                type="submit"
-                className="px-4 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors"
-              >
-                Search
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowSearchBar(false)
-                  setShowSuggestions(false)
-                }}
-                className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
-                aria-label="Close search"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </form>
-
-            {showSuggestions && searchSuggestions.length > 0 && (
-              <div className="mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden max-h-96 overflow-y-auto">
-                <div className="p-2">
-                  {searchSuggestions.map((product: any) => (
-                    <Link
-                      key={product.id}
-                      to={`/products/${product.id}`}
-                      onClick={() => {
-                        setShowSuggestions(false)
-                        setSearchQuery('')
-                        setShowSearchBar(false)
-                      }}
-                      className="flex items-center gap-3 p-3 hover:bg-emerald-50 rounded-xl transition-colors group"
-                    >
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                        <img
-                          src={toApiUrl(product.image_url || product.design_preview || product.image) || 'https://via.placeholder.com/100'}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors truncate">
-                          {product.name}
-                        </div>
-                        {product.designer_name && (
-                          <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                            <Sparkles className="w-3 h-3" />
-                            {product.designer_name}
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-sm font-bold text-emerald-600 flex-shrink-0">
-                        ৳{product.discount_price || product.price}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-                <div className="border-t border-gray-100 p-3 bg-gray-50">
-                  <button
-                    onClick={() => {
-                      setShowSuggestions(false)
-                      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
-                    }}
-                    className="w-full text-center text-sm text-emerald-600 hover:text-emerald-700 font-semibold flex items-center justify-center gap-2"
-                  >
-                    <TrendingUp className="w-4 h-4" />
-                    View all results for "{searchQuery}"
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {isSearching && searchQuery.trim().length >= 2 && (
-              <div className="mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 p-4">
-                <div className="flex items-center justify-center gap-2 text-gray-500">
-                  <div className="w-4 h-4 border-2 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
-                  <span className="text-sm">Searching...</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Mobile Menu */}
       {isMenuOpen && (
