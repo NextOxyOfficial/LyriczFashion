@@ -1,16 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Copy, Edit2, Save, X, Upload } from 'lucide-react'
-import { productsAPI, storeAPI } from '../services/api'
+import { authAPI, productsAPI, storeAPI, toApiUrl } from '../services/api'
 import ProductCard from '../components/ProductCard'
 
-const API_BASE_URL = 'http://localhost:8000'
-
-const toUrl = (path?: string | null) => {
-  if (!path) return ''
-  if (path.startsWith('http://') || path.startsWith('https://')) return path
-  return `${API_BASE_URL}${path}`
-}
+const toUrl = toApiUrl
 
 type Store = {
   id: number
@@ -60,13 +54,8 @@ const StorePage = () => {
         const token = localStorage.getItem('token')
         if (token) {
           try {
-            const userResponse = await fetch('http://localhost:8000/api/auth/me/', {
-              headers: { Authorization: `Bearer ${token}` }
-            })
-            if (userResponse.ok) {
-              const userData = await userResponse.json()
-              setCurrentUserId(userData.id)
-            }
+            const userData = await authAPI.getMe(token)
+            setCurrentUserId(userData.id)
           } catch (err) {
             console.log('Not authenticated')
           }

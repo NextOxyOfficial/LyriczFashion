@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Copy, ExternalLink, ShoppingBag, Sparkles, Store as StoreIcon, Phone, FileText, CheckCircle, Clock, XCircle, ArrowRight } from 'lucide-react'
-import { sellerAPI, storeAPI, designAPI, ordersAPI } from '../services/api'
+import { sellerAPI, storeAPI, designAPI, ordersAPI, toApiUrl } from '../services/api'
 
 type Me = {
   id: number
@@ -74,13 +74,7 @@ type SellerOrderSummary = {
   }
 }
 
-const API_BASE_URL = 'http://localhost:8000'
-
-const toUrl = (path?: string | null) => {
-  if (!path) return ''
-  if (path.startsWith('http://') || path.startsWith('https://')) return path
-  return `${API_BASE_URL}${path}`
-}
+const toUrl = toApiUrl
 
 const SellerDashboard = () => {
   const navigate = useNavigate()

@@ -1,16 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { authAPI, designCommissionAPI, designLibraryAPI, designCategoryAPI } from '../services/api'
+import { authAPI, designCommissionAPI, designLibraryAPI, designCategoryAPI, toApiUrl } from '../services/api'
 
-const API_BASE_URL = 'http://localhost:8000'
-
-const toUrl = (path?: string | null) => {
-  if (!path) return ''
-  const str = String(path).trim()
-  if (str.startsWith('http://') || str.startsWith('https://')) return str
-  const normalized = str.startsWith('/') ? str : `/${str}`
-  return `${API_BASE_URL}${normalized}`
-}
+const toUrl = toApiUrl
 
 const SellYourDesign = () => {
   const navigate = useNavigate()

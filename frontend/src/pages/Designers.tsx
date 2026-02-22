@@ -1,15 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Store } from 'lucide-react'
-import { storeAPI } from '../services/api'
+import { storeAPI, toApiUrl } from '../services/api'
 
-const API_BASE_URL = 'http://localhost:8000'
-
-const toUrl = (path?: string | null) => {
-  if (!path) return ''
-  if (path.startsWith('http://') || path.startsWith('https://')) return path
-  return `${API_BASE_URL}${path}`
-}
+const toUrl = toApiUrl
 
 type DesignerStore = {
   id: number

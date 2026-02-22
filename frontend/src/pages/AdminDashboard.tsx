@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toApiUrl } from '../services/api'
 
 interface User {
   id: number
@@ -160,7 +161,7 @@ const AdminDashboard = () => {
           <h3 className="text-xl font-bold mb-2">API Documentation</h3>
           <p className="mb-4">Access the backend API documentation for development</p>
           <a
-            href="http://localhost:8000/docs"
+            href={toApiUrl('/docs')}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block px-6 py-3 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors"

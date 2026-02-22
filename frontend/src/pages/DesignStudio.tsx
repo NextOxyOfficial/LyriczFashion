@@ -1,18 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { customProductsAPI, designLibraryAPI, designCategoryAPI, mockupAPI, categoriesAPI } from '../services/api'
+import { customProductsAPI, designLibraryAPI, designCategoryAPI, mockupAPI, categoriesAPI, toApiUrl } from '../services/api'
 import { useCartStore } from '../store/cartStore'
 import { RotateCw, RotateCcw, ZoomIn, ZoomOut, Type, Layers, Sparkles, ShoppingCart, ImageIcon } from 'lucide-react'
 
-const API_BASE_URL = 'http://localhost:8000'
-
-const toUrl = (path?: string | null) => {
-  if (!path) return ''
-  const str = String(path).trim()
-  if (str.startsWith('http://') || str.startsWith('https://')) return str
-  const normalized = str.startsWith('/') ? str : `/${str}`
-  return `${API_BASE_URL}${normalized}`
-}
+const toUrl = toApiUrl
 
 type MockupTypeList = {
   id: number

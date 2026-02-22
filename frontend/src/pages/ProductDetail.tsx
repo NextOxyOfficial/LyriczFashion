@@ -1,17 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, Heart, Minus, Plus, Star, Truck, Shield, RefreshCw, Share2, ChevronLeft, ChevronRight, Check, Sparkles } from 'lucide-react'
-import { productsAPI } from '../services/api'
+import { productsAPI, toApiUrl } from '../services/api'
 import { useCartStore } from '../store/cartStore'
 import ProductCard from '../components/ProductCard'
 
-const API_BASE_URL = 'http://localhost:8000'
-
-const toUrl = (path?: string | null) => {
-  if (!path) return ''
-  if (path.startsWith('http://') || path.startsWith('https://')) return path
-  return `${API_BASE_URL}${path}`
-}
+const toUrl = toApiUrl
 
 const ProductDetail = () => {
   const { id } = useParams()

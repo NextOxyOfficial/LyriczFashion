@@ -160,8 +160,8 @@ const Home = () => {
   return (
     <div>
       {/* Hero Section - Enhanced with Cool Effects */}
-      <section className="relative py-4 bg-white overflow-hidden">
-        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative pt-2 pb-4 bg-white overflow-hidden">
+        <div className="max-w-[1480px] mx-auto px-3 sm:px-4 lg:px-8">
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-400 via-emerald-300 to-teal-400">
             {/* Animated Background Gradient Orbs */}
             <div className="absolute inset-0 overflow-hidden">
@@ -184,7 +184,7 @@ const Home = () => {
             {/* Decorative Grid Pattern */}
             <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
 
-            <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 items-center min-h-[500px] py-12 lg:py-16">
+            <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 items-center min-h-[480px] py-10 lg:py-12">
               {/* Left Content */}
               <div className="relative z-10 pl-8 lg:pl-16">
                 {/* Badge */}
@@ -343,8 +343,8 @@ const Home = () => {
       </section>
 
       {/* Shopping by Categories - Dynamic */}
-      <section className="py-8 bg-white">
-        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-6 bg-white">
+        <div className="max-w-[1480px] mx-auto px-3 sm:px-4 lg:px-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-12">Shopping by Categories</h2>
           {categories.length > 0 ? (
             <div className="flex justify-start items-center gap-8 overflow-x-auto pb-4" style={{ scrollbarWidth: 'thin' }}>
@@ -377,8 +377,8 @@ const Home = () => {
       </section>
 
       {/* How to design and order custom T-shirts */}
-      <section className="py-20 bg-white">
-        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-12 bg-white">
+        <div className="max-w-[1480px] mx-auto px-3 sm:px-4 lg:px-8">
           <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl p-8 lg:p-16">
             <h2 className="text-5xl lg:text-5xl font-bold text-center text-gray-900 mb-12">
               How to design and order custom T-shirts
@@ -461,8 +461,8 @@ const Home = () => {
       </section>
 
       {/* All products */}
-      <section className="py-8 bg-white">
-        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-6 bg-white">
+        <div className="max-w-[1480px] mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex justify-between items-center mb-10">
             <div className="flex gap-8">
               <button
@@ -518,8 +518,8 @@ const Home = () => {
         </div>
       </section>
 {/* Promotional Banners */}
-      <section className="py-8 bg-white">
-        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-6 bg-white">
+        <div className="max-w-[1480px] mx-auto px-3 sm:px-4 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Thousands of free templates */}
             <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-purple-100 to-purple-50 p-10 lg:p-14 min-h-[380px] flex items-center">
@@ -596,8 +596,8 @@ const Home = () => {
 
       {/* Featured Design Logos */}
       {featuredLogos.length > 0 && (
-        <section className="py-8 bg-white">
-          <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-6 bg-white">
+          <div className="max-w-[1480px] mx-auto px-3 sm:px-4 lg:px-8">
             <div className="flex justify-between items-center mb-10">
               <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Free design templates</h2>
               <Link
@@ -644,8 +644,8 @@ const Home = () => {
 
       {/* Free design templates - fallback if no featured */}
       {featuredLogos.length === 0 && (
-        <section className="py-8 bg-white">
-          <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-6 bg-white">
+          <div className="max-w-[1480px] mx-auto px-3 sm:px-4 lg:px-8">
             <div className="flex justify-between items-center mb-10">
               <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Free design templates</h2>
               <Link
@@ -718,8 +718,8 @@ const Home = () => {
       )}
 
       {/* We integrate with */}
-      <section className="py-8 bg-white border-t border-gray-100">
-        <div className="max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-6 bg-white border-t border-gray-100">
+        <div className="max-w-[1480px] mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
             <div>
               <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">We integrate with</h2>
@@ -764,7 +764,7 @@ const Home = () => {
       </section>
 
       {/* Features */}
-      <section className="py-12 bg-white border-b border-gray-100">
+      <section className="py-8 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="flex flex-col items-center text-center">
