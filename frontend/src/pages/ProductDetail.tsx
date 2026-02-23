@@ -154,16 +154,16 @@ const ProductDetail = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8 py-4">
-        <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
-          <Link to="/" className="hover:text-emerald-600">Home</Link>
-          <ChevronRight className="w-4 h-4" />
-          <Link to="/products" className="hover:text-emerald-600">Products</Link>
-          <ChevronRight className="w-4 h-4" />
-          <span className="text-gray-900">{product.name}</span>
+        <nav className="flex items-center space-x-1 text-xs sm:text-sm text-gray-500 mb-3 sm:mb-6 overflow-hidden">
+          <Link to="/" className="hover:text-emerald-600 flex-shrink-0">Home</Link>
+          <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
+          <Link to="/products" className="hover:text-emerald-600 flex-shrink-0">Products</Link>
+          <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" />
+          <span className="text-gray-900 truncate">{product.name}</span>
         </nav>
 
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 lg:p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 p-3 sm:p-6 lg:p-8">
             <div className="space-y-4">
               <div className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden group">
                 <img src={imageUrl} alt={product.name} className="w-full h-full object-cover" />
@@ -171,26 +171,26 @@ const ProductDetail = () => {
                   <>
                     <button
                       onClick={() => setSelectedImage((selectedImage - 1 + productImages.length) % productImages.length)}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                      className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 rounded-full flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shadow"
                     >
-                      <ChevronLeft className="w-5 h-5" />
+                      <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                     <button
                       onClick={() => setSelectedImage((selectedImage + 1) % productImages.length)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                      className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 rounded-full flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shadow"
                     >
-                      <ChevronRight className="w-5 h-5" />
+                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                   </>
                 )}
               </div>
               {productImages.length > 1 && (
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3">
                   {productImages.map((img, i) => (
                     <button
                       key={i}
                       onClick={() => setSelectedImage(i)}
-                      className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${selectedImage === i ? 'border-emerald-600' : 'border-transparent hover:border-gray-300'}`}
+                      className={`w-14 h-14 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-colors ${selectedImage === i ? 'border-emerald-600' : 'border-transparent hover:border-gray-300'}`}
                     >
                       <img src={img} alt="" className="w-full h-full object-cover" />
                     </button>
@@ -200,7 +200,7 @@ const ProductDetail = () => {
             </div>
 
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">{product.name}</h1>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">{product.name}</h1>
               
               {/* Designer/Seller Info */}
               {(product.designer_name || product.store_name) && (
@@ -232,17 +232,17 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              <div className="flex items-baseline gap-3 mb-4">
+              <div className="flex items-baseline gap-2 sm:gap-3 mb-3 sm:mb-4">
                 {product.discount_price ? (
                   <>
-                    <span className="text-3xl font-bold text-emerald-600">৳{Number(product.discount_price)}</span>
-                    <span className="text-lg text-gray-400 line-through">৳{Number(product.price)}</span>
+                    <span className="text-2xl sm:text-3xl font-bold text-emerald-600">৳{Number(product.discount_price)}</span>
+                    <span className="text-base sm:text-lg text-gray-400 line-through">৳{Number(product.price)}</span>
                     <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-semibold rounded">
                       {Math.round((1 - Number(product.discount_price) / Number(product.price)) * 100)}% OFF
                     </span>
                   </>
                 ) : (
-                  <span className="text-3xl font-bold text-emerald-600">৳{Number(product.price)}</span>
+                  <span className="text-2xl sm:text-3xl font-bold text-emerald-600">৳{Number(product.price)}</span>
                 )}
               </div>
 
@@ -256,14 +256,14 @@ const ProductDetail = () => {
                 )}
               </div>
 
-              <div className="mb-5">
+              <div className="mb-4">
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Color: {selectedColor}</label>
                 <div className="flex gap-2">
                   {colors.map((c) => (
                     <button
                       key={c.name}
                       onClick={() => setSelectedColor(c.name)}
-                      className={`w-9 h-9 rounded-full border-2 transition-all ${selectedColor === c.name ? 'border-emerald-600 scale-110' : 'border-gray-200'}`}
+                      className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 transition-all ${selectedColor === c.name ? 'border-emerald-600 scale-110' : 'border-gray-200'}`}
                       style={{ backgroundColor: c.hex }}
                       title={c.name}
                     />
@@ -271,14 +271,14 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              <div className="mb-5">
+              <div className="mb-4">
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Size: {selectedSize}</label>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {sizes.map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${selectedSize === size ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-gray-200 hover:border-emerald-300'}`}
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 text-sm font-medium rounded-lg border transition-colors ${selectedSize === size ? 'border-emerald-600 bg-emerald-50 text-emerald-700' : 'border-gray-200 hover:border-emerald-300'}`}
                     >
                       {size}
                     </button>
@@ -286,14 +286,14 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Quantity</label>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center border border-gray-200 rounded-lg">
                     <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-2 hover:bg-gray-50">
                       <Minus className="w-4 h-4" />
                     </button>
-                    <span className="px-4 py-2 font-medium">{quantity}</span>
+                    <span className="px-3 sm:px-4 py-2 font-medium text-sm sm:text-base">{quantity}</span>
                     <button
                       disabled={availableStock > 0 ? quantity >= availableStock : true}
                       onClick={() => setQuantity(availableStock > 0 ? Math.min(availableStock, quantity + 1) : quantity)}
@@ -306,11 +306,11 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              <div className="flex gap-3 mb-6">
+              <div className="flex gap-2 sm:gap-3 mb-4 sm:mb-6">
                 <button
                   onClick={handleAddToCart}
                   disabled={availableStock === 0}
-                  className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${addedToCart ? 'bg-emerald-700 text-white' : 'bg-emerald-600 text-white hover:bg-emerald-700'} disabled:bg-gray-300 disabled:cursor-not-allowed`}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold text-sm sm:text-base transition-all ${addedToCart ? 'bg-emerald-700 text-white' : 'bg-emerald-600 text-white hover:bg-emerald-700'} disabled:bg-gray-300 disabled:cursor-not-allowed`}
                 >
                   {addedToCart ? <><Check className="w-5 h-5" /> Added!</> : <><ShoppingCart className="w-5 h-5" /> Add to Cart</>}
                 </button>
@@ -334,7 +334,7 @@ const ProductDetail = () => {
                 </button>
               </div>
 
-              <div className="mb-6 p-4 bg-gray-50 rounded-xl">
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 rounded-xl">
                 <div className="text-base font-semibold text-gray-900 mb-3">Description</div>
                 <p className="text-gray-700 text-sm leading-relaxed">
                   {product.description?.trim() ? product.description : 'This product has no description available at the moment. Contact us for more details about this item.'}
@@ -363,9 +363,9 @@ const ProductDetail = () => {
         </div>
 
         {relatedProducts.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">You May Also Like</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="mt-6 sm:mt-12">
+            <h2 className="text-base sm:text-xl font-bold text-gray-900 mb-3 sm:mb-6">You May Also Like</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               {relatedProducts.map((p) => (
                 <ProductCard
                   key={p.id}
@@ -384,7 +384,7 @@ const ProductDetail = () => {
       </div>
 
       {addedToCart && (
-        <div className="fixed bottom-4 right-4 z-50 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
+        <div className="fixed bottom-24 md:bottom-4 right-4 z-50 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
           <Check className="w-5 h-5 text-emerald-400" />
           <span>Added to cart</span>
           <Link to="/cart" className="text-emerald-400 hover:underline text-sm">View Cart</Link>

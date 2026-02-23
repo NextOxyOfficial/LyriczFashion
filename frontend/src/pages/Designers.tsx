@@ -63,12 +63,12 @@ const Designers = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4">
+    <div className="min-h-screen bg-gray-50 py-3 sm:py-4">
       <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
-          <div className="text-sm font-medium text-emerald-700">Designers</div>
-          <h1 className="text-3xl font-bold text-gray-900 mt-1">Meet Our Designers</h1>
-          <p className="text-gray-600 mt-2">Explore stores created by designers and discover unique collections.</p>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-4 sm:mb-8">
+          <div className="text-xs sm:text-sm font-medium text-emerald-700">Designers</div>
+          <h1 className="text-xl sm:text-3xl font-bold text-gray-900 mt-0.5 sm:mt-1">Meet Our Designers</h1>
+          <p className="text-gray-600 text-sm mt-1 sm:mt-2">Explore stores created by designers and discover unique collections.</p>
         </div>
 
         {error && (
@@ -76,13 +76,13 @@ const Designers = () => {
         )}
 
         {stores.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-            <Store className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No designers found</h3>
-            <p className="text-gray-600">No active designer stores are available right now.</p>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 sm:p-12 text-center">
+            <Store className="w-10 h-10 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
+            <h3 className="text-base sm:text-xl font-semibold text-gray-900 mb-1 sm:mb-2">No designers found</h3>
+            <p className="text-gray-600 text-sm">No active designer stores are available right now.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
             {stores.map((s) => (
               <Link
                 key={s.id}
@@ -91,27 +91,27 @@ const Designers = () => {
               >
                 <div className="relative">
                   {s.banner ? (
-                    <img src={toUrl(s.banner)} alt={s.name} className="w-full h-32 object-cover" />
+                    <img src={toUrl(s.banner)} alt={s.name} className="w-full h-20 sm:h-32 object-cover" />
                   ) : (
-                    <div className="w-full h-32 bg-gradient-to-r from-emerald-600 to-emerald-400" />
+                    <div className="w-full h-20 sm:h-32 bg-gradient-to-r from-emerald-600 to-emerald-400" />
                   )}
-                  <div className="absolute -bottom-8 left-6 w-16 h-16 rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
+                  <div className="absolute -bottom-5 sm:-bottom-8 left-3 sm:left-6 w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
                     {s.logo ? (
                       <img src={toUrl(s.logo)} alt={s.name} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-500 font-semibold">
+                      <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-500 font-semibold text-sm sm:text-base">
                         {s.name?.slice(0, 1) || 'D'}
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="pt-12 p-6">
-                  <div className="text-sm text-gray-500">Designed by</div>
-                  <div className="text-lg font-bold text-gray-900 mt-1">{getOwnerName(s)}</div>
-                  <div className="text-sm text-emerald-600 font-semibold mt-1">{s.name}</div>
+                <div className="pt-7 sm:pt-12 p-3 sm:p-6">
+                  <div className="text-xs sm:text-sm text-gray-500">Designed by</div>
+                  <div className="text-sm sm:text-lg font-bold text-gray-900 mt-0.5 sm:mt-1 truncate">{getOwnerName(s)}</div>
+                  <div className="text-xs sm:text-sm text-emerald-600 font-semibold mt-0.5 sm:mt-1 truncate">{s.name}</div>
                   {s.description && (
-                    <div className="text-sm text-gray-600 mt-2 line-clamp-2">{s.description}</div>
+                    <div className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2 line-clamp-2">{s.description}</div>
                   )}
                 </div>
               </Link>

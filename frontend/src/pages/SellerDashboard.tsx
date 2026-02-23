@@ -365,81 +365,80 @@ const SellerDashboard = () => {
           </div>
         )
       ) : !store ? (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
-              <StoreIcon className="w-6 h-6 text-emerald-600" />
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+              <StoreIcon className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Create Your Store</h2>
-              <p className="text-gray-600 mt-1">Set up your store with a name, logo, and description to start selling your designs.</p>
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">Create Your Store</h2>
+              <p className="text-gray-600 text-sm mt-0.5">Set up your store to start selling your designs.</p>
             </div>
           </div>
 
-          <div className="space-y-5">
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">Store Name *</label>
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Store Name *</label>
               <div className="relative">
-                <StoreIcon className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <StoreIcon className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full pl-9 pr-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
                   placeholder="Your Brand Name"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">Store Description</label>
+              <label className="block text-sm font-semibold text-gray-900 mb-1.5">Store Description</label>
               <div className="relative">
-                <FileText className="w-5 h-5 text-gray-400 absolute left-3 top-3" />
+                <FileText className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
                 <textarea
                   value={storeDescription}
                   onChange={(e) => setStoreDescription(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                  rows={4}
+                  className="w-full pl-9 pr-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none text-sm"
+                  rows={3}
                   placeholder="Tell customers about your store and what makes your designs unique"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">Store Logo</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Store Logo</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setStoreLogo(e.target.files?.[0] || null)}
-                  className="w-full text-sm border-2 border-dashed border-gray-200 rounded-xl p-4 bg-gray-50 hover:border-emerald-400 hover:bg-emerald-50 transition-all cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer"
+                  className="w-full text-sm border-2 border-dashed border-gray-200 rounded-xl p-3 bg-gray-50 hover:border-emerald-400 hover:bg-emerald-50 transition-all cursor-pointer file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer"
                 />
-                <p className="text-xs text-gray-500 mt-2">Recommended: Square image, at least 200x200px</p>
+                <p className="text-xs text-gray-500 mt-1">Square image, min 200x200px</p>
               </div>
-
               <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">Store Banner (Optional)</label>
+                <label className="block text-sm font-semibold text-gray-900 mb-1.5">Store Banner (Optional)</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setStoreBanner(e.target.files?.[0] || null)}
-                  className="w-full text-sm border-2 border-dashed border-gray-200 rounded-xl p-4 bg-gray-50 hover:border-emerald-400 hover:bg-emerald-50 transition-all cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer"
+                  className="w-full text-sm border-2 border-dashed border-gray-200 rounded-xl p-3 bg-gray-50 hover:border-emerald-400 hover:bg-emerald-50 transition-all cursor-pointer file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer"
                 />
-                <p className="text-xs text-gray-500 mt-2">Recommended: Wide image, at least 1200x400px</p>
+                <p className="text-xs text-gray-500 mt-1">Wide image, min 1200x400px</p>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t border-gray-100">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 pt-4 border-t border-gray-100">
             <button
               onClick={onCreateStore}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors text-sm"
             >
               <CheckCircle className="w-4 h-4" />
               Create Store
             </button>
             <Link
               to="/dashboard"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:py-3 bg-white border border-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors text-sm"
             >
               Back to Dashboard
             </Link>

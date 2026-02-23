@@ -298,30 +298,28 @@ const SellYourDesign = () => {
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="max-h-[520px] overflow-y-auto divide-y divide-gray-100">
                   {myItems.map((d) => (
-                    <div key={d.id} className="p-4 flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex-shrink-0">
+                    <div key={d.id} className="p-3 sm:p-4 flex items-center gap-3">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex-shrink-0">
                         <img src={toUrl(d.image)} alt={d.name} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-semibold text-gray-900 truncate">{d.name}</div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {d.category && <span className="inline-block bg-gray-100 px-2 py-1 rounded mr-2">{d.category}</span>}
-                          Commission: ৳{d.commission_per_use}
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {d.category && <span className="inline-block bg-gray-100 px-1.5 py-0.5 rounded mr-1">{d.category}</span>}
+                          ৳{d.commission_per_use}/use
                         </div>
-                        {d.search_keywords && (
-                          <div className="text-xs text-gray-400 mt-1 truncate">Keywords: {d.search_keywords}</div>
-                        )}
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5 flex-shrink-0">
                         <Link
                           to="/design-studio"
-                          className="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-sm hover:bg-emerald-100 transition-colors"
+                          className="px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-xs sm:text-sm hover:bg-emerald-100 transition-colors whitespace-nowrap"
                         >
-                          View in Studio
+                          <span className="hidden sm:inline">View in Studio</span>
+                          <span className="sm:hidden">Studio</span>
                         </Link>
                         <button
                           onClick={() => handleDeleteLogo(d.id, d.name)}
-                          className="px-3 py-2 rounded-xl bg-red-50 text-red-700 border border-red-200 font-semibold text-sm hover:bg-red-100 transition-colors"
+                          className="px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-red-50 text-red-700 border border-red-200 font-semibold text-xs sm:text-sm hover:bg-red-100 transition-colors"
                           title="Delete logo"
                         >
                           🗑️

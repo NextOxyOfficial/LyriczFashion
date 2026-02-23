@@ -120,7 +120,7 @@ const Products = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <div className="max-w-[1480px] mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-5">
+      <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8 py-3 sm:py-5">
         <nav className="flex items-center space-x-1.5 text-xs sm:text-sm text-gray-500 mb-3">
           <Link to="/" className="hover:text-emerald-600">Home</Link>
           <ChevronRight className="w-3.5 h-3.5" />
@@ -129,10 +129,10 @@ const Products = () => {
 
         <div className="mb-3">
           <h1 className="text-xl sm:text-3xl font-bold text-gray-900">
-            {categoryParam ? `${categoryParam} Products` : 'Products'}
+            {categoryParam ? categoryParam : 'All Products'}
           </h1>
           <p className="text-gray-500 text-xs sm:text-sm mt-0.5">
-            Showing {startIndex + 1}-{Math.min(endIndex, visibleItems.length)} of {visibleItems.length} products
+            Showing {visibleItems.length === 0 ? 0 : startIndex + 1}–{Math.min(endIndex, visibleItems.length)} of {visibleItems.length} products
           </p>
         </div>
 
@@ -207,58 +207,52 @@ const Products = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-sm text-gray-600">
-                  Page {currentPage} of {totalPages}
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Previous
-                  </button>
-                  
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                      const showPage = 
-                        page === 1 || 
-                        page === totalPages || 
-                        (page >= currentPage - 1 && page <= currentPage + 1)
-                      
-                      if (!showPage) {
-                        if (page === currentPage - 2 || page === currentPage + 2) {
-                          return <span key={page} className="px-2 text-gray-400">...</span>
-                        }
-                        return null
+              <div className="mt-6 flex items-center justify-center gap-1.5 sm:gap-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-2 sm:px-4 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  ‹ Prev
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    const showPage =
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+
+                    if (!showPage) {
+                      if (page === currentPage - 2 || page === currentPage + 2) {
+                        return <span key={page} className="px-1 text-gray-400 text-sm">…</span>
                       }
-                      
-                      return (
-                        <button
-                          key={page}
-                          onClick={() => setCurrentPage(page)}
-                          className={`w-10 h-10 rounded-lg transition-colors ${
-                            currentPage === page
-                              ? 'bg-emerald-500 text-white font-semibold'
-                              : 'border border-gray-300 hover:bg-gray-50'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  
-                  <button
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Next
-                  </button>
+                      return null
+                    }
+
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg text-sm transition-colors ${
+                          currentPage === page
+                            ? 'bg-emerald-500 text-white font-semibold'
+                            : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  })}
                 </div>
+
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-2 sm:px-4 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next ›
+                </button>
               </div>
             )}
           </>
