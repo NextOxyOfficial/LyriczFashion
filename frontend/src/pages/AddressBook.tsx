@@ -111,7 +111,7 @@ const AddressBook = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-2 py-4 sm:p-6">
             <div className="text-sm font-semibold text-gray-900 mb-3">Add New Address</div>
             {error && <div className="mb-3 text-sm text-red-600 font-medium">{error}</div>}
             <div className="space-y-3">

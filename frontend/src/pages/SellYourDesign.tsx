@@ -124,6 +124,8 @@ const SellYourDesign = () => {
     return sum
   }, [commissions])
 
+  const pendingCount = useMemo(() => myItems.filter(i => i.approval_status === 'pending').length, [myItems])
+
   const onSubmit = async () => {
     setError('')
     setSuccess('')
@@ -135,41 +137,27 @@ const SellYourDesign = () => {
       setError('Please provide a name and upload an image.')
       return
     }
+    if (pendingCount >= 5) {
+      setError('You already have 5 logos pending review. Please wait for admin approval before submitting more.')
+      return
+    }
 
     setSubmitting(true)
     try {
-      console.log('Uploading logo:', {
-        name: name.trim(),
-        category: category.trim(),
-        search_keywords: searchKeywords.trim(),
-        image: image?.name,
-        imageSize: image?.size,
-        imageType: image?.type,
-        token: token ? `${token.substring(0, 10)}...` : 'missing'
-      })
-      
-      const result = await designLibraryAPI.create(token, {
+      await designLibraryAPI.create(token, {
         name: name.trim(),
         image,
         category: category.trim(),
         search_keywords: searchKeywords.trim(),
         commission_per_use: 49,
       })
-      
-      console.log('Upload successful:', result)
-      setSuccess('Published! Your logo is now available in the Design Studio library.')
+      setSuccess('Submitted for review! Your logo will appear in the library once approved by admin.')
       setName('')
       setImage(null)
       setCategory('')
       setSearchKeywords('')
-
-      localStorage.setItem('designLibraryUpdatedAt', String(Date.now()))
-      window.dispatchEvent(new Event('designLibraryUpdated'))
-
       await fetchData()
     } catch (e: any) {
-      console.error('Upload failed:', e)
-      console.error('Error response:', e?.response?.data)
       setError(e?.response?.data?.detail || e?.response?.data?.error || e?.message || 'Upload failed')
     } finally {
       setSubmitting(false)
@@ -191,8 +179,8 @@ const SellYourDesign = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-3 sm:py-6">
-      <div className="max-w-2xl lg:max-w-[1480px] mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-4">
+      <div className="max-w-2xl lg:max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-2 py-4 sm:p-6 mb-4">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="text-xs font-medium text-emerald-700">Sell Your Design</div>
@@ -206,26 +194,53 @@ const SellYourDesign = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           <div className="lg:col-span-1 space-y-4">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-2 py-4 sm:p-6">
               <div className="text-sm font-semibold text-gray-900">Publish your logo</div>
               <div className="text-xs text-gray-500 mt-0.5">Commission per use: <span className="font-semibold text-emerald-600">৳49</span></div>
 
-              {error && <div className="mt-3 text-sm text-red-600 font-medium">{error}</div>}
-              {success && <div className="mt-3 text-sm text-emerald-700 font-medium">{success}</div>}
+              {/* Pending review slots */}
+              <div className="mt-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-semibold text-gray-600">Review slots used</span>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                    pendingCount >= 5 ? 'bg-red-100 text-red-600' :
+                    pendingCount >= 3 ? 'bg-amber-100 text-amber-700' :
+                    'bg-emerald-100 text-emerald-700'
+                  }`}>{pendingCount}/5</span>
+                </div>
+                <div className="flex gap-1">
+                  {[0,1,2,3,4].map(i => (
+                    <div key={i} className={`flex-1 h-2 rounded-full transition-all ${
+                      i < pendingCount
+                        ? pendingCount >= 5 ? 'bg-red-400' : pendingCount >= 3 ? 'bg-amber-400' : 'bg-emerald-400'
+                        : 'bg-gray-200'
+                    }`} />
+                  ))}
+                </div>
+                <div className="mt-1.5 text-[10px] text-gray-400">
+                  {pendingCount >= 5
+                    ? 'Limit reached — wait for admin approval'
+                    : `${5 - pendingCount} slot${5 - pendingCount !== 1 ? 's' : ''} available`
+                  }
+                </div>
+              </div>
 
-              <div className="mt-4 space-y-3">
+              {error && <div className="mt-3 text-sm text-red-600 font-medium">{error}</div>}
+              {success && <div className="mt-3 text-sm text-emerald-700 font-medium bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">{success}</div>}
+
+              <div className="mt-3 space-y-2">
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Logo name (e.g., Brand Logo)"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
                   <option value="">Select Category</option>
                   {categories.map((cat) => (
@@ -235,101 +250,138 @@ const SellYourDesign = () => {
                 <textarea
                   value={searchKeywords}
                   onChange={(e) => setSearchKeywords(e.target.value)}
-                  placeholder="Search keywords (e.g., modern, minimalist, corporate)"
+                  placeholder="Search keywords (e.g., modern, minimalist)"
                   rows={2}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
                 />
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setImage(e.target.files?.[0] || null)}
-                  className="w-full text-sm border-2 border-dashed border-emerald-200 rounded-xl p-4 bg-gradient-to-br from-emerald-50 to-white hover:border-emerald-400 hover:bg-emerald-50 transition-all cursor-pointer file:mr-4 file:py-2 file:px-5 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer file:shadow-sm"
+                  className="w-full text-xs border-2 border-dashed border-emerald-200 rounded-lg p-2 bg-emerald-50/50 hover:border-emerald-400 transition-all cursor-pointer file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer"
                 />
 
-                {imagePreviewUrl ? (
-                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-3">
-                    <div className="flex items-start gap-3">
-                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-white border border-emerald-100">
-                        <img src={imagePreviewUrl} alt="preview" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-gray-900 truncate">{image?.name}</div>
-                        <div className="text-xs text-gray-600 mt-1">{image ? `${(image.size / 1024).toFixed(1)} KB` : ''}</div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setImage(null)}
-                        className="px-3 py-2 rounded-xl border border-red-200 text-red-700 font-semibold hover:bg-red-50 transition-colors"
-                      >
-                        Remove
-                      </button>
+                {imagePreviewUrl && (
+                  <div className="flex items-center gap-2 p-2 rounded-lg border border-emerald-100 bg-emerald-50">
+                    <img src={imagePreviewUrl} alt="preview" className="w-9 h-9 rounded-lg object-cover border border-emerald-100 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold text-gray-800 truncate">{image?.name}</div>
+                      <div className="text-[10px] text-gray-500">{image ? `${(image.size / 1024).toFixed(1)} KB` : ''}</div>
                     </div>
+                    <button type="button" onClick={() => setImage(null)}
+                      className="text-xs text-red-600 border border-red-200 px-2 py-1 rounded-md hover:bg-red-50 font-medium flex-shrink-0"
+                    >Remove</button>
                   </div>
-                ) : null}
+                )}
 
                 <button
                   onClick={onSubmit}
-                  disabled={submitting}
-                  className="w-full px-5 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={submitting || pendingCount >= 5}
+                  className="w-full py-2.5 text-sm rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {submitting ? 'Publishing...' : 'Publish'}
+                  {submitting ? 'Submitting...' : pendingCount >= 5 ? 'Pending limit reached' : 'Submit for Review'}
                 </button>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-              <div className="text-sm font-semibold text-gray-900">Commission</div>
-              <div className="flex gap-4 mt-2">
-                <div><div className="text-xs text-gray-400">Earned</div><div className="text-base font-bold text-emerald-600">৳{totalEarnings}</div></div>
-                <div><div className="text-xs text-gray-400">Pending</div><div className="text-base font-bold text-gray-800">৳{totalPending}</div></div>
-              </div>
-            </div>
           </div>
 
           <div className="lg:col-span-2 space-y-4">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-              <div className="text-sm font-semibold text-gray-900">My published logos</div>
-              <div className="text-xs text-gray-500 mt-0.5">After you publish, your logos will appear here and in Design Studio library.</div>
-            </div>
+            {/* Single bordered card: Commission + My Logos */}
+            <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-sm overflow-hidden">
 
-            {myItems.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-sm text-gray-600">No logos published yet.</div>
-            ) : (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="max-h-[520px] overflow-y-auto divide-y divide-gray-100">
+              {/* Commission summary */}
+              <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+                <div className="text-sm font-semibold text-gray-900 mb-2">Commission</div>
+                <div className="flex gap-6">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wide text-gray-400 font-medium">Earned</div>
+                    <div className="text-lg font-black text-emerald-600">৳{totalEarnings}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase tracking-wide text-gray-400 font-medium">Pending</div>
+                    <div className="text-lg font-black text-gray-800">৳{totalPending}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* My logos header */}
+              <div className="px-4 pt-3 pb-2 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-semibold text-gray-900">My logos</div>
+                  <div className="flex items-center gap-3 text-[10px] font-semibold">
+                    <span className="flex items-center gap-1 text-amber-600">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block"></span>
+                      {myItems.filter(i => i.approval_status === 'pending').length} pending
+                    </span>
+                    <span className="flex items-center gap-1 text-emerald-600">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
+                      {myItems.filter(i => i.approval_status === 'approved').length} live
+                    </span>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-400 mt-0.5">Logos go live in Design Studio once admin approves.</div>
+              </div>
+
+              {/* Logo list */}
+              {myItems.length === 0 ? (
+                <div className="p-6 text-sm text-gray-500 text-center">No logos submitted yet.</div>
+              ) : (
+                <div className="max-h-[480px] overflow-y-auto divide-y divide-gray-100">
                   {myItems.map((d) => (
-                    <div key={d.id} className="p-3 sm:p-4 flex items-center gap-3">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex-shrink-0">
-                        <img src={toUrl(d.image)} alt={d.name} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-gray-900 truncate">{d.name}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          {d.category && <span className="inline-block bg-gray-100 px-1.5 py-0.5 rounded mr-1">{d.category}</span>}
-                          ৳{d.commission_per_use}/use
+                    <div key={d.id} className={`p-3 sm:p-4 flex items-center gap-3 ${
+                      d.approval_status === 'approved' ? 'bg-emerald-50/30' :
+                      d.approval_status === 'rejected' ? 'bg-red-50/30' : ''
+                    }`}>
+                      {/* Thumbnail with status dot */}
+                      <div className="relative flex-shrink-0">
+                        <div className="w-11 h-11 rounded-xl overflow-hidden bg-gray-50">
+                          <img src={toUrl(d.image)} alt={d.name} className="w-full h-full object-cover" />
                         </div>
+                        {/* Status dot */}
+                        <span className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ${
+                          d.approval_status === 'approved' ? 'bg-emerald-500' :
+                          d.approval_status === 'rejected' ? 'bg-red-500' : 'bg-amber-400'
+                        }`} />
                       </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="text-sm font-semibold text-gray-900 truncate">{d.name}</span>
+                          <span className={`text-[10px] font-semibold whitespace-nowrap flex-shrink-0 ${
+                            d.approval_status === 'approved' ? 'text-emerald-600' :
+                            d.approval_status === 'rejected' ? 'text-red-500' : 'text-amber-600'
+                          }`}>
+                            {d.approval_status === 'approved' ? '· Live' :
+                             d.approval_status === 'rejected' ? '· Rejected' : '· Pending'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          {d.category && <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{d.category}</span>}
+                          <span className="text-[10px] text-gray-400">৳{d.commission_per_use}/use</span>
+                        </div>
+                        {d.approval_status === 'rejected' && d.rejection_reason && (
+                          <div className="text-[10px] text-red-500 mt-0.5 truncate">Reason: {d.rejection_reason}</div>
+                        )}
+                      </div>
+
                       <div className="flex gap-1.5 flex-shrink-0">
-                        <Link
-                          to="/design-studio"
-                          className="px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-xs sm:text-sm hover:bg-emerald-100 transition-colors whitespace-nowrap"
-                        >
-                          <span className="hidden sm:inline">View in Studio</span>
-                          <span className="sm:hidden">Studio</span>
-                        </Link>
+                        {d.approval_status === 'approved' && (
+                          <Link to="/design-studio"
+                            className="px-2 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-xs hover:bg-emerald-100 transition-colors"
+                          >Studio</Link>
+                        )}
                         <button
                           onClick={() => handleDeleteLogo(d.id, d.name)}
-                          className="px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl bg-red-50 text-red-700 border border-red-200 font-semibold text-xs sm:text-sm hover:bg-red-100 transition-colors"
-                          title="Delete logo"
-                        >
-                          🗑️
-                        </button>
+                          className="p-1.5 rounded-lg bg-red-50 text-red-400 border border-red-100 hover:text-red-600 hover:bg-red-100 transition-colors"
+                          title="Delete"
+                        >🗑️</button>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
               <div className="text-sm font-semibold text-gray-900 mb-2">Commission history</div>

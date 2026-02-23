@@ -458,11 +458,23 @@ export const settingsAPI = {
       const response = await api.get('/settings/contact-info');
       return response.data;
     } catch (error) {
-      // Return default contact info if API fails
       return {
         hotline: '19008188',
         email: 'support@lyriczfashion.com',
         address: 'Dhaka, Bangladesh',
+      };
+    }
+  },
+
+  getSiteInfo: async () => {
+    try {
+      const response = await api.get('/settings/site-info');
+      return response.data;
+    } catch (error) {
+      return {
+        site_name: 'LyriczFashion',
+        site_description: 'Design your style, wear your story. Create custom T-shirts with our easy-to-use design studio or shop from talented designers.',
+        logo_url: null,
       };
     }
   },

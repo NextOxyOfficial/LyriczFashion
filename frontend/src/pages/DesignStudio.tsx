@@ -147,38 +147,56 @@ const DesignStudio = () => {
   // Front/Back side toggle
   const [activeSide, setActiveSide] = useState<'front' | 'back'>('front')
 
+  // Upload tab state
+  const [uploadTab, setUploadTab] = useState<'upload' | 'library'>('upload')
+
+  // Multi-logo type
+  type LogoItem = { file: File | null; url: string; pos: { x: number; y: number }; scale: number; rotation: number; libraryId: number | null }
+  const makeLogoItem = (x = 220, y = 180): LogoItem => ({ file: null, url: '', pos: { x, y }, scale: 0.6, rotation: 0, libraryId: null })
+
   // Front side design states
-  const [frontLogoFile, setFrontLogoFile] = useState<File | null>(null)
-  const [frontLogoUrl, setFrontLogoUrl] = useState('')
+  const [frontLogos, setFrontLogos] = useState<LogoItem[]>([makeLogoItem()])
+  const [frontActiveLogoIdx, setFrontActiveLogoIdx] = useState(0)
   const [frontCustomText, setFrontCustomText] = useState('')
   const [frontTextColor, setFrontTextColor] = useState(TEXT_COLORS[0].value)
   const [frontTextFont, setFrontTextFont] = useState(FONTS[0].value)
   const [frontCharColors, setFrontCharColors] = useState<string[]>([])
-  const [frontImagePos, setFrontImagePos] = useState({ x: 220, y: 180 })
-  const [frontImageScale, setFrontImageScale] = useState(0.6)
-  const [frontImageRotation, setFrontImageRotation] = useState(0)
   const [frontTextPos, setFrontTextPos] = useState({ x: 220, y: 280 })
   const [frontTextScale, setFrontTextScale] = useState(0.6)
   const [frontTextRotation, setFrontTextRotation] = useState(0)
 
   // Back side design states
-  const [backLogoFile, setBackLogoFile] = useState<File | null>(null)
-  const [backLogoUrl, setBackLogoUrl] = useState('')
+  const [backLogos, setBackLogos] = useState<LogoItem[]>([makeLogoItem()])
+  const [backActiveLogoIdx, setBackActiveLogoIdx] = useState(0)
   const [backCustomText, setBackCustomText] = useState('')
   const [backTextColor, setBackTextColor] = useState(TEXT_COLORS[0].value)
   const [backTextFont, setBackTextFont] = useState(FONTS[0].value)
   const [backCharColors, setBackCharColors] = useState<string[]>([])
-  const [backImagePos, setBackImagePos] = useState({ x: 220, y: 180 })
-  const [backImageScale, setBackImageScale] = useState(0.6)
-  const [backImageRotation, setBackImageRotation] = useState(0)
   const [backTextPos, setBackTextPos] = useState({ x: 220, y: 280 })
   const [backTextScale, setBackTextScale] = useState(0.6)
   const [backTextRotation, setBackTextRotation] = useState(0)
 
   // Dynamic references based on active side
-  const logoFile = activeSide === 'front' ? frontLogoFile : backLogoFile
-  const setLogoFile = activeSide === 'front' ? setFrontLogoFile : setBackLogoFile
-  const logoUrl = activeSide === 'front' ? frontLogoUrl : backLogoUrl
+  const logos = activeSide === 'front' ? frontLogos : backLogos
+  const setLogos = activeSide === 'front' ? setFrontLogos : setBackLogos
+  const activeLogoIdx = activeSide === 'front' ? frontActiveLogoIdx : backActiveLogoIdx
+  const setActiveLogoIdx = activeSide === 'front' ? setFrontActiveLogoIdx : setBackActiveLogoIdx
+  const activeLogo = logos[activeLogoIdx] ?? logos[0]
+
+  // Helpers to update a specific logo field
+  const updateLogo = (idx: number, patch: Partial<LogoItem>) => {
+    setLogos(prev => prev.map((l, i) => i === idx ? { ...l, ...patch } : l))
+  }
+
+  // Legacy single-logo compat for canvas rendering
+  const logoUrl = activeLogo?.url ?? ''
+  const imagePos = activeLogo?.pos ?? { x: 220, y: 180 }
+  const setImagePos = (pos: { x: number; y: number }) => updateLogo(activeLogoIdx, { pos })
+  const imageScale = activeLogo?.scale ?? 0.6
+  const setImageScale = (scale: number) => updateLogo(activeLogoIdx, { scale })
+  const imageRotation = activeLogo?.rotation ?? 0
+  const setImageRotation = (rotation: number) => updateLogo(activeLogoIdx, { rotation })
+
   const customText = activeSide === 'front' ? frontCustomText : backCustomText
   const setCustomText = activeSide === 'front' ? setFrontCustomText : setBackCustomText
   const textColor = activeSide === 'front' ? frontTextColor : backTextColor
@@ -187,12 +205,6 @@ const DesignStudio = () => {
   const setTextFont = activeSide === 'front' ? setFrontTextFont : setBackTextFont
   const charColors = activeSide === 'front' ? frontCharColors : backCharColors
   const setCharColors = activeSide === 'front' ? setFrontCharColors : setBackCharColors
-  const imagePos = activeSide === 'front' ? frontImagePos : backImagePos
-  const setImagePos = activeSide === 'front' ? setFrontImagePos : setBackImagePos
-  const imageScale = activeSide === 'front' ? frontImageScale : backImageScale
-  const setImageScale = activeSide === 'front' ? setFrontImageScale : setBackImageScale
-  const imageRotation = activeSide === 'front' ? frontImageRotation : backImageRotation
-  const setImageRotation = activeSide === 'front' ? setFrontImageRotation : setBackImageRotation
   const textPos = activeSide === 'front' ? frontTextPos : backTextPos
   const setTextPos = activeSide === 'front' ? setFrontTextPos : setBackTextPos
   const textScale = activeSide === 'front' ? frontTextScale : backTextScale
@@ -200,7 +212,8 @@ const DesignStudio = () => {
   const textRotation = activeSide === 'front' ? frontTextRotation : backTextRotation
   const setTextRotation = activeSide === 'front' ? setFrontTextRotation : setBackTextRotation
 
-  const [selectedCharIndex, setSelectedCharIndex] = useState<number | null>(null)
+  // Multi-select char indices
+  const [selectedCharIndices, setSelectedCharIndices] = useState<Set<number>>(new Set())
   const [draggingImage, setDraggingImage] = useState(false)
   const imageDragOffset = useRef({ dx: 0, dy: 0 })
   const [draggingText, setDraggingText] = useState(false)
@@ -209,9 +222,9 @@ const DesignStudio = () => {
   const [activeElement, setActiveElement] = useState<'image' | 'text' | null>(null)
   const [hoveredElement, setHoveredElement] = useState<'image' | 'text' | null>(null)
 
-  const [frontLibraryDesignId, setFrontLibraryDesignId] = useState<number | null>(null)
-  const [backLibraryDesignId, setBackLibraryDesignId] = useState<number | null>(null)
-  const setLibraryDesignId = activeSide === 'front' ? setFrontLibraryDesignId : setBackLibraryDesignId
+  // library design IDs now stored inside each LogoItem.libraryId
+  const frontLibraryDesignId = frontLogos.find(l => l.libraryId !== null)?.libraryId ?? null
+  const backLibraryDesignId = backLogos.find(l => l.libraryId !== null)?.libraryId ?? null
 
   const [designLibrary, setDesignLibrary] = useState<any[]>([])
   const [loadingDesigns, setLoadingDesigns] = useState(false)
@@ -435,31 +448,9 @@ const DesignStudio = () => {
     }
   }
 
-  useEffect(() => {
-    if (!frontLogoFile) {
-      setFrontLogoUrl('')
-      return
-    }
-    const url = URL.createObjectURL(frontLogoFile)
-    setFrontLogoUrl(url)
-    return () => URL.revokeObjectURL(url)
-  }, [frontLogoFile])
-
-  useEffect(() => {
-    if (!backLogoFile) {
-      setBackLogoUrl('')
-      return
-    }
-    const url = URL.createObjectURL(backLogoFile)
-    setBackLogoUrl(url)
-    return () => URL.revokeObjectURL(url)
-  }, [backLogoFile])
-
   const hasDesign =
-    !!frontLogoUrl ||
-    !!backLogoUrl ||
-    !!frontLibraryDesignId ||
-    !!backLibraryDesignId ||
+    frontLogos.some(l => !!l.url) ||
+    backLogos.some(l => !!l.url) ||
     !!frontCustomText.trim() ||
     !!backCustomText.trim()
 
@@ -640,10 +631,7 @@ const DesignStudio = () => {
     })
     ctx.drawImage(tshirtImg, 0, 0, 900, 900)
 
-    const sideLogoUrl = side === 'front' ? frontLogoUrl : backLogoUrl
-    const sideImagePos = side === 'front' ? frontImagePos : backImagePos
-    const sideImageScale = side === 'front' ? frontImageScale : backImageScale
-    const sideImageRotation = side === 'front' ? frontImageRotation : backImageRotation
+    const sideLogos = side === 'front' ? frontLogos : backLogos
 
     const sideText = side === 'front' ? frontCustomText : backCustomText
     const sideTextPos = side === 'front' ? frontTextPos : backTextPos
@@ -653,19 +641,20 @@ const DesignStudio = () => {
     const sideTextFont = side === 'front' ? frontTextFont : backTextFont
     const sideCharColors = side === 'front' ? frontCharColors : backCharColors
 
-    if (sideLogoUrl) {
+    for (const logo of sideLogos) {
+      if (!logo.url) continue
       const logoImg = await new Promise<HTMLImageElement>((resolve, reject) => {
         const img = new window.Image()
         img.onload = () => resolve(img)
         img.onerror = reject
-        img.src = sideLogoUrl
+        img.src = logo.url
       })
-      const imgDrawX = (sideImagePos.x / rect.width) * 900
-      const imgDrawY = (sideImagePos.y / rect.height) * 900
+      const imgDrawX = (logo.pos.x / rect.width) * 900
+      const imgDrawY = (logo.pos.y / rect.height) * 900
       ctx.save()
       ctx.translate(imgDrawX, imgDrawY)
-      ctx.rotate((sideImageRotation * Math.PI) / 180)
-      const logoW = 260 * sideImageScale
+      ctx.rotate((logo.rotation * Math.PI) / 180)
+      const logoW = 260 * logo.scale
       const logoH = (logoW * logoImg.height) / logoImg.width
       ctx.drawImage(logoImg, -logoW / 2, -logoH / 2, logoW, logoH)
       ctx.restore()
@@ -724,88 +713,50 @@ const DesignStudio = () => {
 
       const unitPrice = Number(selectedVariant.effective_price || selectedMockupType.base_price || 0)
 
+      const buildSideData = (side: 'front' | 'back') => {
+        const sideLogos = side === 'front' ? frontLogos : backLogos
+        const sideText = side === 'front' ? frontCustomText : backCustomText
+        const sideTextPos = side === 'front' ? frontTextPos : backTextPos
+        const sideTextScale = side === 'front' ? frontTextScale : backTextScale
+        const sideTextRotation = side === 'front' ? frontTextRotation : backTextRotation
+        const sideTextColor = side === 'front' ? frontTextColor : backTextColor
+        const sideTextFont = side === 'front' ? frontTextFont : backTextFont
+        const sideCharColors = side === 'front' ? frontCharColors : backCharColors
+        const libId = sideLogos.find(l => l.libraryId !== null)?.libraryId ?? null
+        return {
+          hasLogo: sideLogos.some(l => !!l.url),
+          hasText: !!sideText.trim(),
+          ...(libId ? { library_design_id: libId, design_library_item_id: libId } : {}),
+          logos: sideLogos.filter(l => !!l.url).map(l => ({
+            url: l.url,
+            placement: { x: rect ? l.pos.x / rect.width : 0.5, y: rect ? l.pos.y / rect.height : 0.4, scale: l.scale, rotation: l.rotation }
+          })),
+          ...(sideText.trim() && {
+            textPlacement: { x: rect ? sideTextPos.x / rect.width : 0.5, y: rect ? sideTextPos.y / rect.height : 0.6, scale: sideTextScale, rotation: sideTextRotation },
+            text: sideText, textColor: sideTextColor, textFont: sideTextFont, charColors: sideCharColors
+          }),
+        }
+      }
+
       const designData = {
-        type: logoUrl && customText ? 'image_and_text' : logoUrl ? 'logo_on_mockup' : 'text_on_mockup',
+        type: frontLogos.some(l=>!!l.url) || backLogos.some(l=>!!l.url) ? (customText ? 'image_and_text' : 'logo_on_mockup') : 'text_on_mockup',
         mockupType: selectedMockupType.slug,
         mockupTypeId: selectedMockupType.id,
         mockupVariantId: selectedVariant.id,
         variant: { size: selectedSize, color: selectedColor },
-        sides: {
-          front: {
-            hasLogo: !!frontLogoUrl,
-            hasText: !!frontCustomText.trim(),
-            ...(frontLibraryDesignId ? { library_design_id: frontLibraryDesignId, design_library_item_id: frontLibraryDesignId } : {}),
-            ...(frontLogoUrl && {
-              imagePlacement: { 
-                x: rect ? frontImagePos.x / rect.width : 0.5, 
-                y: rect ? frontImagePos.y / rect.height : 0.4, 
-                scale: frontImageScale, 
-                rotation: frontImageRotation 
-              }
-            }),
-            ...(frontCustomText.trim() && {
-              textPlacement: { 
-                x: rect ? frontTextPos.x / rect.width : 0.5, 
-                y: rect ? frontTextPos.y / rect.height : 0.6, 
-                scale: frontTextScale, 
-                rotation: frontTextRotation 
-              },
-              text: frontCustomText,
-              textColor: frontTextColor,
-              textFont: frontTextFont,
-              charColors: frontCharColors
-            }),
-          },
-          back: {
-            hasLogo: !!backLogoUrl,
-            hasText: !!backCustomText.trim(),
-            ...(backLibraryDesignId ? { library_design_id: backLibraryDesignId, design_library_item_id: backLibraryDesignId } : {}),
-            ...(backLogoUrl && {
-              imagePlacement: { 
-                x: rect ? backImagePos.x / rect.width : 0.5, 
-                y: rect ? backImagePos.y / rect.height : 0.4, 
-                scale: backImageScale, 
-                rotation: backImageRotation 
-              }
-            }),
-            ...(backCustomText.trim() && {
-              textPlacement: { 
-                x: rect ? backTextPos.x / rect.width : 0.5, 
-                y: rect ? backTextPos.y / rect.height : 0.6, 
-                scale: backTextScale, 
-                rotation: backTextRotation 
-              },
-              text: backCustomText,
-              textColor: backTextColor,
-              textFont: backTextFont,
-              charColors: backCharColors
-            }),
-          }
-        },
-        // Legacy fields for backward compatibility
-        ...(logoUrl && {
-          imagePlacement: { x: rect ? imagePos.x / rect.width : 0.5, y: rect ? imagePos.y / rect.height : 0.4, scale: imageScale, rotation: imageRotation }
-        }),
-        ...(customText && {
-          textPlacement: { x: rect ? textPos.x / rect.width : 0.5, y: rect ? textPos.y / rect.height : 0.6, scale: textScale, rotation: textRotation },
-          text: customText,
-          textColor,
-          textFont,
-          charColors
-        }),
+        sides: { front: buildSideData('front'), back: buildSideData('back') },
       }
 
-      // Use front logo as primary, or back logo if front doesn't exist
-      const primaryLogo = frontLogoFile || backLogoFile || undefined
+      const primaryLogoFile = frontLogos.find(l => !!l.file)?.file || backLogos.find(l => !!l.file)?.file || undefined
 
       const productPayload = {
         name: designName,
         price: unitPrice,
         stock: 9999,
-        design_logo: primaryLogo,
+        design_logo: primaryLogoFile,
         design_preview: previewFile,
-        design_logo_front: frontLogoFile || undefined,
-        design_logo_back: backLogoFile || undefined,
+        design_logo_front: frontLogos.find(l => !!l.file)?.file || undefined,
+        design_logo_back: backLogos.find(l => !!l.file)?.file || undefined,
         design_preview_front: frontPreviewFile || undefined,
         design_preview_back: backPreviewFile || undefined,
         design_data: designData,
@@ -848,67 +799,41 @@ const DesignStudio = () => {
 
     // Store design data in localStorage to pass to seller page
     const rect = containerRef.current?.getBoundingClientRect()
-    const hasAnyLogo = !!frontLogoUrl || !!backLogoUrl || !!frontLibraryDesignId || !!backLibraryDesignId
+    const hasAnyLogo = frontLogos.some(l => !!l.url) || backLogos.some(l => !!l.url)
     const hasAnyText = !!frontCustomText.trim() || !!backCustomText.trim()
-    
+
+    const buildSellSideData = (side: 'front' | 'back') => {
+      const sideLogos = side === 'front' ? frontLogos : backLogos
+      const sideText = side === 'front' ? frontCustomText : backCustomText
+      const sideTextPos = side === 'front' ? frontTextPos : backTextPos
+      const sideTextScale = side === 'front' ? frontTextScale : backTextScale
+      const sideTextRotation = side === 'front' ? frontTextRotation : backTextRotation
+      const sideTextColor = side === 'front' ? frontTextColor : backTextColor
+      const sideTextFont = side === 'front' ? frontTextFont : backTextFont
+      const sideCharColors = side === 'front' ? frontCharColors : backCharColors
+      const libId = sideLogos.find(l => l.libraryId !== null)?.libraryId ?? null
+      return {
+        hasLogo: sideLogos.some(l => !!l.url),
+        hasText: !!sideText.trim(),
+        ...(libId ? { library_design_id: libId, design_library_item_id: libId } : {}),
+        logos: sideLogos.filter(l => !!l.url).map(l => ({
+          url: l.url,
+          placement: { x: rect ? l.pos.x / rect.width : 0.5, y: rect ? l.pos.y / rect.height : 0.4, scale: l.scale, rotation: l.rotation }
+        })),
+        ...(sideText.trim() && {
+          textPlacement: { x: rect ? sideTextPos.x / rect.width : 0.5, y: rect ? sideTextPos.y / rect.height : 0.6, scale: sideTextScale, rotation: sideTextRotation },
+          text: sideText, textColor: sideTextColor, textFont: sideTextFont, charColors: sideCharColors
+        }),
+      }
+    }
+
     const designData = {
       type: hasAnyLogo && hasAnyText ? 'image_and_text' : hasAnyLogo ? 'logo_on_mockup' : 'text_on_mockup',
       mockupType: selectedMockupType.slug,
       mockupTypeId: selectedMockupType.id,
       mockupVariantId: selectedVariant.id,
       variant: { size: selectedSize, color: selectedColor },
-      sides: {
-        front: {
-          hasLogo: !!frontLogoUrl,
-          hasText: !!frontCustomText.trim(),
-          ...(frontLibraryDesignId ? { library_design_id: frontLibraryDesignId, design_library_item_id: frontLibraryDesignId } : {}),
-          ...(frontLogoUrl && {
-            imagePlacement: { 
-              x: rect ? frontImagePos.x / rect.width : 0.5, 
-              y: rect ? frontImagePos.y / rect.height : 0.4, 
-              scale: frontImageScale, 
-              rotation: frontImageRotation 
-            }
-          }),
-          ...(frontCustomText.trim() && {
-            textPlacement: { 
-              x: rect ? frontTextPos.x / rect.width : 0.5, 
-              y: rect ? frontTextPos.y / rect.height : 0.6, 
-              scale: frontTextScale, 
-              rotation: frontTextRotation 
-            },
-            text: frontCustomText,
-            textColor: frontTextColor,
-            textFont: frontTextFont,
-            charColors: frontCharColors
-          }),
-        },
-        back: {
-          hasLogo: !!backLogoUrl,
-          hasText: !!backCustomText.trim(),
-          ...(backLibraryDesignId ? { library_design_id: backLibraryDesignId, design_library_item_id: backLibraryDesignId } : {}),
-          ...(backLogoUrl && {
-            imagePlacement: { 
-              x: rect ? backImagePos.x / rect.width : 0.5, 
-              y: rect ? backImagePos.y / rect.height : 0.4, 
-              scale: backImageScale, 
-              rotation: backImageRotation 
-            }
-          }),
-          ...(backCustomText.trim() && {
-            textPlacement: { 
-              x: rect ? backTextPos.x / rect.width : 0.5, 
-              y: rect ? backTextPos.y / rect.height : 0.6, 
-              scale: backTextScale, 
-              rotation: backTextRotation 
-            },
-            text: backCustomText,
-            textColor: backTextColor,
-            textFont: backTextFont,
-            charColors: backCharColors
-          }),
-        }
-      }
+      sides: { front: buildSellSideData('front'), back: buildSellSideData('back') }
     }
 
     localStorage.setItem('sellerDesignData', JSON.stringify({
@@ -923,16 +848,14 @@ const DesignStudio = () => {
   const selectDesignFromLibrary = async (design: any) => {
     try {
       const id = Number(design?.id)
-      setLibraryDesignId(Number.isFinite(id) ? id : null)
       const imageUrl = toUrl(design.image || design.design_logo || design.design_preview)
       if (!imageUrl) return
-      if (activeSide === 'front') {
-        setFrontLogoUrl(imageUrl)
-        setFrontLogoFile(null)
-      } else {
-        setBackLogoUrl(imageUrl)
-        setBackLogoFile(null)
-      }
+      setLogos(prev => {
+        // Replace active logo slot with library design
+        const next = [...prev]
+        next[activeLogoIdx] = { ...next[activeLogoIdx], url: imageUrl, file: null, libraryId: Number.isFinite(id) ? id : null }
+        return next
+      })
     } catch (e) { console.error('Failed to load design:', e) }
   }
 
@@ -971,7 +894,7 @@ const DesignStudio = () => {
           ) : mockupTypes.length === 0 ? (
             <div className="py-10 text-center text-sm text-gray-500">No apparel types found. Add mockups from Django Admin.</div>
           ) : (
-            <div className="p-1 flex gap-2 sm:gap-4 overflow-x-auto pb-1 scrollbar-hide">
+            <div className="p-1 flex gap-2 sm:gap-4 overflow-x-auto pb-1 scrollbar-hide justify-start lg:justify-center">
               {mockupTypes.map((m) => (
                 <button
                   key={m.id}
@@ -1006,285 +929,212 @@ const DesignStudio = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Left Panel - Controls */}
           <div className="lg:col-span-1 space-y-3">
-            {/* Design Mode */}
             <div className="bg-white rounded-xl shadow-sm border border-emerald-100 px-2 py-4 space-y-4">
-              {/* Upload Image Section */}
-              <div className="space-y-3">
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-3">
-                    <ImageIcon className="w-5 h-5 text-emerald-600" />
-                    Upload Your Design
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        setLibraryDesignId(null)
-                        setLogoFile(e.target.files?.[0] || null)
-                      }}
-                      className="w-full text-sm border-2 border-dashed border-emerald-200 rounded-xl p-4 bg-gradient-to-br from-emerald-50 to-white hover:border-emerald-400 hover:bg-emerald-50 transition-all cursor-pointer file:mr-4 file:py-2 file:px-5 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer file:shadow-sm"
-                    />
-                  </div>
-                  {logoFile && (
-                    <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-white border border-emerald-100">
-                        <img src={logoUrl} alt="Preview" className="w-full h-full object-cover" />
+
+              {/* Upload Your Design — tabbed */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 mb-2">
+                  <ImageIcon className="w-5 h-5 text-emerald-600" /> Upload Your Design
+                </label>
+                <div className="flex gap-1 mb-3 bg-gray-100 rounded-lg p-1">
+                  {(['upload','library'] as const).map(tab => (
+                    <button key={tab} onClick={() => setUploadTab(tab)}
+                      className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-all capitalize ${uploadTab === tab ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+                {uploadTab === 'upload' ? (
+                  <div className="space-y-2">
+                    {/* Uploaded logos — row by row, up to 3 */}
+                    {logos.some(l => !!l.url) && (
+                      <div className="space-y-1.5">
+                        {logos.map((logo, idx) => logo.url ? (
+                          <div key={idx}
+                            onClick={() => setActiveLogoIdx(idx)}
+                            className={`flex items-center gap-2 p-2 rounded-xl border-2 cursor-pointer transition-all ${activeLogoIdx === idx ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-gray-50 hover:border-emerald-300'}`}
+                          >
+                            <img src={logo.url} alt="" className="w-10 h-10 rounded-lg object-cover border border-gray-200 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-xs font-bold ${activeLogoIdx === idx ? 'text-emerald-700' : 'text-gray-600'}`}>Logo {idx + 1}</p>
+                              <p className="text-[10px] text-gray-500 truncate">{logo.file?.name || 'Library design'}</p>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                // Remove this logo; compact the array
+                                setLogos(prev => {
+                                  const next = prev.filter((_, i) => i !== idx)
+                                  return next.length > 0 ? next : [makeLogoItem()]
+                                })
+                                setActiveLogoIdx(0)
+                              }}
+                              className="flex-shrink-0 p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Remove"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : null)}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-800 truncate">{logoFile.name}</p>
-                        <p className="text-xs text-gray-500">{(logoFile.size / 1024).toFixed(1)} KB</p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setLibraryDesignId(null)
-                          setLogoFile(null)
+                    )}
+
+                    {/* Single file input — each upload adds a new logo row (up to 3) */}
+                    {logos.filter(l => !!l.url).length < 3 && (
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0]
+                          if (!f) return
+                          const url = URL.createObjectURL(f)
+                          setLogos(prev => {
+                            // Find first empty slot or append
+                            const emptyIdx = prev.findIndex(l => !l.url)
+                            if (emptyIdx !== -1) {
+                              const next = [...prev]
+                              next[emptyIdx] = { ...next[emptyIdx], file: f, url, libraryId: null }
+                              setActiveLogoIdx(emptyIdx)
+                              return next
+                            } else if (prev.length < 3) {
+                              const ni = prev.length
+                              setActiveLogoIdx(ni)
+                              return [...prev, { ...makeLogoItem(180+ni*40, 180+ni*30), file: f, url, libraryId: null }]
+                            }
+                            return prev
+                          })
+                          e.target.value = ''
                         }}
-                        className="text-red-500 hover:text-red-700 text-xs font-medium px-3 py-1 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        Remove
+                        className="w-full text-sm border-2 border-dashed border-emerald-200 rounded-xl p-3 bg-gradient-to-br from-emerald-50 to-white hover:border-emerald-400 transition-all cursor-pointer file:mr-3 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer"
+                      />
+                    )}
+
+                    {logos.filter(l => !!l.url).length >= 3 && (
+                      <p className="text-xs text-center text-gray-400 py-1">Maximum 3 logos reached</p>
+                    )}
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5">
+                      <p className="text-xs text-blue-800 font-medium mb-1">💡 Tips:</p>
+                      <ul className="text-xs text-blue-700 space-y-0.5 ml-3">
+                        <li>• PNG with transparent background</li>
+                        <li>• Min 500×500px, under 5MB</li>
+                        <li>• Upload up to 3 logos per side</li>
+                      </ul>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2 overflow-hidden">
+                      <div className="flex-1 min-w-0 transition-all duration-300" style={{ maxWidth: librarySearchOpen ? '0px' : '100%', opacity: librarySearchOpen ? 0 : 1, pointerEvents: librarySearchOpen ? 'none' : 'auto', overflow: 'hidden', flexShrink: librarySearchOpen ? 1 : 0 }}>
+                        <select value={libraryCategory} onChange={(e) => setLibraryCategory(e.target.value)} className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                          <option value="">All Categories</option>
+                          {categories.map((cat) => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="min-w-0 transition-all duration-300" style={{ flex: librarySearchOpen ? '1 1 0%' : '0 0 0%', maxWidth: librarySearchOpen ? '100%' : '0px', opacity: librarySearchOpen ? 1 : 0, pointerEvents: librarySearchOpen ? 'auto' : 'none', overflow: 'hidden' }}>
+                        <div className="flex items-center gap-1 border border-emerald-400 rounded-lg px-2 py-2 bg-white">
+                          <Search className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                          <input type="text" value={librarySearch} onChange={(e) => setLibrarySearch(e.target.value)} placeholder="Search..."
+                            ref={(el) => { if (librarySearchOpen && el) setTimeout(() => el.focus(), 320) }}
+                            className="flex-1 text-xs bg-transparent focus:outline-none min-w-0" />
+                          {librarySearch && <button onClick={() => setLibrarySearch('')}><X className="w-3 h-3 text-gray-400" /></button>}
+                        </div>
+                      </div>
+                      <button onClick={() => { setLibrarySearchOpen(!librarySearchOpen); if (librarySearchOpen) setLibrarySearch('') }}
+                        className={`p-2 rounded-lg border flex-shrink-0 transition-all ${librarySearchOpen ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-200 text-gray-500 hover:border-emerald-400 hover:bg-emerald-50'}`}>
+                        {librarySearchOpen ? <X className="w-3.5 h-3.5" /> : <Search className="w-3.5 h-3.5" />}
                       </button>
                     </div>
-                  )}
-                </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-xs text-blue-800 font-medium mb-1">💡 Tips for best results:</p>
-                  <ul className="text-xs text-blue-700 space-y-0.5 ml-4">
-                    <li>• Use PNG format with transparent background</li>
-                    <li>• Minimum resolution: 500x500 pixels</li>
-                    <li>• Keep file size under 5MB</li>
-                  </ul>
-                </div>
+                    {loadingDesigns ? (
+                      <div className="flex justify-center py-6"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600" /></div>
+                    ) : designLibrary.length > 0 ? (
+                      <div className="grid grid-cols-4 gap-1.5 max-h-48 overflow-y-auto"
+                        onScroll={(e) => { const {scrollTop,scrollHeight,clientHeight} = e.currentTarget; if (scrollHeight-scrollTop <= clientHeight+10 && libraryHasMore && !libraryLoadingMore) loadMoreDesigns() }}>
+                        {designLibrary.map((d) => (
+                          <button key={d.id} onClick={() => selectDesignFromLibrary(d)}
+                            className={`p-1.5 border rounded-lg hover:border-emerald-400 transition-all ${activeLogo?.libraryId === d.id ? 'border-emerald-500 bg-emerald-50' : 'border-gray-100'}`}>
+                            <img src={toUrl(d.image||d.design_logo||d.design_preview)||''} alt={d.name} className="w-full aspect-square object-cover rounded" />
+                          </button>
+                        ))}
+                        {libraryLoadingMore && <div className="col-span-4 flex justify-center py-2"><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600" /></div>}
+                      </div>
+                    ) : <p className="text-xs text-gray-400 text-center py-4">No designs available</p>}
+                  </div>
+                )}
               </div>
 
               {/* Text Design Section */}
-              <div className="bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 rounded-xl p-5 space-y-4">
-                {/* Text Input */}
+              <div className="bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 rounded-xl p-4 space-y-3">
                 <div>
                   <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                    <Type className="w-4 h-4 text-emerald-600" />
-                    Your Text
+                    <Type className="w-4 h-4 text-emerald-600" /> Your Text
                   </label>
-                  <input
-                    value={customText}
-                      onChange={(e) => {
-                        const newText = e.target.value
-                        setCustomText(newText)
-                        setCharColors(prev => {
-                          const newColors = [...prev]
-                          while (newColors.length < newText.length) {
-                            newColors.push(textColor)
-                          }
-                          return newColors.slice(0, newText.length)
-                        })
-                      }}
-                      placeholder="Type your custom text..."
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:border-emerald-400 bg-white transition-all"
-                    />
-                  </div>
-                  
-                  {/* Font Selector */}
+                  <input value={customText}
+                    onChange={(e) => { const t = e.target.value; setCustomText(t); setCharColors(prev => { const nc=[...prev]; while(nc.length<t.length) nc.push(textColor); return nc.slice(0,t.length) }); setSelectedCharIndices(new Set()) }}
+                    placeholder="Type your custom text..."
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-emerald-500 bg-white transition-all" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Font Style</label>
+                  <select value={textFont} onChange={(e) => setTextFont(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-emerald-500 bg-white cursor-pointer">
+                    {FONTS.map((f) => <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>{f.name}</option>)}
+                  </select>
+                </div>
+                {customText.replace(/\s/g,'').length > 0 && (
                   <div>
-                    <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-3">
-                      <svg className="w-4 h-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                      Choose Font Style
-                    </label>
-                    <select
-                      value={textFont}
-                      onChange={(e) => setTextFont(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-emerald-500 bg-white cursor-pointer hover:border-gray-300 transition-all"
-                    >
-                      {FONTS.map((f) => (
-                        <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>
-                          {f.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Per-character color display */}
-                  {customText && customText.replace(/\s/g, '').length > 0 && (
-                    <div>
-                      <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-3">
-                        <svg className="w-4 h-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                        Click Letters to Customize
-                      </label>
-                      <div className="flex flex-wrap gap-1 p-3 bg-white rounded-lg border border-gray-200 min-h-[45px]">
-                        {customText.split('').filter(char => char !== ' ').map((char, originalIdx) => {
-                          const idx = customText.split('').findIndex((c, i) => c === char && customText.split('').slice(0, i).filter(ch => ch !== ' ').length === originalIdx);
-                          return (
-                            <button
-                              key={idx}
-                              onClick={() => setSelectedCharIndex(selectedCharIndex === idx ? null : idx)}
-                              className={`px-2 py-1 text-lg font-bold rounded-lg transition-all ${
-                                selectedCharIndex === idx 
-                                  ? 'ring-2 ring-emerald-500 bg-emerald-50 shadow-sm scale-105' 
-                                  : 'hover:bg-gray-50'
-                              }`}
-                              style={{ color: charColors[idx] || textColor }}
-                            >
-                              {char}
-                            </button>
-                          );
-                        })}
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-semibold text-gray-700">Select Letters</label>
+                      <div className="flex gap-1">
+                        <button onClick={() => setSelectedCharIndices(new Set(customText.split('').map((_,i)=>i)))} className="text-[10px] px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded font-semibold hover:bg-emerald-200">All</button>
+                        <button onClick={() => setSelectedCharIndices(new Set())} className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded font-semibold hover:bg-gray-200">None</button>
                       </div>
                     </div>
-                  )}
-
-                  {/* Color Palette */}
-                  <div>
-                    <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-3">
-                      <svg className="w-4 h-4 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                      </svg>
-                      {selectedCharIndex !== null ? `Color for "${customText[selectedCharIndex]}"` : 'Default Text Color'}
-                    </label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {TEXT_COLORS.map((c) => (
-                        <button
-                          key={c.value}
-                          onClick={() => {
-                            if (selectedCharIndex !== null) {
-                              setCharColors(prev => {
-                                const newColors = [...prev]
-                                newColors[selectedCharIndex] = c.value
-                                return newColors
-                              })
+                    <div className="flex flex-wrap gap-2 p-2 bg-white rounded-lg border border-gray-200 min-h-[36px]">
+                      {customText.split('').map((char, idx) => (
+                        <button key={idx}
+                          onClick={(e) => {
+                            if (e.shiftKey && selectedCharIndices.size > 0) {
+                              const last = Math.max(...Array.from(selectedCharIndices))
+                              const [from,to] = [Math.min(last,idx), Math.max(last,idx)]
+                              const next = new Set(selectedCharIndices); for(let i=from;i<=to;i++) next.add(i); setSelectedCharIndices(next)
                             } else {
-                              setTextColor(c.value)
-                              setCharColors(prev => prev.map((col) => col === textColor ? c.value : col))
+                              const next = new Set(selectedCharIndices); if(next.has(idx)) next.delete(idx); else next.add(idx); setSelectedCharIndices(next)
                             }
                           }}
-                          className={`w-8 h-8 rounded-lg border-2 transition-all hover:scale-105 ${
-                            (selectedCharIndex !== null ? charColors[selectedCharIndex] : textColor) === c.value 
-                              ? 'border-emerald-500 scale-105 shadow-md ring-2 ring-emerald-200' 
-                              : 'border-gray-300 hover:border-gray-400'
-                          }`}
-                          style={{ backgroundColor: c.value }}
-                          title={c.name}
-                        />
+                          className={`px-1.5 py-0.5 text-base font-bold rounded transition-all ${selectedCharIndices.has(idx) ? 'ring-2 ring-emerald-500 bg-emerald-50 scale-105' : 'hover:bg-gray-50'}`}
+                          style={{ color: charColors[idx]||textColor, whiteSpace:'pre' }}>{char}</button>
                       ))}
                     </div>
+                    {selectedCharIndices.size > 0 && <p className="text-[10px] text-emerald-600 mt-1">{selectedCharIndices.size} selected — pick color below</p>}
                   </div>
-                </div>
-            </div>
-
-
-            {/* Design Library */}
-            <div className="bg-white rounded-xl shadow-sm border border-emerald-100 p-4">
-              <h3 className="font-semibold text-emerald-700 mb-3 text-base flex items-center gap-2">
-                <Layers className="w-5 h-5" /> Design Library
-              </h3>
-              
-              {/* Filters */}
-              <div className="mb-3">
-                <div className="flex items-center gap-2 overflow-hidden">
-                  {/* Category select - slides out when search opens */}
-                  <div
-                    className="flex-1 min-w-0 transition-all duration-300 ease-in-out"
-                    style={{
-                      maxWidth: librarySearchOpen ? '0px' : '100%',
-                      opacity: librarySearchOpen ? 0 : 1,
-                      pointerEvents: librarySearchOpen ? 'none' : 'auto',
-                      overflow: 'hidden',
-                      flexShrink: librarySearchOpen ? 1 : 0,
-                    }}
-                  >
-                    <select
-                      value={libraryCategory}
-                      onChange={(e) => setLibraryCategory(e.target.value)}
-                      className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    >
-                      <option value="">All Categories</option>
-                      {categories.map((cat) => (
-                        <option key={cat.id} value={cat.name}>{cat.name}</option>
-                      ))}
-                    </select>
+                )}
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 mb-1.5 block">
+                    {selectedCharIndices.size > 0 ? `Color for ${selectedCharIndices.size} selected` : 'Default Text Color'}
+                  </label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {TEXT_COLORS.map((c) => (
+                      <button key={c.value}
+                        onClick={() => {
+                          if (selectedCharIndices.size > 0) {
+                            setCharColors(prev => { const nc=[...prev]; selectedCharIndices.forEach(i => { nc[i]=c.value }); return nc })
+                          } else {
+                            setTextColor(c.value)
+                            setCharColors(prev => prev.map(col => col===textColor ? c.value : col))
+                          }
+                        }}
+                        className={`w-8 h-8 rounded-lg border-2 transition-all hover:scale-105 ${
+                          (selectedCharIndices.size>0 ? [...selectedCharIndices].every(i=>charColors[i]===c.value) : textColor===c.value)
+                            ? 'border-emerald-500 scale-105 shadow-md ring-2 ring-emerald-200' : 'border-gray-300 hover:border-gray-400'
+                        }`}
+                        style={{ backgroundColor: c.value }} title={c.name} />
+                    ))}
                   </div>
-
-                  {/* Search input - slides in when search opens */}
-                  <div
-                    className="min-w-0 transition-all duration-300 ease-in-out"
-                    style={{
-                      flex: librarySearchOpen ? '1 1 0%' : '0 0 0%',
-                      maxWidth: librarySearchOpen ? '100%' : '0px',
-                      opacity: librarySearchOpen ? 1 : 0,
-                      pointerEvents: librarySearchOpen ? 'auto' : 'none',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <div className="flex items-center gap-1 border border-emerald-400 rounded-lg px-2 py-2.5 bg-white ring-1 ring-emerald-100">
-                      <Search className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                      <input
-                        type="text"
-                        value={librarySearch}
-                        onChange={(e) => setLibrarySearch(e.target.value)}
-                        placeholder="Search designs..."
-                        ref={(el) => { if (librarySearchOpen && el) setTimeout(() => el.focus(), 320) }}
-                        className="flex-1 text-xs bg-transparent focus:outline-none min-w-0"
-                      />
-                      {librarySearch && (
-                        <button onClick={() => setLibrarySearch('')} className="flex-shrink-0">
-                          <X className="w-3 h-3 text-gray-400 hover:text-gray-600" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Toggle button */}
-                  <button
-                    onClick={() => { setLibrarySearchOpen(!librarySearchOpen); if (librarySearchOpen) setLibrarySearch('') }}
-                    className={`p-2 rounded-lg border transition-all duration-200 flex-shrink-0 ${
-                      librarySearchOpen
-                        ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm'
-                        : 'border-gray-200 text-gray-500 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50'
-                    }`}
-                  >
-                    <div className="transition-transform duration-200" style={{ transform: librarySearchOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}>
-                      {librarySearchOpen ? <X className="w-3.5 h-3.5" /> : <Search className="w-3.5 h-3.5" />}
-                    </div>
-                  </button>
                 </div>
               </div>
-
-              {loadingDesigns ? (
-                <div className="flex justify-center py-6">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
-                </div>
-              ) : designLibrary.length > 0 ? (
-                <div 
-                  className="grid grid-cols-4 gap-1.5 max-h-48 overflow-y-auto"
-                  onScroll={(e) => {
-                    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
-                    if (scrollHeight - scrollTop <= clientHeight + 10 && libraryHasMore && !libraryLoadingMore) {
-                      loadMoreDesigns()
-                    }
-                  }}
-                >
-                  {designLibrary.map((d) => (
-                    <button key={d.id} onClick={() => selectDesignFromLibrary(d)}
-                      className="p-1.5 border border-gray-100 rounded-lg hover:border-emerald-400 hover:shadow transition-all">
-                      <img src={toUrl(d.image || d.design_logo || d.design_preview) || ''} alt={d.name}
-                        className="w-full aspect-square object-cover rounded" />
-                      {d.category && (
-                        <div className="text-xs text-gray-500 truncate mt-1">{d.category}</div>
-                      )}
-                    </button>
-                  ))}
-                  {libraryLoadingMore && (
-                    <div className="col-span-3 flex justify-center py-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-xs text-gray-400 text-center py-4">No designs available</p>
-              )}
             </div>
+
           </div>
 
           {/* Right Panel - Mockup Editor (Larger) */}
@@ -1354,7 +1204,7 @@ const DesignStudio = () => {
 
               <div
                 ref={containerRef}
-                className="relative w-full max-w-md mx-auto aspect-square select-none"
+                className="relative w-full max-w-sm mx-auto aspect-square select-none"
                 onMouseMove={onMouseMove}
                 onMouseUp={onMouseUp}
                 onMouseLeave={onMouseUp}
@@ -1377,41 +1227,32 @@ const DesignStudio = () => {
                   </div>
                 )}
 
-                {(activeSide === 'front' ? frontLogoUrl : backLogoUrl) && (
+                {logos.map((logo, idx) => logo.url ? (
                   <div
+                    key={idx}
                     className="absolute"
-                    style={{
-                      left: imagePos.x, top: imagePos.y,
-                      transform: 'translate(-50%, -50%)',
-                    }}
-                    onMouseEnter={() => setHoveredElement('image')}
+                    style={{ left: logo.pos.x, top: logo.pos.y, transform: 'translate(-50%, -50%)' }}
+                    onMouseEnter={() => { setHoveredElement('image'); setActiveLogoIdx(idx) }}
                     onMouseLeave={() => setHoveredElement(null)}
                   >
                     <img
-                      key={activeSide}
-                      src={activeSide === 'front' ? frontLogoUrl : backLogoUrl}
+                      src={logo.url}
                       alt="design"
-                      onMouseDown={onMouseDownImage}
-                      onTouchStart={onTouchStartImage}
+                      onMouseDown={(e) => { setActiveLogoIdx(idx); onMouseDownImage(e) }}
+                      onTouchStart={(e) => { setActiveLogoIdx(idx); onTouchStartImage(e) }}
                       className="cursor-move drop-shadow-sm touch-none"
                       style={{
-                        width: `${260 * imageScale}px`,
-                        transform: `rotate(${imageRotation}deg)`,
-                        transition: draggingImage ? 'none' : 'transform 0.1s',
+                        width: `${260 * logo.scale}px`,
+                        transform: `rotate(${logo.rotation}deg)`,
+                        transition: (draggingImage && activeLogoIdx === idx) ? 'none' : 'transform 0.1s',
                       }}
                       draggable={false}
                     />
-                    {hoveredElement === 'image' && (
+                    {hoveredElement === 'image' && activeLogoIdx === idx && (
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setLibraryDesignId(null)
-                          setLogoFile(null);
-                        }}
+                        onClick={(e) => { e.stopPropagation(); updateLogo(idx, { file: null, url: '', libraryId: null }) }}
                         className="absolute top-0 right-0 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all z-10"
-                        style={{
-                          transform: 'translate(50%, -50%)'
-                        }}
+                        style={{ transform: 'translate(50%, -50%)' }}
                         title="Delete image"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1420,7 +1261,7 @@ const DesignStudio = () => {
                       </button>
                     )}
                   </div>
-                )}
+                ) : null)}
 
                 {(activeSide === 'front' ? frontCustomText : backCustomText) && (
                   <div
@@ -1589,7 +1430,7 @@ const DesignStudio = () => {
                         type="range" 
                         min={0.05} 
                         max={1.5} 
-                        step={0.05} 
+                        step={0.01} 
                         value={activeElement === 'image' ? imageScale : textScale} 
                         onChange={(e) => activeElement === 'image' ? setImageScale(Number(e.target.value)) : setTextScale(Number(e.target.value))}
                         className="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
@@ -1639,7 +1480,7 @@ const DesignStudio = () => {
               </div>
 
               {/* Price & Add to Cart */}
-              <div className="mt-4 max-w-md mx-auto">
+              <div className="mt-4">
                 <div className="flex items-center gap-2 p-2 bg-white rounded-2xl shadow-md border border-emerald-100">
                   {/* Product info + price */}
                   <div className="flex flex-col justify-center pl-2 min-w-0 flex-1">

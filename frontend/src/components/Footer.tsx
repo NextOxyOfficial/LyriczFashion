@@ -1,23 +1,21 @@
 import { Link } from 'react-router-dom'
 import { Facebook, Instagram, Twitter, Mail, Send, Sparkles, ShoppingBag, Truck, Shield, Smartphone, Phone } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { settingsAPI } from '../services/api'
+import { settingsAPI, toApiUrl } from '../services/api'
 
 const Footer = () => {
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
-  const [contactInfo, setContactInfo] = useState({ hotline: '19008188', email: 'support@lyriczfashion.com', address: 'Dhaka, Bangladesh' })
+  const [siteSettings, setSiteSettings] = useState<any>({
+    hotline: '19008188', email: 'support@lyriczfashion.com', address: 'Dhaka, Bangladesh',
+    site_name: 'LyriczFashion', logo: null,
+    meta_description: 'Design your style, wear your story. Create custom T-shirts with our easy-to-use design studio or shop from talented designers.',
+  })
 
   useEffect(() => {
-    const fetchContactInfo = async () => {
-      try {
-        const contact = await settingsAPI.getContactInfo()
-        setContactInfo(contact)
-      } catch (error) {
-        console.error('Failed to fetch contact info:', error)
-      }
-    }
-    fetchContactInfo()
+    settingsAPI.getContactInfo().then(data => {
+      if (data) setSiteSettings(data)
+    }).catch(() => {})
   }, [])
 
   const handleSubscribe = (e: React.FormEvent) => {
@@ -65,13 +63,19 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-2 lg:col-span-2 px-2 sm:px-0 flex flex-col items-center text-center">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
-                <Sparkles className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <span className="text-xl sm:text-2xl font-bold text-white">LyriczFashion</span>
+              {siteSettings.logo ? (
+                <img src={toApiUrl(siteSettings.logo)} alt={siteSettings.site_name || 'Logo'} className="h-8 sm:h-10 w-auto object-contain" />
+              ) : (
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <Sparkles className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                </div>
+              )}
+              {!siteSettings.logo && (
+                <span className="text-xl sm:text-2xl font-bold text-white">{siteSettings.site_name || 'LyriczFashion'}</span>
+              )}
             </div>
             <p className="text-sm sm:text-base text-gray-400 mb-4 leading-relaxed max-w-xs">
-              Design your style, wear your story. Create custom T-shirts with our easy-to-use design studio or shop from talented designers.
+              {siteSettings.meta_description || 'Design your style, wear your story. Create custom T-shirts with our easy-to-use design studio or shop from talented designers.'}
             </p>
             <div className="flex flex-wrap justify-center gap-3 mb-6">
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:bg-emerald-600 hover:text-white transition-colors">
@@ -200,13 +204,13 @@ const Footer = () => {
 
         {/* Contact Info - centered below grid */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-10 py-5 border-t border-gray-800 mt-6">
-          <a href={`tel:${contactInfo.hotline}`} className="text-gray-400 hover:text-emerald-400 transition-colors inline-flex items-center gap-2 text-sm">
+          <a href={`tel:${siteSettings.hotline}`} className="text-gray-400 hover:text-emerald-400 transition-colors inline-flex items-center gap-2 text-sm">
             <Phone className="w-4 h-4 text-emerald-500" />
-            {contactInfo.hotline}
+            {siteSettings.hotline}
           </a>
-          <a href={`mailto:${contactInfo.email}`} className="text-gray-400 hover:text-emerald-400 transition-colors inline-flex items-center gap-2 text-sm">
+          <a href={`mailto:${siteSettings.email}`} className="text-gray-400 hover:text-emerald-400 transition-colors inline-flex items-center gap-2 text-sm">
             <Mail className="w-4 h-4 text-emerald-500" />
-            {contactInfo.email}
+            {siteSettings.email}
           </a>
         </div>
 

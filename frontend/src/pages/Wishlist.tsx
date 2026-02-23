@@ -102,7 +102,7 @@ const Wishlist = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8 py-3 sm:py-4">
         {/* Header */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-2 py-4 sm:p-6 mb-4 sm:mb-6">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <h1 className="text-lg sm:text-2xl font-bold text-gray-900 flex items-center gap-2">

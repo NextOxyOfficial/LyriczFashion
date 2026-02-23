@@ -98,7 +98,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-3 sm:py-6">
-      <div className="max-w-2xl lg:max-w-[1480px] mx-auto px-3 sm:px-6 lg:px-8">
+      <div className="max-w-2xl lg:max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-4">
           <div className="flex items-center justify-between gap-3">

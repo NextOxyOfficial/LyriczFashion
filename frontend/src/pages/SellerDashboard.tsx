@@ -202,7 +202,7 @@ const SellerDashboard = () => {
     <div className="min-h-screen bg-gray-50 py-3 sm:py-6">
       <div className="max-w-2xl lg:max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8">
         {/* Header Section */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-4">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-2 py-4 sm:p-6 mb-4">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="text-xs font-medium text-emerald-700">{store ? 'My Store' : 'Seller Dashboard'}</div>
@@ -365,7 +365,7 @@ const SellerDashboard = () => {
           </div>
         )
       ) : !store ? (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-2 py-4 sm:p-6">
           <div className="flex items-start gap-3 mb-4">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
               <StoreIcon className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />

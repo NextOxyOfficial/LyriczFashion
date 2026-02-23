@@ -169,7 +169,7 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-3 sm:py-6">
       <div className="max-w-2xl lg:max-w-[1480px] mx-auto px-2 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-4">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-2 py-4 sm:p-6 mb-4">
           <div className="text-xs font-medium text-emerald-700">Account Settings</div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mt-0.5">My Profile</h1>
           <p className="text-gray-500 text-xs sm:text-sm mt-0.5">Manage your account information and preferences for {displayName}.</p>

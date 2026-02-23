@@ -47,7 +47,7 @@ const UserDashboard = () => {
     { to: '/profile', icon: <User className="w-5 h-5" />, label: 'Profile', desc: 'Update personal info', color: 'bg-purple-50 text-purple-600' },
     { to: '/address-book', icon: <MapPin className="w-5 h-5" />, label: 'Address Book', desc: 'Manage delivery addresses', color: 'bg-orange-50 text-orange-600' },
     { to: '/settings', icon: <Settings className="w-5 h-5" />, label: 'Settings', desc: 'Preferences & security', color: 'bg-gray-100 text-gray-600' },
-    { to: '/sell-your-design', icon: <Store className="w-5 h-5" />, label: 'Become Seller', desc: 'Open your store', color: 'bg-emerald-50 text-emerald-600' },
+    { to: me?.is_seller ? '/sell-your-design' : '/seller', icon: <Store className="w-5 h-5" />, label: 'Sell your Logo', desc: me?.is_seller ? 'Upload logos & earn' : 'Become a seller', color: 'bg-emerald-50 text-emerald-600' },
     { to: '/products', icon: <ShoppingCart className="w-5 h-5" />, label: 'Shop', desc: 'Browse all products', color: 'bg-pink-50 text-pink-600' },
   ]
 
