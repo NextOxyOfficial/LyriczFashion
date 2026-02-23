@@ -25,6 +25,21 @@ def contact_info(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+def site_info(request):
+    """Get site name, description and logo for footer/header"""
+    s = SiteSettings.load()
+    logo_url = None
+    if s.logo and hasattr(s.logo, 'url'):
+        logo_url = request.build_absolute_uri(s.logo.url)
+    return Response({
+        'site_name': s.site_name,
+        'site_description': s.meta_description or 'Design your style, wear your story. Create custom T-shirts with our easy-to-use design studio or shop from talented designers.',
+        'logo_url': logo_url,
+    })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def meta_tags(request):
     """Get all SEO and social meta tag data for the frontend"""
     s = SiteSettings.load()

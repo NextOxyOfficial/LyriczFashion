@@ -391,7 +391,7 @@ class DesignLibraryItemViewSet(viewsets.ModelViewSet):
         if self.action in ['update', 'partial_update', 'destroy', 'my']:
             return DesignLibraryItem.objects.filter(owner=self.request.user).select_related('owner')
         
-        qs = DesignLibraryItem.objects.filter(is_active=True).select_related('owner')
+        qs = DesignLibraryItem.objects.filter(is_active=True, approval_status=DesignLibraryItem.APPROVAL_APPROVED).select_related('owner')
         
         # Add filtering by category and search
         category = self.request.query_params.get('category')
@@ -432,28 +432,56 @@ class DesignLibraryItemViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy', 'my']:
             return [IsAuthenticated(), IsOwnerOrReadOnly()]
+        if self.action in ['approve', 'reject']:
+            return [IsAdminUser()]
         return [AllowAny()]
 
     def perform_create(self, serializer):
-        print(f"Creating design library item for user: {self.request.user.username}")
-        print(f"Data received: {self.request.data}")
-        try:
-            instance = serializer.save(owner=self.request.user, is_active=True)
-            print(f"Successfully created design library item: ID {instance.id}, Name: {instance.name}, Active: {instance.is_active}")
-        except Exception as e:
-            print(f"Error creating design library item: {e}")
-            raise
+        user = self.request.user
+        pending_count = DesignLibraryItem.objects.filter(
+            owner=user, approval_status=DesignLibraryItem.APPROVAL_PENDING
+        ).count()
+        if pending_count >= 5:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError(
+                "You already have 5 logos pending review. Please wait for admin approval before submitting more."
+            )
+        instance = serializer.save(
+            owner=user,
+            is_active=False,
+            approval_status=DesignLibraryItem.APPROVAL_PENDING,
+        )
+        print(f"Design library item submitted for review: ID {instance.id}, User: {user.username}")
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def my(self, request):
         qs = DesignLibraryItem.objects.filter(owner=request.user).select_related('owner')
         return Response(DesignLibraryItemSerializer(qs, many=True, context={'request': request}).data)
-    
+
     @action(detail=False, methods=['get'], permission_classes=[AllowAny])
     def featured(self, request):
         """Get featured logos for homepage"""
         qs = DesignLibraryItem.objects.filter(is_active=True, is_featured=True).select_related('owner')[:8]
         return Response(DesignLibraryItemSerializer(qs, many=True, context={'request': request}).data)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def approve(self, request, id=None):
+        item = self.get_object()
+        item.approval_status = DesignLibraryItem.APPROVAL_APPROVED
+        item.is_active = True
+        item.rejection_reason = ''
+        item.save()
+        return Response({'status': 'approved', 'id': item.id, 'name': item.name})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def reject(self, request, id=None):
+        item = self.get_object()
+        reason = request.data.get('reason', '')
+        item.approval_status = DesignLibraryItem.APPROVAL_REJECTED
+        item.is_active = False
+        item.rejection_reason = reason
+        item.save()
+        return Response({'status': 'rejected', 'id': item.id, 'name': item.name, 'reason': reason})
 
 
 class DesignCategoryViewSet(viewsets.ModelViewSet):

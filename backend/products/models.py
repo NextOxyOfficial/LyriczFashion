@@ -213,19 +213,33 @@ class DesignCategory(models.Model):
 
 
 class DesignLibraryItem(models.Model):
+    APPROVAL_PENDING = 'pending'
+    APPROVAL_APPROVED = 'approved'
+    APPROVAL_REJECTED = 'rejected'
+    APPROVAL_CHOICES = [
+        (APPROVAL_PENDING, 'Pending Review'),
+        (APPROVAL_APPROVED, 'Approved'),
+        (APPROVAL_REJECTED, 'Rejected'),
+    ]
+
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='design_library_items')
     name = models.CharField(max_length=200)
     image = models.ImageField(upload_to='design-library/')
     category = models.CharField(max_length=100, blank=True, default='')
     search_keywords = models.TextField(blank=True, default='')
     commission_per_use = models.DecimalField(max_digits=10, decimal_places=2, default=49.00)
-    is_active = models.BooleanField(default=True, help_text="Approved and visible in Design Library")
+    approval_status = models.CharField(
+        max_length=20, choices=APPROVAL_CHOICES, default=APPROVAL_PENDING,
+        help_text="Admin must approve before logo appears in library"
+    )
+    rejection_reason = models.TextField(blank=True, default='', help_text="Reason shown to seller on rejection")
+    is_active = models.BooleanField(default=False, help_text="Approved and visible in Design Library")
     is_featured = models.BooleanField(default=False, help_text="Show in homepage featured section")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.name} by {self.owner.username}"
+        return f"{self.name} by {self.owner.username} [{self.approval_status}]"
 
     class Meta:
         ordering = ['-created_at']
